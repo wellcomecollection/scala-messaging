@@ -1,4 +1,4 @@
-package uk.ac.wellcome.messaging.test.fixtures
+package uk.ac.wellcome.messaging.fixtures
 
 import com.amazonaws.services.sns.AmazonSNS
 import io.circe.{yaml, Decoder, Json, ParsingFailure}
