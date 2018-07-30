@@ -8,7 +8,6 @@ import org.scalatest.Matchers
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.sqs._
 import uk.ac.wellcome.monitoring.MetricsSender
-import uk.ac.wellcome.test.fixtures._
 
 import scala.concurrent.duration._
 import scala.collection.JavaConverters._
