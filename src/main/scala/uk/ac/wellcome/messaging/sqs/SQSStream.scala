@@ -13,7 +13,6 @@ import com.google.inject.Inject
 import grizzled.slf4j.Logging
 import io.circe.Decoder
 import io.circe.parser._
-import uk.ac.wellcome.exceptions.GracefulFailureException
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.storage.dynamo.DynamoNonFatalError
 
@@ -93,7 +92,7 @@ class SQSStream[T] @Inject()(actorSystem: ActorSystem,
   // https://doc.akka.io/docs/akka/2.5.6/scala/stream/stream-error.html#supervision-strategies
   //
   private def decider(metricName: String): Supervision.Decider = {
-    case e: GracefulFailureException =>
+    case e: RecognisedFailureException =>
       logException(e)
       metricsSender.countRecognisedFailure(metricName)
       Supervision.resume
@@ -106,8 +105,8 @@ class SQSStream[T] @Inject()(actorSystem: ActorSystem,
 
   private def logException(exception: Exception) = {
     exception match {
-      case exception: GracefulFailureException =>
-        logger.warn(s"Graceful failure: ${exception.getMessage}")
+      case exception: RecognisedFailureException =>
+        logger.warn(s"Recognised failure: ${exception.getMessage}")
       case exception: DynamoNonFatalError =>
         logger.warn(s"Non-fatal DynamoDB error: ${exception.getMessage}")
       case exception: Exception =>
