@@ -11,7 +11,6 @@ import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.sqs.SQSStream
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.storage.ObjectStore
-import uk.ac.wellcome.utils.JsonUtil.{fromJson, _}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -60,7 +59,9 @@ class MessageStream[T] @Inject()(actorSystem: ActorSystem,
 
   private def readFromS3(messageString: String): Future[T] =
     for {
-      messagePointer <- Future.fromTry(fromJson[MessagePointer](messageString))
+      messagePointer <- Future.fromTry(
+        decode[MessagePointer](messageString).toTry
+      )
       deserialisedObject <- objectStore.get(messagePointer.src)
     } yield deserialisedObject
 }
