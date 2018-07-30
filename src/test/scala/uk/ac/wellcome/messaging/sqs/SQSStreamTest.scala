@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import akka.stream.scaladsl.Flow
 import org.mockito.Matchers.endsWith
 import org.mockito.Mockito.{never, times, verify}
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{FunSpec, Matchers}
 import uk.ac.wellcome.messaging.fixtures.Akka
 import uk.ac.wellcome.messaging.test.fixtures.Messaging
@@ -24,7 +24,7 @@ class SQSStreamTest
     with Messaging
     with Akka
     with ScalaFutures
-    with ExtendedPatience
+    with IntegrationPatience
     with MetricsSenderFixture {
 
   def process(list: ConcurrentLinkedQueue[ExampleObject])(o: ExampleObject) = {
