@@ -7,10 +7,11 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.sns.AmazonSNS
 import com.google.inject.Inject
 import grizzled.slf4j.Logging
+import io.circe.generic.auto._
+import io.circe.syntax._
 import uk.ac.wellcome.messaging.sns.{PublishAttempt, SNSConfig, SNSWriter}
 import uk.ac.wellcome.storage.s3.S3Config
 import uk.ac.wellcome.storage.{KeyPrefix, ObjectStore}
-import uk.ac.wellcome.utils.JsonUtil._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -46,7 +47,7 @@ class MessageWriter[T] @Inject()(
         keyPrefix = KeyPrefix(getKeyPrefix())
       )
       _ = debug(s"Successfully stored message $message in location: $location")
-      pointer <- Future.fromTry(toJson(MessagePointer(location)))
+      pointer <- Future { MessagePointer(location).asJson.noSpaces }
       publishAttempt <- sns.writeMessage(pointer, subject)
       _ = debug(publishAttempt)
     } yield publishAttempt
