@@ -1,4 +1,4 @@
-package uk.ac.wellcome.storage.utils
+package uk.ac.wellcome.messaging.utils
 
 import io.circe.generic.AutoDerivation
 import io.circe.java8.time.TimeInstances
