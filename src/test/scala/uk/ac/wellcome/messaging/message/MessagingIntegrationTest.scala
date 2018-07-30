@@ -6,9 +6,9 @@ import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import org.scalatest.{FunSpec, Matchers}
 import uk.ac.wellcome.messaging.test.fixtures.Messaging
 import uk.ac.wellcome.messaging.test.fixtures.SQS.Queue
+import uk.ac.wellcome.messaging.utils.JsonUtil
+import uk.ac.wellcome.messaging.utils.JsonUtil._
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
-import uk.ac.wellcome.test.fixtures._
-import uk.ac.wellcome.utils.JsonUtil._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
