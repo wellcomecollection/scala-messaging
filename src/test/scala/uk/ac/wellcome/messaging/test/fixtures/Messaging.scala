@@ -11,6 +11,7 @@ import com.amazonaws.services.sqs.model.SendMessageResult
 import io.circe.{Decoder, Encoder}
 import org.scalatest.Matchers
 import uk.ac.wellcome.messaging.message._
+import uk.ac.wellcome.messaging.fixtures.Akka
 import uk.ac.wellcome.messaging.sns.SNSConfig
 import uk.ac.wellcome.messaging.sqs.SQSConfig
 import uk.ac.wellcome.messaging.test.fixtures.SNS.Topic
@@ -128,7 +129,7 @@ trait Messaging
     testWith: TestWith[(Bucket, MessageStream[T], QueuePair, MetricsSender), R]
   )(implicit objectStore: ObjectStore[T]) = {
 
-    withActorSystem { actorSystem =>
+    withMessagingActorSystem { actorSystem =>
       withLocalS3Bucket { bucket =>
         withLocalSqsQueueAndDlq {
           case queuePair @ QueuePair(queue, _) =>

@@ -7,11 +7,12 @@ import org.mockito.Matchers.endsWith
 import org.mockito.Mockito.{never, times, verify}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FunSpec, Matchers}
+import uk.ac.wellcome.messaging.fixtures.Akka
 import uk.ac.wellcome.messaging.test.fixtures.Messaging
 import uk.ac.wellcome.messaging.test.fixtures.SQS.{Queue, QueuePair}
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
-import uk.ac.wellcome.test.fixtures.{Akka, TestWith}
+import uk.ac.wellcome.test.fixtures.TestWith
 import uk.ac.wellcome.test.utils.ExtendedPatience
 import uk.ac.wellcome.utils.JsonUtil._
 
@@ -236,7 +237,7 @@ class SQSStreamTest
     testWith: TestWith[(SQSStream[ExampleObject], QueuePair, MetricsSender),
                        R]) = {
 
-    withActorSystem { actorSystem =>
+    withMessagingActorSystem { actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>
           withMockMetricSender { metricsSender =>
