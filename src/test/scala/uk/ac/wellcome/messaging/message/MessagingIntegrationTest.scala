@@ -4,8 +4,9 @@ import java.util.concurrent.ConcurrentLinkedDeque
 
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import org.scalatest.{FunSpec, Matchers}
-import uk.ac.wellcome.messaging.fixtures.Messaging
+import uk.ac.wellcome.messaging.fixtures._
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
+import uk.ac.wellcome.messaging.utils.JsonUtil._
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -55,7 +56,7 @@ class MessagingIntegrationTest
   def withLocalStackMessageStreamFixtures[R](
     testWith: TestWith[(Queue, Bucket, MessageStream[ExampleObject]), R]) = {
     withMessagingActorSystem { actorSystem =>
-      withMessagingMetricsSender(actorSystem) { metricsSender =>
+      withMetricsSender(actorSystem) { metricsSender =>
         withLocalS3Bucket { bucket =>
           withLocalStackSqsQueue { queue =>
             withMessageStream[ExampleObject, R](

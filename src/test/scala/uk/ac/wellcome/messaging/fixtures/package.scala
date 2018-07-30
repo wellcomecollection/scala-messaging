@@ -8,7 +8,7 @@ package object fixtures extends Logging {
   type TestWith[T, R] = T => R
   type Fixture[L, R] = TestWith[L, R] => R
 
-  private def safeCleanup[L](resource: L)(f: L => Unit): Unit = {
+  private[messaging] def safeCleanup[L](resource: L)(f: L => Unit): Unit = {
     Try {
       logger.debug(s"cleaning up resource=[$resource]")
       f(resource)
