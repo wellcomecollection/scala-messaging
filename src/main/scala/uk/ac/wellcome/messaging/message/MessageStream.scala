@@ -7,6 +7,8 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.Message
 import com.google.inject.Inject
+import io.circe.generic.auto._
+import io.circe.parser._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.sqs.SQSStream
 import uk.ac.wellcome.monitoring.MetricsSender
