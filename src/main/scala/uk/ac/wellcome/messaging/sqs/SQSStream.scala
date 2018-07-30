@@ -15,7 +15,6 @@ import io.circe.Decoder
 import uk.ac.wellcome.exceptions.GracefulFailureException
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.storage.dynamo.DynamoNonFatalError
-import uk.ac.wellcome.utils.JsonUtil.fromJson
 
 import scala.concurrent.Future
 
@@ -71,7 +70,7 @@ class SQSStream[T] @Inject()(actorSystem: ActorSystem,
         .withSupervisionStrategy(decider(metricName)))
 
     val src: Source[Message, NotUsed] = modifySource(source.map { message =>
-      (message, fromJson[T](message.getBody).get)
+      (message, parse[T](message.getBody))
     })
 
     val srcWithLogging: Source[(Message, Delete.type), NotUsed] = src
