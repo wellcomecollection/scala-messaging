@@ -12,6 +12,7 @@ import com.amazonaws.services.sqs.model.Message
 import com.google.inject.Inject
 import grizzled.slf4j.Logging
 import io.circe.Decoder
+import io.circe.parser._
 import uk.ac.wellcome.exceptions.GracefulFailureException
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.storage.dynamo.DynamoNonFatalError
@@ -70,7 +71,7 @@ class SQSStream[T] @Inject()(actorSystem: ActorSystem,
         .withSupervisionStrategy(decider(metricName)))
 
     val src: Source[Message, NotUsed] = modifySource(source.map { message =>
-      (message, parse[T](message.getBody))
+      (message, decode[T](message.getBody).right.get)
     })
 
     val srcWithLogging: Source[(Message, Delete.type), NotUsed] = src
