@@ -54,8 +54,8 @@ class MessagingIntegrationTest
 
   def withLocalStackMessageStreamFixtures[R](
     testWith: TestWith[(Queue, Bucket, MessageStream[ExampleObject]), R]) = {
-    withActorSystem { actorSystem =>
-      withMetricsSender(actorSystem) { metricsSender =>
+    withMessagingActorSystem { actorSystem =>
+      withMessagingMetricsSender(actorSystem) { metricsSender =>
         withLocalS3Bucket { bucket =>
           withLocalStackSqsQueue { queue =>
             withMessageStream[ExampleObject, R](

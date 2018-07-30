@@ -8,7 +8,6 @@ import uk.ac.wellcome.messaging.utils.JsonUtil
 import uk.ac.wellcome.messaging.utils.JsonUtil._
 import uk.ac.wellcome.storage.ObjectLocation
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
-import uk.ac.wellcome.test.utils.JsonTestUtil
 
 import scala.concurrent.Future
 import scala.util.Success
