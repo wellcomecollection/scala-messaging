@@ -13,6 +13,7 @@ import com.google.inject.Inject
 import grizzled.slf4j.Logging
 import io.circe.Decoder
 import io.circe.parser._
+import uk.ac.wellcome.json.exceptions.JsonDecodingError
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.storage.dynamo.DynamoNonFatalError
 
@@ -92,10 +93,6 @@ class SQSStream[T] @Inject()(actorSystem: ActorSystem,
   // https://doc.akka.io/docs/akka/2.5.6/scala/stream/stream-error.html#supervision-strategies
   //
   private def decider(metricName: String): Supervision.Decider = {
-    case e: RecognisedFailureException =>
-      logException(e)
-      metricsSender.countRecognisedFailure(metricName)
-      Supervision.resume
     case e: Exception =>
       logException(e)
       metricsSender.countFailure(metricName)
@@ -105,8 +102,8 @@ class SQSStream[T] @Inject()(actorSystem: ActorSystem,
 
   private def logException(exception: Exception) = {
     exception match {
-      case exception: RecognisedFailureException =>
-        logger.warn(s"Recognised failure: ${exception.getMessage}")
+      case exception: JsonDecodingError =>
+        logger.warn(s"JSON decoding error: ${exception.getMessage}")
       case exception: DynamoNonFatalError =>
         logger.warn(s"Non-fatal DynamoDB error: ${exception.getMessage}")
       case exception: Exception =>
