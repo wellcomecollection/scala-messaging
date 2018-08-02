@@ -5,9 +5,9 @@ import com.amazonaws.services.sqs._
 import com.amazonaws.services.sqs.model._
 import io.circe.Encoder
 import org.scalatest.Matchers
+import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.sqs._
-import uk.ac.wellcome.messaging.utils.JsonUtil._
 import uk.ac.wellcome.monitoring.MetricsSender
 
 import scala.concurrent.duration._

@@ -2,10 +2,10 @@ package uk.ac.wellcome.messaging.message
 
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest._
+import uk.ac.wellcome.json.JsonUtil._
+import uk.ac.wellcome.json.utils.JsonAssertions
 import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.fixtures.SNS.Topic
-import uk.ac.wellcome.messaging.utils.JsonUtil
-import uk.ac.wellcome.messaging.utils.JsonUtil._
 import uk.ac.wellcome.storage.ObjectLocation
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
 
@@ -19,7 +19,8 @@ class MessageWriterTest
     with Matchers
     with Messaging
     with IntegrationPatience
-    with Inside {
+    with Inside
+    with JsonAssertions {
 
   val message = ExampleObject("A message sent in the MessageWriterTest")
   val subject = "message-writer-test-subject"
@@ -43,7 +44,7 @@ class MessageWriterTest
             inside(messagePointer) {
               case MessagePointer(ObjectLocation(bucketName, key)) => {
                 bucketName shouldBe bucket.name
-                JsonUtil.assertJsonStringsAreEqual(
+                assertJsonStringsAreEqual(
                   getContentFromS3(bucket, key),
                   toJson(message).get
                 )

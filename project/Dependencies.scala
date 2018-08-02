@@ -2,9 +2,15 @@ import sbt._
 
 object WellcomeDependencies {
   private lazy val versions = new {
+    val json = "1.0.0"
     val monitoring = "1.1.0"
     val storage = "1.5.0"
   }
+
+  val jsonLibrary: Seq[ModuleID] = Seq(
+    "uk.ac.wellcome" % "json_2.12" % versions.json % "test",
+    "uk.ac.wellcome" % "json_2.12" % versions.json % "test" classifier "tests"
+  )
 
   val monitoringLibrary: Seq[ModuleID] = Seq(
     "uk.ac.wellcome" % "monitoring_2.12" % versions.monitoring,
@@ -60,6 +66,7 @@ object Dependencies {
     "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % versions.akkaStreamAlpakkaS3,
     "io.circe" %% "circe-yaml" % versions.circeYaml
   ) ++
+    WellcomeDependencies.jsonLibrary ++
     WellcomeDependencies.monitoringLibrary ++
     WellcomeDependencies.storageLibrary ++
     loggingDependencies ++

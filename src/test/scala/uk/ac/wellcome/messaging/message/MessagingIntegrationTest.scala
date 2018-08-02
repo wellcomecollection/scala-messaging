@@ -4,9 +4,9 @@ import java.util.concurrent.ConcurrentLinkedDeque
 
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import org.scalatest.{FunSpec, Matchers}
+import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures._
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
-import uk.ac.wellcome.messaging.utils.JsonUtil._
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
 import scala.concurrent.ExecutionContext.Implicits.global
 
