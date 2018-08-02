@@ -5,5 +5,6 @@ package uk.ac.wellcome.messaging.sqs
   *
   * Instances of this exception are counted as a separate metric.
   */
-case class RecognisedFailureException(e: Throwable)
-    extends Exception(e.getMessage)
+trait RecognisedFailureException extends Exception { self: Throwable =>
+  val message = self.getMessage
+}
