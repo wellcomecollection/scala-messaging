@@ -28,6 +28,7 @@ object Dependencies {
     val aws = "1.11.225"
     val akka = "2.5.9"
     val akkaStreamAlpakka = "0.20"
+    val circe = "0.9.0"
     val circeYaml = "0.8.0"
     val mockito = "1.9.5"
     val scalatest = "3.0.1"
