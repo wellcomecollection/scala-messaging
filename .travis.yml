@@ -1,0 +1,53 @@
+language: scala
+
+before_script:
+  - openssl aes-256-cbc -K $encrypted_83630750896a_key -iv $encrypted_83630750896a_iv -in secrets.zip.enc -out secrets.zip -d
+  - git remote add ssh-origin "git@github.com:wellcometrust/scala-messaging.git"
+
+
+
+# Everything below this line is boilerplate that should be reusable,
+# unmodified, in any of our Scala library repos.
+
+sudo: false
+
+scala:
+- 2.12.6
+
+cache:
+  directories:
+    - $HOME/.sbt
+    - $HOME/.ivy2/cache
+    - project/target
+    - target
+
+branches:
+  only:
+    - master
+
+env:
+  global:
+    # This forces Python to print everything to stdout/stderr immediately.
+    - PYTHONUNBUFFERED=x
+
+jobs:
+  include:
+    - stage: format
+      env: TASK=autoformat
+    - stage: test
+      env: TASK=test
+      sudo: required
+      services:
+        - docker
+    - env: TASK=check_release_file
+    - stage: release
+      env: TASK=release
+
+script:
+  - ./sbt_release_tooling.py "$TASK"
+
+stages:
+  - format
+  - test
+  - name: release
+    if: type = push
