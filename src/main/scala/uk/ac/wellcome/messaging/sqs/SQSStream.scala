@@ -11,7 +11,6 @@ import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.Message
 import grizzled.slf4j.Logging
 import io.circe.Decoder
-import uk.ac.wellcome.exceptions.GracefulFailureException
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.json.exceptions.JsonDecodingError
 import uk.ac.wellcome.monitoring.MetricsSender
@@ -91,10 +90,6 @@ class SQSStream[T](
   // https://doc.akka.io/docs/akka/2.5.6/scala/stream/stream-error.html#supervision-strategies
   //
   private def decider(metricName: String): Supervision.Decider = {
-    case e @ (_: GracefulFailureException | _: JsonDecodingError) =>
-      logException(e)
-      metricsSender.countRecognisedFailure(metricName)
-      Supervision.resume
     case e: Exception =>
       logException(e)
       metricsSender.countFailure(metricName)
@@ -104,8 +99,8 @@ class SQSStream[T](
 
   private def logException(exception: Throwable): Unit = {
     exception match {
-      case exception: GracefulFailureException =>
-        logger.warn(s"Graceful failure: ${exception.getMessage}")
+      case exception: RecognisedFailure =>
+        logger.warn(s"Recognised failure: ${exception.getMessage}")
       case exception: DynamoNonFatalError =>
         logger.warn(s"Non-fatal DynamoDB error: ${exception.getMessage}")
       case exception: JsonDecodingError =>
