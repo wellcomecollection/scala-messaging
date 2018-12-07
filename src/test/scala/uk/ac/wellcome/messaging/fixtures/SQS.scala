@@ -7,18 +7,17 @@ import com.amazonaws.services.sqs.model._
 import grizzled.slf4j.Logging
 import io.circe.Encoder
 import org.scalatest.Matchers
+import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.sqs._
 import uk.ac.wellcome.monitoring.MetricsSender
-import uk.ac.wellcome.test.fixtures._
-
-import scala.collection.JavaConverters._
-import scala.util.Random
-import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 import uk.ac.wellcome.storage.ObjectLocation
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
 import uk.ac.wellcome.storage.vhs.HybridRecord
+
+import scala.collection.JavaConverters._
+import scala.util.Random
 
 object SQS {
 

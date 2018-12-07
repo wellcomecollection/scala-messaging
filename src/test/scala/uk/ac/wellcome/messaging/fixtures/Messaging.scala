@@ -11,14 +11,13 @@ import com.amazonaws.services.sqs.model.SendMessageResult
 import io.circe.{Decoder, Encoder}
 import org.scalatest.Matchers
 import uk.ac.wellcome.messaging.message._
-import uk.ac.wellcome.messaging.test.fixtures.SNS.Topic
-import uk.ac.wellcome.messaging.test.fixtures.SQS.{Queue, QueuePair}
+import uk.ac.wellcome.messaging.fixtures.SNS.Topic
+import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 import uk.ac.wellcome.storage.ObjectStore
 import uk.ac.wellcome.storage.fixtures.S3
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
-import uk.ac.wellcome.test.fixtures._
 
 import scala.util.Success
 import uk.ac.wellcome.json.JsonUtil._

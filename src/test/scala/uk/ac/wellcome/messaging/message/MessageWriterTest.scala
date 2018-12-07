@@ -2,8 +2,8 @@ package uk.ac.wellcome.messaging.message
 
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest._
-import uk.ac.wellcome.messaging.test.fixtures.{MessageInfo, Messaging}
-import uk.ac.wellcome.messaging.test.fixtures.SNS.Topic
+import uk.ac.wellcome.messaging.fixtures.{MessageInfo, Messaging}
+import uk.ac.wellcome.messaging.fixtures.SNS.Topic
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.json.utils.JsonAssertions

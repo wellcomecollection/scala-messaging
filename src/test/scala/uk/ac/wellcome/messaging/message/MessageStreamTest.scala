@@ -8,11 +8,10 @@ import org.mockito.Matchers.{endsWith, eq => equalTo}
 import org.mockito.Mockito.{never, times, verify}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{Assertion, FunSpec, Matchers}
-import uk.ac.wellcome.messaging.test.fixtures.Messaging
-import uk.ac.wellcome.messaging.test.fixtures.SQS.{Queue, QueuePair}
+import uk.ac.wellcome.messaging.fixtures.{Akka, Messaging}
+import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 import uk.ac.wellcome.storage.ObjectLocation
-import uk.ac.wellcome.test.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
 

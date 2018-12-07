@@ -12,7 +12,6 @@ import uk.ac.wellcome.messaging.sns.{
   SNSMessageWriter,
   SNSWriter
 }
-import uk.ac.wellcome.test.fixtures._
 
 import scala.language.higherKinds
 import scala.collection.immutable.Seq
