@@ -90,6 +90,10 @@ class SQSStream[T](
   // https://doc.akka.io/docs/akka/2.5.6/scala/stream/stream-error.html#supervision-strategies
   //
   private def decider(metricName: String): Supervision.Decider = {
+    case e @ (_: RecognisedFailure | _: JsonDecodingError) =>
+      logException(e)
+      metricsSender.countRecognisedFailure(metricName)
+      Supervision.resume
     case e: Exception =>
       logException(e)
       metricsSender.countFailure(metricName)
