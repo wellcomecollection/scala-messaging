@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.1.0 - 2018-12-07
+
+Bump the version of scala-json to 1.1.1.
+
 ## v0.0.3 - 2018-12-07
 
 Internal refactoring to simplify the SQS fixtures.
