@@ -8,7 +8,7 @@ object WellcomeDependencies {
   }
 
   val jsonLibrary: Seq[ModuleID] = Seq(
-    "uk.ac.wellcome" % "json_2.12" % versions.json % "test",
+    "uk.ac.wellcome" % "json_2.12" % versions.json,
     "uk.ac.wellcome" % "json_2.12" % versions.json % "test" classifier "tests"
   )
 
@@ -58,5 +58,6 @@ object Dependencies {
     WellcomeDependencies.monitoringLibrary ++
     WellcomeDependencies.storageLibrary ++
     akkaDependencies ++
+    circeDependencies ++
     testDependencies
 }
