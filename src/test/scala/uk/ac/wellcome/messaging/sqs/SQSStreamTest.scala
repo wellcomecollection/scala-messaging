@@ -235,7 +235,7 @@ class SQSStreamTest
   def withSQSStreamFixtures[R](
     testWith: TestWith[(SQSStream[ExampleObject], QueuePair, MetricsSender), R])
     : R =
-    withActorSystem { implicit actorSystem =>
+    withMessagingActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>
           withMockMetricSender { metricsSender =>

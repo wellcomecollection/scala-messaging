@@ -88,7 +88,7 @@ trait Messaging
   def withMessageStreamFixtures[T, R](
     testWith: TestWith[(MessageStream[T], QueuePair, MetricsSender), R]
   )(implicit objectStore: ObjectStore[T]): R =
-    withActorSystem { implicit actorSystem =>
+    withMessagingActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>
           withMockMetricSender { metricsSender =>
