@@ -1,4 +1,4 @@
-package uk.ac.wellcome.messaging.test.fixtures
+package uk.ac.wellcome.messaging.fixtures
 
 import akka.actor.ActorSystem
 import com.amazonaws.services.s3.AmazonS3
