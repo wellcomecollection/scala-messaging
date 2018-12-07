@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import org.scalatest.concurrent.Eventually
 
 private[messaging] trait Akka extends Eventually {
-  private[messaging] def withActorSystem[R] = fixture[ActorSystem, R](
+  private[messaging] def withMessagingActorSystem[R] = fixture[ActorSystem, R](
     create = ActorSystem(),
     destroy = eventually { _.terminate() }
   )
