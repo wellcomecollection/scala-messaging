@@ -1,7 +1,7 @@
 import com.amazonaws.services.s3.model.Region
 
 name    := "messaging"
-version := "0.1.0"
+version := "0.2.0"
 
 organization := "uk.ac.wellcome"
 scalaVersion := "2.12.6"

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.2.0 - 2018-12-08
+
+Bump the version of scala-storage to 3.1.0.
+
 ## v0.1.0 - 2018-12-07
 
 Bump the version of scala-json to 1.1.1.
