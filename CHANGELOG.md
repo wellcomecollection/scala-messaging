@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.0.0 - 2018-12-10
+
+First release of the messaging code in the platform repo.
+
 ## v0.2.0 - 2018-12-08
 
 Bump the version of scala-storage to 3.1.0.
