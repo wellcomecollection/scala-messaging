@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.1.0 - 2019-01-10
+
+Bump the version of scala-monitoring to 1.2.0.
+
 ## v1.0.0 - 2018-12-10
 
 First release of the messaging code in the platform repo.
