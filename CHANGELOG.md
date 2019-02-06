@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v1.1.1 - 2019-02-06
+
+This fixes a small flakiness in `SNS.notificationMessage[T](topic)`, where it
+would occasionally fail an assert if a duplicate message was sent twice.
+
 ## v1.1.0 - 2019-01-10
 
 Bump the version of scala-monitoring to 1.2.0.
