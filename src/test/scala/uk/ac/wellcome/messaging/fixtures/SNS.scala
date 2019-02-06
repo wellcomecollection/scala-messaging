@@ -189,9 +189,9 @@ trait SNS extends Matchers with Logging {
   }
 
   def notificationMessage[T](topic: Topic)(implicit decoderT: Decoder[T]): T = {
-    notificationCount(topic) shouldBe 1
-    val maybeT = listNotifications[T](topic).head
-    maybeT.get
+    val notifications = listNotifications[T](topic)
+    notifications.distinct.size shouldBe 1
+    notifications.head.get
   }
 
   def createSNSConfigWith(topic: Topic): SNSConfig =
