@@ -5,6 +5,7 @@ import grizzled.slf4j.Logging
 import io.circe.generic.extras.JsonKey
 import io.circe.{yaml, Decoder, Json, ParsingFailure}
 import org.scalatest.Matchers
+import uk.ac.wellcome.fixtures._
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.{
   SNSClientFactory,

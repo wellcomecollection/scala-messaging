@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentLinkedDeque
 
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import org.scalatest.{FunSpec, Matchers}
-import uk.ac.wellcome.messaging.fixtures._
+import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.json.JsonUtil._

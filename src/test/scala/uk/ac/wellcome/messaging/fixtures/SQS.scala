@@ -7,6 +7,7 @@ import com.amazonaws.services.sqs.model._
 import grizzled.slf4j.Logging
 import io.circe.Encoder
 import org.scalatest.Matchers
+import uk.ac.wellcome.fixtures._
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.sqs._

@@ -10,6 +10,7 @@ import com.amazonaws.services.sns.model.{
 import com.amazonaws.services.sqs.model.SendMessageResult
 import io.circe.{Decoder, Encoder}
 import org.scalatest.Matchers
+import uk.ac.wellcome.fixtures.{fixture, Fixture, TestWith}
 import uk.ac.wellcome.messaging.message._
 import uk.ac.wellcome.messaging.fixtures.SNS.Topic
 import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
