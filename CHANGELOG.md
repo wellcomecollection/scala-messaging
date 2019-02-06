@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.1.2 - 2019-02-06
+
+Start using the scala-fixtures lib rather than vendoring fixtures.
+
 ## v1.1.1 - 2019-02-06
 
 This fixes a small flakiness in `SNS.notificationMessage[T](topic)`, where it
