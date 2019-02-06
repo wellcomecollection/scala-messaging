@@ -2,10 +2,16 @@ import sbt._
 
 object WellcomeDependencies {
   private lazy val versions = new {
+    val fixtures   = "1.0.0"
     val json       = "1.1.1"
     val monitoring = "1.2.0"
     val storage    = "3.1.0"
   }
+
+  val fixturesLibrary: Seq[ModuleID] = Seq(
+    "uk.ac.wellcome" % "fixtures_2.12" % versions.fixtures,
+    "uk.ac.wellcome" % "fixtures_2.12" % versions.fixtures % "test" classifier "tests"
+  )
 
   val jsonLibrary: Seq[ModuleID] = Seq(
     "uk.ac.wellcome" % "json_2.12" % versions.json,
@@ -57,6 +63,7 @@ object Dependencies {
   ) ++ WellcomeDependencies.jsonLibrary ++
     WellcomeDependencies.monitoringLibrary ++
     WellcomeDependencies.storageLibrary ++
+    WellcomeDependencies.fixturesLibrary ++
     akkaDependencies ++
     circeDependencies ++
     testDependencies
