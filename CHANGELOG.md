@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.2.0 - 2019-02-08
+
+This release adds the `messaging_typesafe` library for configuring the `messaging` library using Typesafe.
+
 ## v1.1.2 - 2019-02-06
 
 Start using the scala-fixtures lib rather than vendoring fixtures.
