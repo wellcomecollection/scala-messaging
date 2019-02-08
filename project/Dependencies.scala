@@ -4,8 +4,8 @@ object WellcomeDependencies {
   private lazy val versions = new {
     val fixtures   = "1.0.0"
     val json       = "1.1.1"
-    val monitoring = "1.2.0"
-    val storage    = "3.1.0"
+    val monitoring = "1.3.0"
+    val storage    = "3.3.0"
   }
 
   val fixturesLibrary: Seq[ModuleID] = Seq(
@@ -23,9 +23,19 @@ object WellcomeDependencies {
     "uk.ac.wellcome" %% "monitoring" % versions.monitoring % "test" classifier "tests"
   )
 
+  val monitoringTypesafeLibrary: Seq[ModuleID] = Seq(
+    "uk.ac.wellcome" %% "monitoring_typesafe" % versions.monitoring,
+    "uk.ac.wellcome" %% "monitoring_typesafe" % versions.monitoring % "test" classifier "tests"
+  )
+
   val storageLibrary: Seq[ModuleID] = Seq(
     "uk.ac.wellcome" %% "storage" % versions.storage,
     "uk.ac.wellcome" %% "storage" % versions.storage % "test" classifier "tests"
+  )
+
+  val storageTypesafeLibrary = Seq[ModuleID](
+    "uk.ac.wellcome" % "storage_typesafe_2.12" % versions.storage,
+    "uk.ac.wellcome" % "storage_typesafe_2.12" % versions.storage % "test" classifier "tests",
   )
 }
 
@@ -67,4 +77,8 @@ object Dependencies {
     akkaDependencies ++
     circeDependencies ++
     testDependencies
+
+  val typesafeDependencies =
+    WellcomeDependencies.monitoringTypesafeLibrary ++
+    WellcomeDependencies.storageTypesafeLibrary
 }
