@@ -3,8 +3,16 @@ package uk.ac.wellcome.messaging.typesafe
 import com.amazonaws.services.sns.AmazonSNS
 import com.typesafe.config.Config
 import uk.ac.wellcome.config.models.AWSClientConfig
-import uk.ac.wellcome.messaging.sns.{SNSClientFactory, SNSConfig, SNSMessageWriter, SNSWriter}
-import uk.ac.wellcome.typesafe.config.builders.{AWSClientConfigBuilder, AkkaBuilder}
+import uk.ac.wellcome.messaging.sns.{
+  SNSClientFactory,
+  SNSConfig,
+  SNSMessageWriter,
+  SNSWriter
+}
+import uk.ac.wellcome.typesafe.config.builders.{
+  AWSClientConfigBuilder,
+  AkkaBuilder
+}
 import uk.ac.wellcome.typesafe.config.builders.EnrichConfig._
 
 object SNSBuilder extends AWSClientConfigBuilder {
