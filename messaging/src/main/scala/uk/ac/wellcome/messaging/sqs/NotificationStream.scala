@@ -4,7 +4,6 @@ import akka.Done
 import io.circe.Decoder
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
-import uk.ac.wellcome.messaging.sqs.SQSStream
 
 import scala.concurrent.{ExecutionContext, Future}
 
