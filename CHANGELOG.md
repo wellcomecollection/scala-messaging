@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v1.3.0 - 2019-02-22
+
+This release adds a new class, `NotificationStream[T]`, which does the work of
+wrapping an `SQSStream[NotificationMessage]`, reading those messages from the
+queue and unpacking them as instances of the case class `T` – hiding the mucky
+JSON decoding from the worker services, which just get handed lovely case classes.
+
 ## v1.2.0 - 2019-02-08
 
 This release adds the `messaging_typesafe` library for configuring the `messaging` library using Typesafe.
