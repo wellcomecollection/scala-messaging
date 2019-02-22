@@ -6,6 +6,8 @@ import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.sqs.NotificationStream
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 trait NotificationStreamFixture extends Akka with SQS {
   def withNotificationStream[T, R](queue: Queue)(testWith: TestWith[NotificationStream[T], R])(implicit decoder: Decoder[T]): R =
     withMessagingActorSystem { implicit actorSystem =>
