@@ -5,7 +5,6 @@ import com.typesafe.config.Config
 import io.circe.Decoder
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.sqs.NotificationStream
-import uk.ac.wellcome.messaging.typesafe.SQSBuilder
 
 import scala.concurrent.ExecutionContext
 
