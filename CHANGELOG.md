@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.4.0 - 2019-02-25
+
+This release adds a `namespace` parameter to `SNSBuilder.buildSNSWriter`.
+
 ## v1.3.0 - 2019-02-22
 
 This release adds a new class, `NotificationStream[T]`, which does the work of
