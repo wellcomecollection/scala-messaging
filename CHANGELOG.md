@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v1.5.0 - 2019-02-25
+
+This release removes the need to pass an `s3Client` to `SQS.createHybridRecordWith`
+and `SQS.createHybridRecordNotificationWith`.
+
 ## v1.4.0 - 2019-02-25
 
 This release adds a `namespace` parameter to `SNSBuilder.buildSNSWriter`.
