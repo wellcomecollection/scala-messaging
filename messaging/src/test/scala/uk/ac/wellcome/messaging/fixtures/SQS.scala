@@ -14,6 +14,7 @@ import uk.ac.wellcome.messaging.sqs._
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 import uk.ac.wellcome.storage.ObjectLocation
+import uk.ac.wellcome.storage.fixtures.S3
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
 import uk.ac.wellcome.storage.vhs.HybridRecord
 
@@ -30,7 +31,7 @@ object SQS {
 
 }
 
-trait SQS extends Matchers with Logging with MetricsSenderFixture {
+trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
 
   import SQS._
 
@@ -39,8 +40,8 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture {
 
   private val regionName = "localhost"
 
-  private val accessKey = "access"
-  private val secretKey = "secret"
+  private val sqsAccessKey = "access"
+  private val sqsSecretKey = "secret"
 
   def endpoint(queue: Queue) =
     s"aws-sqs://${queue.name}?amazonSQSEndpoint=$sqsInternalEndpointUrl&accessKey=&secretKey="
@@ -51,15 +52,15 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture {
   val sqsClient: AmazonSQS = SQSClientFactory.createSyncClient(
     region = regionName,
     endpoint = sqsEndpointUrl,
-    accessKey = accessKey,
-    secretKey = secretKey
+    accessKey = sqsAccessKey,
+    secretKey = sqsSecretKey
   )
 
   val asyncSqsClient: AmazonSQSAsync = SQSClientFactory.createAsyncClient(
     region = regionName,
     endpoint = sqsEndpointUrl,
-    accessKey = accessKey,
-    secretKey = secretKey
+    accessKey = sqsAccessKey,
+    secretKey = sqsSecretKey
   )
 
   private def withLocalSqsQueue[R](client: AmazonSQS): Fixture[Queue, R] = fixture[Queue, R](
@@ -145,7 +146,7 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture {
   def createHybridRecordWith[T](
     t: T,
     version: Int = 1,
-    s3Client: AmazonS3,
+    s3Client: AmazonS3 = s3Client,
     bucket: Bucket)(implicit encoder: Encoder[T]): HybridRecord = {
     val s3key = Random.alphanumeric take 10 mkString
     val content = toJson(t).get
@@ -162,7 +163,7 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture {
   def createHybridRecordNotificationWith[T](
     t: T,
     version: Int = 1,
-    s3Client: AmazonS3,
+    s3Client: AmazonS3 = s3Client,
     bucket: Bucket)(implicit encoder: Encoder[T]): NotificationMessage = {
     val hybridRecord = createHybridRecordWith[T](
       t,
