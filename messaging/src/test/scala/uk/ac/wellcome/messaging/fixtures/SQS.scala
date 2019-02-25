@@ -40,8 +40,8 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
 
   private val regionName = "localhost"
 
-  private val accessKey = "access"
-  private val secretKey = "secret"
+  private val sqsAccessKey = "access"
+  private val sqsSecretKey = "secret"
 
   def endpoint(queue: Queue) =
     s"aws-sqs://${queue.name}?amazonSQSEndpoint=$sqsInternalEndpointUrl&accessKey=&secretKey="
@@ -52,15 +52,15 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
   val sqsClient: AmazonSQS = SQSClientFactory.createSyncClient(
     region = regionName,
     endpoint = sqsEndpointUrl,
-    accessKey = accessKey,
-    secretKey = secretKey
+    accessKey = sqsAccessKey,
+    secretKey = sqsSecretKey
   )
 
   val asyncSqsClient: AmazonSQSAsync = SQSClientFactory.createAsyncClient(
     region = regionName,
     endpoint = sqsEndpointUrl,
-    accessKey = accessKey,
-    secretKey = secretKey
+    accessKey = sqsAccessKey,
+    secretKey = sqsSecretKey
   )
 
   private def withLocalSqsQueue[R](client: AmazonSQS): Fixture[Queue, R] = fixture[Queue, R](
