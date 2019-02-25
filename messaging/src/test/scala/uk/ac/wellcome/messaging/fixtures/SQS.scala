@@ -14,6 +14,7 @@ import uk.ac.wellcome.messaging.sqs._
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 import uk.ac.wellcome.storage.ObjectLocation
+import uk.ac.wellcome.storage.fixtures.S3
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
 import uk.ac.wellcome.storage.vhs.HybridRecord
 
@@ -30,7 +31,7 @@ object SQS {
 
 }
 
-trait SQS extends Matchers with Logging with MetricsSenderFixture {
+trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
 
   import SQS._
 
@@ -142,11 +143,7 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture {
     implicit encoder: Encoder[T]): NotificationMessage =
     createNotificationMessageWith(body = toJson(message).get)
 
-  def createHybridRecordWith[T](
-    t: T,
-    version: Int = 1,
-    s3Client: AmazonS3,
-    bucket: Bucket)(implicit encoder: Encoder[T]): HybridRecord = {
+  def createHybridRecordWith[T](t: T, bucket: Bucket, version: Int = 1)(implicit encoder: Encoder[T]): HybridRecord = {
     val s3key = Random.alphanumeric take 10 mkString
     val content = toJson(t).get
     s3Client.putObject(bucket.name, s3key, content)
@@ -158,23 +155,40 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture {
     )
   }
 
+  @deprecated(
+    "You don't need to pass s3Client",
+    since = "messaging 1.5.0"
+  )
+  def createHybridRecordWith[T](
+    t: T,
+    version: Int = 1,
+    s3Client: AmazonS3,
+    bucket: Bucket)(implicit encoder: Encoder[T]): HybridRecord =
+    createHybridRecordWith(t, bucket = bucket, version = version)
+
   /** Store an object in S3 and create the HybridRecordNotification that should be sent to SNS. */
+  def createHybridRecordNotificationWith[T](
+    t: T,
+    bucket: Bucket,
+    version: Int = 1
+  )(implicit encoder: Encoder[T]): NotificationMessage = {
+    val hybridRecord = createHybridRecordWith[T](
+      t, bucket = bucket, version = version
+    )
+
+    createNotificationMessageWith(message = hybridRecord)
+  }
+
+  @deprecated(
+    "You don't need to pass s3Client",
+    since = "messaging 1.5.0"
+  )
   def createHybridRecordNotificationWith[T](
     t: T,
     version: Int = 1,
     s3Client: AmazonS3,
-    bucket: Bucket)(implicit encoder: Encoder[T]): NotificationMessage = {
-    val hybridRecord = createHybridRecordWith[T](
-      t,
-      version = version,
-      s3Client = s3Client,
-      bucket = bucket
-    )
-
-    createNotificationMessageWith(
-      message = hybridRecord
-    )
-  }
+    bucket: Bucket)(implicit encoder: Encoder[T]): NotificationMessage =
+    createHybridRecordNotificationWith(t, bucket = bucket, version = version)
 
   def sendNotificationToSQS(queue: Queue, body: String): SendMessageResult = {
     val message = createNotificationMessageWith(body = body)
