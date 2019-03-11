@@ -130,7 +130,7 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
 
   def withSQSStream[T, R](queue: Queue)(testWith: TestWith[SQSStream[T], R])(
     implicit actorSystem: ActorSystem): R =
-    withMetricsSender(actorSystem) { metricsSender =>
+    withMetricsSender() { metricsSender =>
       withSQSStream[T, R](queue, metricsSender) { sqsStream =>
         testWith(sqsStream)
       }

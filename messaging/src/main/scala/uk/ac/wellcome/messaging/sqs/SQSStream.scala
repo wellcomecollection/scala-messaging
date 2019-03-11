@@ -73,7 +73,7 @@ class SQSStream[T](
 
     val srcWithLogging: Source[(Message, Delete.type), NotUsed] = src
       .map { m =>
-        metricsSender.countSuccess(metricName)
+        metricsSender.incrementCount(s"${metricName}_success")
         debug(s"Deleting message ${m.getMessageId}")
         (m, MessageAction.Delete)
       }
@@ -92,11 +92,11 @@ class SQSStream[T](
   private def decider(metricName: String): Supervision.Decider = {
     case e @ (_: RecognisedFailure | _: JsonDecodingError) =>
       logException(e)
-      metricsSender.countRecognisedFailure(metricName)
+      metricsSender.incrementCount(s"${metricName}_recognisedFailure")
       Supervision.resume
     case e: Exception =>
       logException(e)
-      metricsSender.countFailure(metricName)
+      metricsSender.incrementCount(s"${metricName}_failure")
       Supervision.Resume
     case _ => Supervision.Stop
   }
