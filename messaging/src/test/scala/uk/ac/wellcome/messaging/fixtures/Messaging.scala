@@ -10,6 +10,7 @@ import com.amazonaws.services.sns.model.{
 import com.amazonaws.services.sqs.model.SendMessageResult
 import io.circe.{Decoder, Encoder}
 import org.scalatest.Matchers
+import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.fixtures.{fixture, Fixture, TestWith}
 import uk.ac.wellcome.messaging.message._
 import uk.ac.wellcome.messaging.fixtures.SNS.Topic
@@ -89,10 +90,10 @@ trait Messaging
   def withMessageStreamFixtures[T, R](
     testWith: TestWith[(MessageStream[T], QueuePair, MetricsSender), R]
   )(implicit objectStore: ObjectStore[T]): R =
-    withMessagingActorSystem { implicit actorSystem =>
+    withActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>
-          withMockMetricSender { metricsSender =>
+          withMockMetricsSender { metricsSender =>
             withMessageStream[T, R](queue, metricsSender) { stream =>
               testWith((stream, queuePair, metricsSender))
             }

@@ -2,13 +2,13 @@ package uk.ac.wellcome.messaging.message
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
-import akka.stream.QueueOfferResult
 import akka.stream.scaladsl.Flow
 import org.mockito.Matchers.{endsWith, eq => equalTo}
 import org.mockito.Mockito.{never, times, verify}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{Assertion, FunSpec, Matchers}
-import uk.ac.wellcome.messaging.fixtures.{Akka, Messaging}
+import uk.ac.wellcome.akka.fixtures.Akka
+import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 import uk.ac.wellcome.storage.ObjectLocation
@@ -120,7 +120,7 @@ class MessageStreamTest
     }.toList
 
   it("increments *_ProcessMessage metric when successful") {
-    withMessageStreamFixtures[ExampleObject, Future[QueueOfferResult]] {
+    withMessageStreamFixtures[ExampleObject, Future[Unit]] {
       case (messageStream, QueuePair(queue, _), metricsSender) =>
         val exampleObject = ExampleObject("some value")
         sendInlineNotification(queue = queue, exampleObject = exampleObject)
@@ -132,7 +132,7 @@ class MessageStreamTest
 
         eventually {
           verify(metricsSender, times(1))
-            .countSuccess(equalTo("test-stream_ProcessMessage"))
+            .incrementCount(equalTo("test-stream_ProcessMessage_success"))
         }
     }
   }
@@ -183,7 +183,7 @@ class MessageStreamTest
 
         eventually {
           verify(metricsSender, times(3))
-            .countFailure(metricName = "test-stream_ProcessMessage")
+            .incrementCount(metricName = "test-stream_ProcessMessage_failure")
 
           received shouldBe empty
 
@@ -223,7 +223,7 @@ class MessageStreamTest
 
   describe("runStream") {
     it("processes messages off a queue") {
-      withMessageStreamFixtures[ExampleObject, Future[QueueOfferResult]] {
+      withMessageStreamFixtures[ExampleObject, Future[Unit]] {
         case (messageStream, QueuePair(queue, dlq), metricsSender) =>
           val exampleObject1 = ExampleObject("some value 1")
           sendInlineNotification(queue = queue, exampleObject = exampleObject1)
@@ -249,13 +249,13 @@ class MessageStreamTest
             assertQueueEmpty(queue)
             assertQueueEmpty(dlq)
             verify(metricsSender, times(2))
-              .countSuccess("test-stream_ProcessMessage")
+              .incrementCount("test-stream_ProcessMessage_success")
           }
       }
     }
 
     it("does not delete failed messages and sends a failure metric") {
-      withMessageStreamFixtures[ExampleObject, Future[QueueOfferResult]] {
+      withMessageStreamFixtures[ExampleObject, Future[Unit]] {
         case (messageStream, QueuePair(queue, dlq), metricsSender) =>
           val exampleObject = ExampleObject("some value")
           sendInlineNotification(queue = queue, exampleObject = exampleObject)
@@ -271,7 +271,7 @@ class MessageStreamTest
             assertQueueHasSize(dlq, 1)
 
             verify(metricsSender, times(3))
-              .countFailure("test-stream_ProcessMessage")
+              .incrementCount("test-stream_ProcessMessage_failure")
           }
       }
     }

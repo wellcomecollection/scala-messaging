@@ -6,6 +6,7 @@ object WellcomeDependencies {
     val json       = "1.1.1"
     val monitoring = "1.3.0"
     val storage    = "3.3.0"
+    val typesafe   = "1.0.0"
   }
 
   val fixturesLibrary: Seq[ModuleID] = Seq(
@@ -33,9 +34,14 @@ object WellcomeDependencies {
     "uk.ac.wellcome" %% "storage" % versions.storage % "test" classifier "tests"
   )
 
-  val storageTypesafeLibrary = Seq[ModuleID](
+  val storageTypesafeLibrary: Seq[ModuleID] = Seq[ModuleID](
     "uk.ac.wellcome" % "storage_typesafe_2.12" % versions.storage,
     "uk.ac.wellcome" % "storage_typesafe_2.12" % versions.storage % "test" classifier "tests",
+  )
+
+  val typesafeLibrary: Seq[ModuleID] = Seq[ModuleID](
+    "uk.ac.wellcome" % "typesafe-app_2.12" % versions.typesafe,
+    "uk.ac.wellcome" % "typesafe-app_2.12" % versions.typesafe % "test" classifier "tests",
   )
 }
 
@@ -65,7 +71,7 @@ object Dependencies {
     "org.mockito" % "mockito-core" % versions.mockito % Test,
   )
 
-  val libraryDependencies = Seq(
+  val libraryDependencies: Seq[ModuleID] = Seq(
     "com.amazonaws" % "aws-java-sdk-sns" % versions.aws,
     "com.amazonaws" % "aws-java-sdk-sqs" % versions.aws,
     "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % versions.akkaStreamAlpakka,
@@ -74,6 +80,7 @@ object Dependencies {
     WellcomeDependencies.monitoringLibrary ++
     WellcomeDependencies.storageLibrary ++
     WellcomeDependencies.fixturesLibrary ++
+    WellcomeDependencies.typesafeLibrary ++
     akkaDependencies ++
     circeDependencies ++
     testDependencies

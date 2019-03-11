@@ -6,8 +6,9 @@ import akka.stream.scaladsl.Flow
 import org.mockito.Mockito.{atLeastOnce, never, times, verify}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{FunSpec, Matchers}
+import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.fixtures.TestWith
-import uk.ac.wellcome.messaging.fixtures.{Akka, Messaging}
+import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
@@ -235,7 +236,7 @@ class SQSStreamTest
   def withSQSStreamFixtures[R](
     testWith: TestWith[(SQSStream[ExampleObject], QueuePair, MetricsSender), R])
     : R =
-    withMessagingActorSystem { implicit actorSystem =>
+    withActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>
           withMockMetricsSender { metricsSender =>

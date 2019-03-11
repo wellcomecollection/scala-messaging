@@ -20,7 +20,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Random, Success, Try}
 
 object SNS {
-
   class Topic(val arn: String) extends AnyVal {
     override def toString = s"SNS.Topic($arn)"
   }
