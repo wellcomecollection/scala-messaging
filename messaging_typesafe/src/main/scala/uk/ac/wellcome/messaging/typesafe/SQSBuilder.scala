@@ -52,11 +52,10 @@ object SQSBuilder extends AWSClientConfigBuilder {
       awsClientConfig = buildAWSClientConfig(config, namespace = "sqs")
     )
 
-  def buildSQSStream[T](config: Config)(
-    implicit
-    actorSystem: ActorSystem,
-    materializer: ActorMaterializer,
-    ec: ExecutionContext): SQSStream[T] =
+  def buildSQSStream[T](config: Config)(implicit
+                                        actorSystem: ActorSystem,
+                                        materializer: ActorMaterializer,
+                                        ec: ExecutionContext): SQSStream[T] =
     new SQSStream[T](
       sqsClient = buildSQSAsyncClient(config),
       sqsConfig = buildSQSConfig(config),
