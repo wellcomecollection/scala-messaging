@@ -1,13 +1,14 @@
 package uk.ac.wellcome.messaging.typesafe
 
 import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
 import uk.ac.wellcome.messaging.message.{
   MessageStream,
   MessageWriter,
   MessageWriterConfig
 }
-import uk.ac.wellcome.monitoring.typesafe.MetricsSenderBuilder
+import uk.ac.wellcome.monitoring.typesafe.MetricsBuilder
 import uk.ac.wellcome.storage.s3.S3StorageBackend
 import uk.ac.wellcome.storage.type_classes.SerialisationStrategy
 import uk.ac.wellcome.storage.typesafe.S3Builder
@@ -18,6 +19,7 @@ import scala.concurrent.ExecutionContext
 object MessagingBuilder {
   def buildMessageStream[T](config: Config)(
     implicit actorSystem: ActorSystem,
+    materializer: ActorMaterializer,
     serialisationStrategy: SerialisationStrategy[T]): MessageStream[T] = {
     implicit val executionContext: ExecutionContext =
       AkkaBuilder.buildExecutionContext()
@@ -30,7 +32,7 @@ object MessagingBuilder {
       sqsClient = SQSBuilder.buildSQSAsyncClient(config),
       sqsConfig =
         SQSBuilder.buildSQSConfig(config, namespace = "message.reader"),
-      metricsSender = MetricsSenderBuilder.buildMetricsSender(config)
+      metricsSender = MetricsBuilder.buildMetricsSender(config)
     )
   }
 
