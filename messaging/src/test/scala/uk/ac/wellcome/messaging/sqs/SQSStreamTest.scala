@@ -6,8 +6,9 @@ import akka.stream.scaladsl.Flow
 import org.mockito.Mockito.{atLeastOnce, never, times, verify}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{FunSpec, Matchers}
+import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.fixtures.TestWith
-import uk.ac.wellcome.messaging.fixtures.{Akka, Messaging}
+import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
@@ -63,7 +64,7 @@ class SQSStreamTest
 
         eventually {
           verify(metricsSender, atLeastOnce)
-            .countSuccess("test-stream_ProcessMessage")
+            .incrementCount("test-stream_ProcessMessage_success")
         }
     }
   }
@@ -81,9 +82,9 @@ class SQSStreamTest
 
         eventually {
           verify(metricsSender, never())
-            .countFailure("test-stream_ProcessMessage")
+            .incrementCount("test-stream_ProcessMessage_failure")
           verify(metricsSender, times(3))
-            .countRecognisedFailure("test-stream_ProcessMessage")
+            .incrementCount("test-stream_ProcessMessage_recognisedFailure")
           received shouldBe empty
 
           assertQueueEmpty(queue)
@@ -109,7 +110,7 @@ class SQSStreamTest
 
         eventually {
           verify(metricsSender, times(3))
-            .countFailure(metricName = "test-stream_ProcessMessage")
+            .incrementCount(metricName = "test-stream_ProcessMessage_failure")
           assertQueueEmpty(queue)
           assertQueueHasSize(dlq, size = 1)
         }
@@ -165,7 +166,7 @@ class SQSStreamTest
             assertQueueEmpty(dlq)
 
             verify(metricsSender, times(2))
-              .countSuccess("test-stream_ProcessMessage")
+              .incrementCount("test-stream_ProcessMessage_success")
           }
       }
     }
@@ -186,7 +187,7 @@ class SQSStreamTest
             assertQueueHasSize(dlq, 1)
 
             verify(metricsSender, times(3))
-              .countFailure("test-stream_ProcessMessage")
+              .incrementCount("test-stream_ProcessMessage_failure")
           }
       }
     }
@@ -235,10 +236,10 @@ class SQSStreamTest
   def withSQSStreamFixtures[R](
     testWith: TestWith[(SQSStream[ExampleObject], QueuePair, MetricsSender), R])
     : R =
-    withMessagingActorSystem { implicit actorSystem =>
+    withActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>
-          withMockMetricSender { metricsSender =>
+          withMockMetricsSender { metricsSender =>
             withSQSStream[ExampleObject, R](queue, metricsSender) { stream =>
               testWith((stream, queuePair, metricsSender))
             }
