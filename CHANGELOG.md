@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.6.0 - 2019-03-12
+
+Some internal refactoring to use our new scala-monitoring library.
+
 ## v1.5.0 - 2019-02-25
 
 This release removes the need to pass an `s3Client` to `SQS.createHybridRecordWith`
