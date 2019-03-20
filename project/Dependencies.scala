@@ -54,7 +54,12 @@ object Dependencies {
     val circeYaml = "0.8.0"
     val mockito = "1.9.5"
     val scalatest = "3.0.1"
+    val logback = "1.2.3"
   }
+
+  val logbackDependencies = Seq(
+    "ch.qos.logback" % "logback-classic" % versions.logback
+  )
 
   val akkaDependencies: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-actor" % versions.akka,
@@ -83,7 +88,8 @@ object Dependencies {
     WellcomeDependencies.typesafeLibrary ++
     akkaDependencies ++
     circeDependencies ++
-    testDependencies
+    testDependencies ++
+    logbackDependencies
 
   val typesafeDependencies =
     WellcomeDependencies.monitoringTypesafeLibrary ++

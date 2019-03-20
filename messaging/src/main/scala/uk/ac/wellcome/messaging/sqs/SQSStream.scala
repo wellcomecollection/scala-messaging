@@ -5,7 +5,7 @@ import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
 import akka.stream.alpakka.sqs.MessageAction
 import akka.stream.alpakka.sqs.MessageAction.Delete
 import akka.stream.alpakka.sqs.scaladsl.{SqsAckSink, SqsSource}
-import akka.stream.scaladsl.{Keep, Source}
+import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.{Done, NotUsed}
 import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.Message
@@ -42,7 +42,7 @@ class SQSStream[T](
   implicit val dispatcher = actorSystem.dispatcher
 
   private val source = SqsSource(sqsConfig.queueUrl)(sqsClient)
-  private val sink = SqsAckSink(sqsConfig.queueUrl)(sqsClient)
+  private val sink: Sink[(Message, MessageAction), Future[Done]] = SqsAckSink(sqsConfig.queueUrl)(sqsClient)
 
   def foreach(streamName: String, process: T => Future[Unit])(
     implicit decoderT: Decoder[T]): Future[Done] =
