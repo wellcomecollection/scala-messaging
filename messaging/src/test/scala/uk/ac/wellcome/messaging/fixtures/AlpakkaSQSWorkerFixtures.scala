@@ -9,7 +9,7 @@ import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSW
 import uk.ac.wellcome.messaging.worker.WorkerProcess
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 import uk.ac.wellcome.messaging.worker.result.Result
-import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, Successful}
+import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, PostProcessFailure, Successful}
 import uk.ac.wellcome.json.JsonUtil._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -68,7 +68,13 @@ trait AlpakkaSQSWorkerFixtures {
     Some("Summary DeterministicFailure")
   )
 
-  val exceptionState: TestProcess = (_: MyWork) => {
+  val postProcessFailure: TestProcess = (in: MyWork) => PostProcessFailure(
+    in.toString,
+    new RuntimeException("PostProcessFailure"),
+    Some("Summary PostProcessFailure")
+  )
+
+  val exceptionState: TestProcess = (in: MyWork) => {
     Future.failed(new RuntimeException("BOOM"))
     Successful("exceptionState")
   }

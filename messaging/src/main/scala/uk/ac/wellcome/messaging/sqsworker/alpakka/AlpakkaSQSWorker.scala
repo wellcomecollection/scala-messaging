@@ -15,7 +15,7 @@ import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.monitoring.{MonitoringClient, SummaryRecorder}
 import uk.ac.wellcome.messaging.worker.result._
-import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, Successful}
+import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, PostProcessFailure, Successful}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -94,12 +94,12 @@ case class AlpakkaSQSWorkerConfig(
 
 trait SummaryRecorderLogger extends SummaryRecorder with Logging {
   def record[ProcessResult <: Result[_]] (result: ProcessResult)(implicit ec: ExecutionContext): Future[Unit] = Future {
-
-
     result match {
       case r: Successful[_] => info(r.toString)
-      case r: DeterministicFailure[_] => error(r.toString)
       case r: NonDeterministicFailure[_] => warn(r.toString)
+      case r: DeterministicFailure[_] => error(r.toString)
+      case r: PostProcessFailure[_] => error(r.toString)
+      case r: Result[_] => error(f"Unexpected result ${r.toString}")
     }
   }
 }

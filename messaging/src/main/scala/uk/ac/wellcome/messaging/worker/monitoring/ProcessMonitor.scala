@@ -3,7 +3,7 @@ package uk.ac.wellcome.messaging.worker.monitoring
 import java.time.{Duration, Instant}
 
 import uk.ac.wellcome.messaging.worker.result.Result
-import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, Successful}
+import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, PostProcessFailure, Successful}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -27,6 +27,10 @@ trait ProcessMonitor[ProcessMonitoringClient <: MonitoringClient] {
         .incrementCount(metricName("DeterministicFailure"))
       case _: NonDeterministicFailure[_] => monitoringClient
         .incrementCount(metricName("NonDeterministicFailure"))
+      case _: PostProcessFailure[_] => monitoringClient
+        .incrementCount(metricName("PostProcessFailure"))
+      case _: Result[_] => monitoringClient
+        .incrementCount(metricName("UnknownResult"))
     }
 
     val recordDuration =
