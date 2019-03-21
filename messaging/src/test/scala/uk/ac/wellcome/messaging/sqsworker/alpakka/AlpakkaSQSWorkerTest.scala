@@ -4,8 +4,11 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{FunSpec, Matchers}
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
+import uk.ac.wellcome.messaging.fixtures.SQS.QueuePair
 import uk.ac.wellcome.messaging.fixtures.{AlpakkaSQSWorkerFixtures, Messaging}
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
+
+import org.scalatest.prop.TableDrivenPropertyChecks._
 
 class AlpakkaSQSWorkerTest extends FunSpec
   with Matchers
@@ -16,37 +19,60 @@ class AlpakkaSQSWorkerTest extends FunSpec
   with IntegrationPatience
   with MetricsSenderFixture {
 
-  describe("when a process succeeds") {
-    it("calls the process required, increments metrics and deletes the message") {
-      withLocalSqsQueue { queue =>
-        withActorSystem { actorSystem =>
-          val process = new FakeTestProcess(successful)
+  describe("When a process completes") {
+    it("increments metrics, consumes the message, and for nonDeterministicFailures places a message on the DLQ") {
+      val processResults = Table(
+        ("testProcess", "metricName", "metricCount", "dlqSize"),
+        (successful, "namespace/Successful", 1, 0),
+        (deterministicFailure, "namespace/DeterministicFailure", 1, 0),
+        (nonDeterministicFailure, "namespace/NonDeterministicFailure", 3, 1)
+      )
+      forAll(processResults) {
+        (
+          testProcess: TestProcess,
+          metricName: String,
+          expectedMetricCount: Int,
+          expectedDlqSize: Int) => {
+          withLocalSqsQueueAndDlq { case queuePair@QueuePair(queue, dlq) =>
+            withActorSystem { actorSystem =>
+              val process = new FakeTestProcess(testProcess)
+              withAlpakkaSQSWorker(queue, actorSystem, asyncSqsClient, process) {
+                case (worker, _, metrics) =>
 
-          withAlpakkaSQSWorker(queue, actorSystem, asyncSqsClient, process) {
-            case (worker, config, metrics) =>
+                  worker.start
 
-              worker.start
-              sendNotificationToSQS[MyWork](queue, work)
+                  sendNotificationToSQS(queue, work)
 
-              eventually {
-                process.called shouldBe true
+                  eventually {
+                    process.called shouldBe true
 
-                metrics.incrementCountCalls shouldBe Map(
-                  "namespace/Successful" -> 1
-                )
+                    assertMetricCount(metrics, metricName, expectedMetricCount)
+                    assertMetricDurations(metrics, "namespace/Duration", expectedMetricCount)
 
-                val durationMetric = metrics.recordValueCalls.get(
-                  "namespace/Duration"
-                )
-
-                durationMetric shouldBe Some(_)
-                durationMetric.get should have size (1)
-
-                assertQueueEmpty(queue)
+                    assertQueueEmpty(queue)
+                    assertQueueHasSize(dlq, expectedDlqSize)
+                  }
               }
+            }
           }
         }
       }
     }
+  }
+
+  private def assertMetricCount(metrics: FakeMonitoringClient, metricName : String, expectedCount : Int) = {
+    metrics.incrementCountCalls shouldBe Map(
+      metricName -> expectedCount
+    )
+  }
+
+  private def assertMetricDurations(metrics: FakeMonitoringClient, metricName: String, expectedNumberDurations: Int) = {
+    val durationMetric = metrics.recordValueCalls.get(
+      metricName
+    )
+
+    durationMetric shouldBe defined
+    durationMetric.get should have length expectedNumberDurations
+    durationMetric.get.foreach(_ should be >= 0.0)
   }
 }
