@@ -8,6 +8,8 @@ import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 import uk.ac.wellcome.json.JsonUtil._
+import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
+import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, Successful}
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -2,6 +2,10 @@ package uk.ac.wellcome.messaging.worker
 
 import java.time.Instant
 
+import uk.ac.wellcome.messaging.worker.monitoring.{MonitoringClient, ProcessMonitor, SummaryRecorder}
+import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, PostProcessFailure}
+import uk.ac.wellcome.messaging.worker.result.Result
+
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Worker[
@@ -17,8 +21,11 @@ MessageProcess <: WorkerProcess[
   with ProcessMonitor[ProcessMonitoringClient] {
 
   protected val process: MessageProcess
+
   protected def toWork(message: WorkerMessage): Future[Work]
+
   protected def toMessageAction(result: Result[_]): Future[Action]
+
   protected def processMessage(
                                 id: String,
                                 message: WorkerMessage
@@ -26,7 +33,7 @@ MessageProcess <: WorkerProcess[
                                 monitoringClient: ProcessMonitoringClient,
                                 ec: ExecutionContext
 
-  ): Future[(WorkerMessage, Action)] = {
+                              ): Future[(WorkerMessage, Action)] = {
     val startTime = Instant.now
 
     val result = for {
@@ -54,8 +61,4 @@ MessageProcess <: WorkerProcess[
       action <- toMessageAction(result)
     } yield (message, action)
   }
-}
-
-trait WorkerProcess[Work, Summary] {
-  def run(in: Work)(implicit ec: ExecutionContext): Future[Result[Summary]]
 }

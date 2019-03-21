@@ -13,6 +13,9 @@ import io.circe.Decoder
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.worker._
+import uk.ac.wellcome.messaging.worker.monitoring.{MonitoringClient, SummaryRecorder}
+import uk.ac.wellcome.messaging.worker.result._
+import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, Successful}
 
 import scala.concurrent.{ExecutionContext, Future}
 

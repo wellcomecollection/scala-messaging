@@ -1,6 +1,9 @@
-package uk.ac.wellcome.messaging.worker
+package uk.ac.wellcome.messaging.worker.monitoring
 
 import java.time.{Duration, Instant}
+
+import uk.ac.wellcome.messaging.worker.result.Result
+import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, Successful}
 
 import scala.concurrent.{ExecutionContext, Future}
 
