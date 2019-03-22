@@ -4,7 +4,7 @@ import java.time.Instant
 
 import uk.ac.wellcome.messaging.worker.monitoring.{MonitoringClient, ProcessMonitor, SummaryRecorder}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 trait PostProcessor
   extends ProcessMonitor

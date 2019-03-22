@@ -20,7 +20,7 @@ class WorkerTest extends FunSpec
   with MetricsSenderFixture {
 
 
-  describe("When a message is processed") {
+  describe("when a message is processed") {
     it("increments metrics, processes work and returns the correct action") {
 
       val processResults = Table(
