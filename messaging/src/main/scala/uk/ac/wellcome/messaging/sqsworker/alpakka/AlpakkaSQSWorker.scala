@@ -14,7 +14,24 @@ import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.worker.{BaseOperation, _}
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
+
+object AlpakkaSQSWorker {
+  def apply[Work, Summary](
+                                                                       config: AlpakkaSQSWorkerConfig
+                                                                     )(
+    process: Work => Future[Result[Summary]]
+  )(implicit
+    monitoringClient: MonitoringClient,
+    sqsClient: AmazonSQSAsync,
+    decoder: Decoder[Work],
+    actorSytem: ActorSystem) = {
+    val operation = new BaseOperation[Work, Summary] {
+      override def run(in: Work)(implicit ec: ExecutionContext): Future[Result[Summary]] =
+        process(in)
+    }
+  }
+}
 
 class AlpakkaSQSWorker[Work, Summary, Operation <: BaseOperation[Work, Summary]](
    config: AlpakkaSQSWorkerConfig

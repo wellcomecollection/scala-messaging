@@ -39,10 +39,7 @@ trait AlpakkaSQSWorkerFixtures
       queue.url
     )
 
-    val worker = new AlpakkaSQSWorker[
-      MyWork,
-      Option[String],
-      MyProcess](config)(process)
+    val worker = new AlpakkaSQSWorker[MyWork, MySummary, MyProcess](config)(process)
 
     testWith( (worker, config, fakeMonitoringClient) )
   }
