@@ -21,6 +21,7 @@ class AlpakkaSQSWorkerTest extends FunSpec
 
   describe("When a process completes") {
     it("increments metrics, consumes the message, and for nonDeterministicFailures places a message on the DLQ") {
+
       val processResults = Table(
         ("testProcess", "metricName", "metricCount", "dlqSize"),
         (successful, "namespace/Successful", 1, 0),
@@ -28,6 +29,7 @@ class AlpakkaSQSWorkerTest extends FunSpec
         (postProcessFailure, "namespace/PostProcessFailure", 1, 0),
         (nonDeterministicFailure, "namespace/NonDeterministicFailure", 3, 1)
       )
+
       forAll(processResults) {
         (testProcess: TestProcess,
          metricName: String,
@@ -58,21 +60,5 @@ class AlpakkaSQSWorkerTest extends FunSpec
         }
       }
     }
-  }
-
-  private def assertMetricCount(metrics: FakeMonitoringClient, metricName : String, expectedCount : Int) = {
-    metrics.incrementCountCalls shouldBe Map(
-      metricName -> expectedCount
-    )
-  }
-
-  private def assertMetricDurations(metrics: FakeMonitoringClient, metricName: String, expectedNumberDurations: Int) = {
-    val durationMetric = metrics.recordValueCalls.get(
-      metricName
-    )
-
-    durationMetric shouldBe defined
-    durationMetric.get should have length expectedNumberDurations
-    durationMetric.get.foreach(_ should be >= 0.0)
   }
 }

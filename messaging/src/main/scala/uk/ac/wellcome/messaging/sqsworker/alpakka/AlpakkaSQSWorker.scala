@@ -1,23 +1,20 @@
 package uk.ac.wellcome.messaging.sqsworker.alpakka
 
-import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.stream.alpakka.sqs.MessageAction
 import akka.stream.alpakka.sqs.scaladsl.{SqsAckSink, SqsSource}
 import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
+import akka.{Done, NotUsed}
 import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.{Message => SQSMessage}
-import grizzled.slf4j.Logging
 import io.circe.Decoder
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.worker._
-import uk.ac.wellcome.messaging.worker.monitoring.{MonitoringClient, SummaryRecorder}
-import uk.ac.wellcome.messaging.worker.result._
-import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, PostProcessFailure, Successful}
+import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class AlpakkaSQSWorker[
 ProcessMonitoringClient <: MonitoringClient,
@@ -41,7 +38,7 @@ MessageProcess <: WorkerProcess[
   Summary,
   SQSMessage,
   MessageAction,
-  MessageProcess] with SummaryRecorderLogger {
+  MessageProcess] {
 
   implicit val _ec = actorSytem.dispatcher
 
@@ -60,8 +57,8 @@ MessageProcess <: WorkerProcess[
 
   override protected def toMessageAction(result: Result[_]): Future[MessageAction] = Future {
     result match {
-      case _: Retry[_] => MessageAction.changeMessageVisibility(0)
-      case _: Completed[_] => MessageAction.delete
+      case _: Retry => MessageAction.changeMessageVisibility(0)
+      case _: Completed => MessageAction.delete
     }
   }
 
@@ -91,15 +88,3 @@ case class AlpakkaSQSWorkerConfig(
                          queueUrl: String,
                          parallelism: Int = 1
                        )
-
-trait SummaryRecorderLogger extends SummaryRecorder with Logging {
-  def record[ProcessResult <: Result[_]] (result: ProcessResult)(implicit ec: ExecutionContext): Future[Unit] = Future {
-    result match {
-      case r: Successful[_] => info(r.toString)
-      case r: NonDeterministicFailure[_] => warn(r.toString)
-      case r: DeterministicFailure[_] => error(r.toString)
-      case r: PostProcessFailure[_] => error(r.toString)
-      case r: Result[_] => error(f"Unexpected result ${r.toString}")
-    }
-  }
-}

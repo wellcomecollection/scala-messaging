@@ -3,8 +3,6 @@ package uk.ac.wellcome.messaging.worker
 import java.time.Instant
 
 import uk.ac.wellcome.messaging.worker.monitoring.{MonitoringClient, ProcessMonitor, SummaryRecorder}
-import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, PostProcessFailure}
-import uk.ac.wellcome.messaging.worker.result.Result
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -26,35 +24,56 @@ MessageProcess <: WorkerProcess[
 
   protected def toMessageAction(result: Result[_]): Future[Action]
 
+  private def doProcess(
+                      id: String,
+                      message: WorkerMessage
+                    )(implicit ec: ExecutionContext
+                       ) = {
+
+    val result: Future[Result[_]] = for {
+      work <- toWork(message)
+      result <- process.run(work)
+    } yield result
+
+    val recoveredResult = result.recover {
+      case e => DeterministicFailure(id, e, None)
+    }
+
+    recoveredResult
+  }
+
+  private def doPostProcess(
+                           id: String,
+                           startTime: Instant,
+                           result: Result[_]
+                         )(implicit
+                           monitoringClient: ProcessMonitoringClient,
+                           ec: ExecutionContext
+                           ) = {
+
+    val postProcessResult = for {
+      _ <- record(result)
+      _ <- monitor(result, startTime)
+    } yield result
+
+    postProcessResult.recover {
+      case e => PostProcessFailure(id, e)
+    }
+  }
+
   protected def processMessage(
                                 id: String,
                                 message: WorkerMessage
                               )(implicit
                                 monitoringClient: ProcessMonitoringClient,
                                 ec: ExecutionContext
-
                               ): Future[(WorkerMessage, Action)] = {
     val startTime = Instant.now
 
-    val result = for {
-      work <- toWork(message)
-      result <- process.run(work)
-    } yield result
-
-    val recoveredResult = result.recover {
-      case e => DeterministicFailure(id, e)
-    }
-
-    val postProcessResult = for {
-      result <- recoveredResult
-
-      _ <- record(result)
-      _ <- monitor(result, startTime)
-    } yield result
-
-    val recoveredPostProcessResult = postProcessResult.recover {
-      case e => PostProcessFailure(id, e)
-    }
+    val recoveredPostProcessResult = for {
+      processResult <- doProcess(id, message)
+      postProcessResult <- doPostProcess(id, startTime, processResult)
+    } yield postProcessResult
 
     for {
       result <- recoveredPostProcessResult

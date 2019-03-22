@@ -3,18 +3,17 @@ package uk.ac.wellcome.messaging.fixtures
 import akka.actor.ActorSystem
 import com.amazonaws.services.sqs.AmazonSQSAsync
 import grizzled.slf4j.Logging
+import org.scalatest.Matchers
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
-import uk.ac.wellcome.messaging.worker.WorkerProcess
+import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
-import uk.ac.wellcome.messaging.worker.result.Result
-import uk.ac.wellcome.messaging.worker.result.models.{DeterministicFailure, NonDeterministicFailure, PostProcessFailure, Successful}
 import uk.ac.wellcome.json.JsonUtil._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait AlpakkaSQSWorkerFixtures {
+trait AlpakkaSQSWorkerFixtures extends Matchers {
   case class MyWork(s: String)
 
   type TestResult = Result[Option[String]]
@@ -112,5 +111,21 @@ trait AlpakkaSQSWorkerFixtures {
       FakeTestProcess](config)(process)
 
     testWith( (worker, config, fakeMonitoringClient) )
+  }
+
+  protected def assertMetricCount(metrics: FakeMonitoringClient, metricName : String, expectedCount : Int) = {
+    metrics.incrementCountCalls shouldBe Map(
+      metricName -> expectedCount
+    )
+  }
+
+  protected def assertMetricDurations(metrics: FakeMonitoringClient, metricName: String, expectedNumberDurations: Int) = {
+    val durationMetric = metrics.recordValueCalls.get(
+      metricName
+    )
+
+    durationMetric shouldBe defined
+    durationMetric.get should have length expectedNumberDurations
+    durationMetric.get.foreach(_ should be >= 0.0)
   }
 }
