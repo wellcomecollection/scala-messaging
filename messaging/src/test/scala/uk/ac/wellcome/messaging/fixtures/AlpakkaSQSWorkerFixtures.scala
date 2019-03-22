@@ -7,7 +7,7 @@ import org.scalatest.Matchers
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
-import uk.ac.wellcome.messaging.worker._
+import uk.ac.wellcome.messaging.worker.{BaseOperation, _}
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 import uk.ac.wellcome.json.JsonUtil._
 
@@ -39,7 +39,7 @@ trait AlpakkaSQSWorkerFixtures extends Matchers {
   val work = MyWork("some_content")
 
   class FakeTestProcess(testProcess: TestProcess)
-    extends WorkerProcess[MyWork, Option[String]] {
+    extends BaseOperation[MyWork, Option[String]] {
     var called: Boolean = false
 
     override def run(
@@ -86,7 +86,6 @@ trait AlpakkaSQSWorkerFixtures extends Matchers {
                              )(
                                testWith: TestWith[(
                                  AlpakkaSQSWorker[
-                                   FakeMonitoringClient,
                                    MyWork,
                                    Option[String],
                                    FakeTestProcess
@@ -105,7 +104,6 @@ trait AlpakkaSQSWorkerFixtures extends Matchers {
     )
 
     val worker = new AlpakkaSQSWorker[
-      FakeMonitoringClient,
       MyWork,
       Option[String],
       FakeTestProcess](config)(process)

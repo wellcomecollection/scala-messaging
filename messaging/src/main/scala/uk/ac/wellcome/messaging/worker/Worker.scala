@@ -2,71 +2,19 @@ package uk.ac.wellcome.messaging.worker
 
 import java.time.Instant
 
-import uk.ac.wellcome.messaging.worker.monitoring.{MonitoringClient, ProcessMonitor, SummaryRecorder}
+import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-trait Worker[
-ProcessMonitoringClient <: MonitoringClient,
-Work,
-Summary,
-WorkerMessage,
-Action,
-MessageProcess <: WorkerProcess[
-  Work,
-  Summary]
-] extends SummaryRecorder
-  with ProcessMonitor[ProcessMonitoringClient] {
+trait Worker[Message, Work, Summary, Operation <: BaseOperation[Work, Summary], ExternalMessageAction] extends Processor[Message, Work, Summary, Operation] with PostProcessor[ExternalMessageAction] {
 
-  protected val process: MessageProcess
-
-  protected def toWork(message: WorkerMessage): Future[Work]
-  protected def toAction(result: Result[_]): Future[Action]
-
-  private def doProcess(
-                      id: String,
-                      message: WorkerMessage
-                    )(implicit ec: ExecutionContext
-                       ) = {
-
-    val result: Future[Result[_]] = for {
-      work <- toWork(message)
-      result <- process.run(work)
-    } yield result
-
-    val recoveredResult = result.recover {
-      case e => DeterministicFailure(id, e, None)
-    }
-
-    recoveredResult
-  }
-
-  private def doPostProcess(
-                           id: String,
-                           startTime: Instant,
-                           result: Result[_]
-                         )(implicit
-                           monitoringClient: ProcessMonitoringClient,
-                           ec: ExecutionContext
-                           ) = {
-
-    val postProcessResult = for {
-      _ <- record(result)
-      _ <- monitor(result, startTime)
-    } yield result
-
-    postProcessResult.recover {
-      case e => PostProcessFailure(id, e)
-    }
-  }
-
-  protected def processMessage(
+  protected def processMessage[ProcessMonitoringClient <: MonitoringClient](
                                 id: String,
-                                message: WorkerMessage
+                                message: Message
                               )(implicit
                                 monitoringClient: ProcessMonitoringClient,
                                 ec: ExecutionContext
-                              ): Future[(WorkerMessage, Action)] = {
+                              )= {
     val startTime = Instant.now
 
     val recoveredPostProcessResult = for {
@@ -76,7 +24,7 @@ MessageProcess <: WorkerProcess[
 
     for {
       result <- recoveredPostProcessResult
-      action <- toAction(result)
+      action <- toAction(result.asInstanceOf[Action])
     } yield (message, action)
   }
 }

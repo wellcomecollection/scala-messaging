@@ -11,40 +11,27 @@ import com.amazonaws.services.sqs.model.{Message => SQSMessage}
 import io.circe.Decoder
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
-import uk.ac.wellcome.messaging.worker._
+import uk.ac.wellcome.messaging.worker.{BaseOperation, _}
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 
 import scala.concurrent.Future
 
-class AlpakkaSQSWorker[
-ProcessMonitoringClient <: MonitoringClient,
-Work,
-Summary,
-MessageProcess <: WorkerProcess[
-  Work,
-  Summary]
-](
+class AlpakkaSQSWorker[Work, Summary, Operation <: BaseOperation[Work, Summary]](
    config: AlpakkaSQSWorkerConfig
  )(
-   messageProcess: MessageProcess
+   messageProcess: Operation
  )(implicit
-   monitoringClient: ProcessMonitoringClient,
+   monitoringClient: MonitoringClient,
    sqsClient: AmazonSQSAsync,
    decoder: Decoder[Work],
    actorSytem: ActorSystem
- ) extends Worker[
-  ProcessMonitoringClient,
-  Work,
-  Summary,
-  SQSMessage,
-  MessageAction,
-  MessageProcess] {
+ ) extends Worker[SQSMessage, Work, Summary, Operation, MessageAction] {
 
   implicit val _ec = actorSytem.dispatcher
 
   override val namespace: String = config.namespace
 
-  override protected val process: MessageProcess = messageProcess
+  override protected val process: Operation =  messageProcess
 
   override protected def toWork(message: SQSMessage): Future[Work] = {
     val maybeWork = for {
@@ -55,8 +42,8 @@ MessageProcess <: WorkerProcess[
     Future.fromTry(maybeWork)
   }
 
-  override protected def toAction(result: Result[_]): Future[MessageAction] = Future {
-    result match {
+  override protected def toAction(action: Action): Future[MessageAction] = Future {
+    action match {
       case _: Retry => MessageAction.changeMessageVisibility(0)
       case _: Completed => MessageAction.delete
     }

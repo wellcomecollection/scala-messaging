@@ -6,13 +6,13 @@ import uk.ac.wellcome.messaging.worker._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait ProcessMonitor[ProcessMonitoringClient <: MonitoringClient] {
+trait ProcessMonitor {
 
   val namespace: String
 
   private def metricName(name: String) = s"$namespace/$name"
 
-  def monitor(
+  def monitor[ProcessMonitoringClient <: MonitoringClient](
                                            result: Result[_],
                                            startTime: Instant
                                          )(
