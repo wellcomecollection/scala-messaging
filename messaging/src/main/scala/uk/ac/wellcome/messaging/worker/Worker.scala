@@ -18,14 +18,9 @@ trait Worker[Message, Work, Summary, Operation <: BaseOperation[Work, Summary], 
                                 ec: ExecutionContext
                               )= {
     val startTime = Instant.now
-
-    val recoveredPostProcessResult = for {
-      processResult <- doProcess(id, message)
-      postProcessResult <- doPostProcess(id, startTime, processResult)
-    } yield postProcessResult
-
     for {
-      result <- recoveredPostProcessResult
+      processResult <- doProcess(id, message)
+      result <- doPostProcess(id, startTime, processResult)
       action <- toAction(result.asInstanceOf[Action])
     } yield (message, action)
   }

@@ -10,15 +10,11 @@ trait PostProcessor
   extends ProcessMonitor
     with SummaryRecorder {
 
-  protected def doPostProcess[ProcessMonitoringClient <: MonitoringClient](id: String, startTime: Instant, result: Result[_])(implicit monitoringClient: ProcessMonitoringClient, ec: ExecutionContext): Future[Result[_]] = {
-
-    val postProcessResult = for {
+  protected def doPostProcess[ProcessMonitoringClient <: MonitoringClient](id: String, startTime: Instant, result: Result[_])(implicit monitoringClient: ProcessMonitoringClient, ec: ExecutionContext) = (
+    for {
       _ <- record(result)
       _ <- monitor(result, startTime)
-    } yield result
-
-    postProcessResult.recover {
-      case e => PostProcessFailure(id, e)
-    }
+    } yield result) recover {
+    case e => PostProcessFailure(id, e)
   }
 }

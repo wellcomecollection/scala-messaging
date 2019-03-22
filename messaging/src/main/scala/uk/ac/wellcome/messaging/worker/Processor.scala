@@ -7,17 +7,11 @@ Operation <: BaseOperation[Work, Summary]] {
   protected def toWork(message: Message): Future[Work]
   protected val process: Operation
 
-  def doProcess(id: String, message: Message)(implicit ec: ExecutionContext) = {
-
-    val result: Future[Result[_]] = for {
+  def doProcess(id: String, message: Message)(implicit ec: ExecutionContext) = (
+    for {
       work <- toWork(message)
       result <- process.run(work)
-    } yield result
-
-    val recoveredResult = result.recover {
-      case e => DeterministicFailure(id, e, None)
-    }
-
-    recoveredResult
+    } yield result ) recover {
+    case e => DeterministicFailure(id, e, None)
   }
 }
