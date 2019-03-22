@@ -19,7 +19,7 @@ class AlpakkaSQSWorkerTest extends FunSpec
   with IntegrationPatience
   with MetricsSenderFixture {
 
-  describe("When a process completes") {
+  describe("When a message is processed") {
     it("increments metrics, consumes the message, and for nonDeterministicFailures places a message on the DLQ") {
 
       val processResults = Table(
@@ -55,6 +55,40 @@ class AlpakkaSQSWorkerTest extends FunSpec
                     assertQueueHasSize(dlq, expectedDlqSize)
                   }
               }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  describe("When a message cannot be parsed") {
+    it("does not call process, but consumes the message and increments metrics") {
+      val messages = Table(
+        "testProcess",
+        "not json",
+        """{"json" : "but not a work"}"""
+      )
+      forAll(messages) { message =>
+        withLocalSqsQueueAndDlq { case QueuePair(queue, dlq) =>
+          withActorSystem { actorSystem =>
+            val process = new FakeTestProcess(successful)
+            withAlpakkaSQSWorker(queue, actorSystem, asyncSqsClient, process) {
+              case (worker, _, metrics) =>
+
+                worker.start
+
+                sendNotificationToSQS(queue, message)
+
+                eventually {
+                  process.called shouldBe false
+
+                  assertMetricCount(metrics, "namespace/DeterministicFailure", 1)
+                  assertMetricDurations(metrics, "namespace/Duration", 1)
+
+                  assertQueueEmpty(queue)
+                  assertQueueEmpty(dlq)
+                }
             }
           }
         }

@@ -62,12 +62,13 @@ MessageProcess <: WorkerProcess[
     }
   }
 
-  private val source = SqsSource(config.queueUrl)
-  private val sink: Sink[(SQSMessage, MessageAction), Future[Done]]
-  = SqsAckSink(config.queueUrl)
+  private val source =
+    SqsSource(config.queueUrl)
+  private val sink: Sink[(SQSMessage, MessageAction), Future[Done]] =
+    SqsAckSink(config.queueUrl)
 
-  private val processedSource: Source[(SQSMessage, MessageAction), NotUsed] = source
-    .mapAsyncUnordered(config.parallelism) {
+  private val processedSource: Source[(SQSMessage, MessageAction), NotUsed] =
+    source.mapAsyncUnordered(config.parallelism) {
       message: SQSMessage => processMessage(message.getMessageId, message)
     }
 
