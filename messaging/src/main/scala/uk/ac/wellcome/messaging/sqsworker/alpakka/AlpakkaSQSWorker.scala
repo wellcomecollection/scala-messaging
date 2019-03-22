@@ -28,9 +28,7 @@ class AlpakkaSQSWorker[Work, Summary, Operation <: BaseOperation[Work, Summary]]
  ) extends Worker[SQSMessage, Work, Summary, Operation, MessageAction] {
 
   implicit val _ec = actorSytem.dispatcher
-
   override val namespace: String = config.namespace
-
   override protected val process: Operation =  messageProcess
 
   override protected def toWork(message: SQSMessage): Future[Work] = {

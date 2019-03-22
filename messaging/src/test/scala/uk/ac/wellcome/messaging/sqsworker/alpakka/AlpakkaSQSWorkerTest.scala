@@ -5,10 +5,10 @@ import org.scalatest.{FunSpec, Matchers}
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS.QueuePair
-import uk.ac.wellcome.messaging.fixtures.{AlpakkaSQSWorkerFixtures, Messaging}
+import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
-
 import org.scalatest.prop.TableDrivenPropertyChecks._
+import uk.ac.wellcome.messaging.fixtures.worker.AlpakkaSQSWorkerFixtures
 
 class AlpakkaSQSWorkerTest extends FunSpec
   with Matchers
@@ -37,7 +37,7 @@ class AlpakkaSQSWorkerTest extends FunSpec
          expectedDlqSize: Int) => {
           withLocalSqsQueueAndDlq { case QueuePair(queue, dlq) =>
             withActorSystem { actorSystem =>
-              val process = new FakeTestProcess(testProcess)
+              val process = new MyProcess(testProcess)
               withAlpakkaSQSWorker(queue, actorSystem, asyncSqsClient, process) {
                 case (worker, _, metrics) =>
 
@@ -72,7 +72,7 @@ class AlpakkaSQSWorkerTest extends FunSpec
       forAll(messages) { message =>
         withLocalSqsQueueAndDlq { case QueuePair(queue, dlq) =>
           withActorSystem { actorSystem =>
-            val process = new FakeTestProcess(successful)
+            val process = new MyProcess(successful)
             withAlpakkaSQSWorker(queue, actorSystem, asyncSqsClient, process) {
               case (worker, _, metrics) =>
 

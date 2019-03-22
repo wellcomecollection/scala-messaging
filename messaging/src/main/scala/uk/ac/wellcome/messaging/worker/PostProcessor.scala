@@ -6,13 +6,11 @@ import uk.ac.wellcome.messaging.worker.monitoring.{MonitoringClient, ProcessMoni
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait PostProcessor[ExternalMessageAction]
+trait PostProcessor
   extends ProcessMonitor
     with SummaryRecorder {
 
-  protected def toAction(action: Action): Future[ExternalMessageAction]
-
-  protected def doPostProcess[ProcessMonitoringClient <: MonitoringClient](id: String, startTime: Instant, result: Result[_])(implicit monitoringClient: ProcessMonitoringClient, ec: ExecutionContext) = {
+  protected def doPostProcess[ProcessMonitoringClient <: MonitoringClient](id: String, startTime: Instant, result: Result[_])(implicit monitoringClient: ProcessMonitoringClient, ec: ExecutionContext): Future[Result[_]] = {
 
     val postProcessResult = for {
       _ <- record(result)

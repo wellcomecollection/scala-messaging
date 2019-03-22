@@ -4,9 +4,11 @@ import java.time.Instant
 
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-trait Worker[Message, Work, Summary, Operation <: BaseOperation[Work, Summary], ExternalMessageAction] extends Processor[Message, Work, Summary, Operation] with PostProcessor[ExternalMessageAction] {
+trait Worker[Message, Work, Summary, Operation <: BaseOperation[Work, Summary], ExternalMessageAction] extends Processor[Message, Work, Summary, Operation] with PostProcessor {
+
+  protected def toAction(action: Action): Future[ExternalMessageAction]
 
   protected def processMessage[ProcessMonitoringClient <: MonitoringClient](
                                 id: String,
