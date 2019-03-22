@@ -225,7 +225,7 @@ class SQSStreamTest
 
   private def createExampleObjects(start: Int = 1,
                                    count: Int): List[ExampleObject] =
-    (start to (start + count - 1)).map { i =>
+    (start until start + count).map { i =>
       ExampleObject(s"Example value $i")
     }.toList
 
