@@ -12,15 +12,11 @@ trait PostProcessor[ExternalMessageAction]
 
   protected def toAction(action: Action): Future[ExternalMessageAction]
 
-  protected def doPostProcess[ProcessMonitoringClient <: MonitoringClient](id: String, startTime: Instant, result: Result[_])(implicit monitoringClient: ProcessMonitoringClient, ec: ExecutionContext) = {
-
-    val postProcessResult = for {
+  protected def doPostProcess[ProcessMonitoringClient <: MonitoringClient](id: String, startTime: Instant, result: Result[_])(implicit monitoringClient: ProcessMonitoringClient, ec: ExecutionContext) = (
+    for {
       _ <- record(result)
       _ <- monitor(result, startTime)
-    } yield result
-
-    postProcessResult.recover {
-      case e => PostProcessFailure(id, e)
-    }
+    } yield result) recover {
+    case e => PostProcessFailure(id, e)
   }
 }
