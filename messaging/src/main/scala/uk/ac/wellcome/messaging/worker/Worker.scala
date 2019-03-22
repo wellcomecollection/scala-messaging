@@ -21,8 +21,7 @@ MessageProcess <: WorkerProcess[
   protected val process: MessageProcess
 
   protected def toWork(message: WorkerMessage): Future[Work]
-
-  protected def toMessageAction(result: Result[_]): Future[Action]
+  protected def toAction(result: Result[_]): Future[Action]
 
   private def doProcess(
                       id: String,
@@ -77,7 +76,7 @@ MessageProcess <: WorkerProcess[
 
     for {
       result <- recoveredPostProcessResult
-      action <- toMessageAction(result)
+      action <- toAction(result)
     } yield (message, action)
   }
 }

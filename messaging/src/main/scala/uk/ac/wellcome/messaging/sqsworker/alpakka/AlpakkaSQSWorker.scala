@@ -55,7 +55,7 @@ MessageProcess <: WorkerProcess[
     Future.fromTry(maybeWork)
   }
 
-  override protected def toMessageAction(result: Result[_]): Future[MessageAction] = Future {
+  override protected def toAction(result: Result[_]): Future[MessageAction] = Future {
     result match {
       case _: Retry => MessageAction.changeMessageVisibility(0)
       case _: Completed => MessageAction.delete
