@@ -25,7 +25,8 @@ trait AlpakkaSQSWorkerFixtures
                                testWith: TestWith[(
                                  AlpakkaSQSWorker[
                                    MyWork,
-                                   MySummary], AlpakkaSQSWorkerConfig, MyMonitoringClient), R])(
+                                   MySummary], AlpakkaSQSWorkerConfig, MyMonitoringClient,
+                                   CallCounter), R])(
     implicit fakeMonitoringClient: MyMonitoringClient = new MyMonitoringClient(), ec: ExecutionContext
   ): R = {
 
@@ -39,11 +40,14 @@ trait AlpakkaSQSWorkerFixtures
       queue.url
     )
 
-    val testProcess = (in: MyWork) => Future(process(in))
+    val callCounter = new CallCounter()
+    val testProcess = (o: MyWork) => Future {
+      createResult(process, callCounter)(o)
+    }
 
     val worker =
       new AlpakkaSQSWorker[MyWork, MySummary](config)(testProcess)
 
-    testWith( (worker, config, fakeMonitoringClient) )
+    testWith( (worker, config, fakeMonitoringClient, callCounter) )
   }
 }

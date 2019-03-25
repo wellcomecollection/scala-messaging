@@ -39,15 +39,6 @@ case class Successful[Summary](
     pretty("Successful")
 }
 
-case class ResultProcessorFailure[Summary](
-                                        id: String,
-                                        failure: Throwable,
-                                        summary: Option[Summary] = Option.empty[Summary]
-                                      ) extends Result[Summary] with Completed {
-  override def toString: String =
-    pretty("ResultProcessorFailure")
-}
-
 case class MonitoringProcessorFailure[Summary](
                                             id: String,
                                             failure: Throwable,

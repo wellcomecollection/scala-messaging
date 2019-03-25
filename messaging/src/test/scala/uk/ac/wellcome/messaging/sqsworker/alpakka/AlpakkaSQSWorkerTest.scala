@@ -28,7 +28,6 @@ class AlpakkaSQSWorkerTest extends FunSpec
         ("testProcess", "metricName", "metricCount", "dlqSize"),
         (successful, "namespace/Successful", 1, 0),
         (deterministicFailure, "namespace/DeterministicFailure", 1, 0),
-        (resultProcessorFailure, "namespace/PostProcessFailure", 1, 0),
         (nonDeterministicFailure, "namespace/NonDeterministicFailure", 3, 1)
       )
 
@@ -40,14 +39,16 @@ class AlpakkaSQSWorkerTest extends FunSpec
           withLocalSqsQueueAndDlq { case QueuePair(queue, dlq) =>
             withActorSystem { actorSystem =>
               withAlpakkaSQSWorker(queue, actorSystem, asyncSqsClient, testProcess) {
-                case (worker, _, metrics) =>
+                case (worker, _, metrics, callCounter) =>
 
                   worker.start
 
-                  sendNotificationToSQS(queue, work)
+                  val myWork = MyWork("my-new-work")
+
+                  sendNotificationToSQS(queue, myWork)
 
                   eventually {
-                    //process.called shouldBe true
+                    callCounter.calledCount shouldBe expectedMetricCount
 
                     assertMetricCount(metrics, metricName, expectedMetricCount)
                     assertMetricDurations(metrics, "namespace/Duration", expectedMetricCount)
@@ -74,7 +75,7 @@ class AlpakkaSQSWorkerTest extends FunSpec
         withLocalSqsQueueAndDlq { case QueuePair(queue, dlq) =>
           withActorSystem { actorSystem =>
             withAlpakkaSQSWorker(queue, actorSystem, asyncSqsClient, successful) {
-              case (worker, _, metrics) =>
+              case (worker, _, metrics,_) =>
 
                 worker.start
 

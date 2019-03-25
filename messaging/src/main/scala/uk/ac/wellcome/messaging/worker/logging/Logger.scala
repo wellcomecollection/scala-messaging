@@ -11,7 +11,6 @@ trait Logger extends Logging {
       case r: Successful[_] => info(r.toString)
       case r: NonDeterministicFailure[_] => warn(r.toString)
       case r: DeterministicFailure[_] => error(r.toString)
-      case r: ResultProcessorFailure[_] => error(r.toString)
       case r: MonitoringProcessorFailure[_] => error(r.toString)
     }
   }

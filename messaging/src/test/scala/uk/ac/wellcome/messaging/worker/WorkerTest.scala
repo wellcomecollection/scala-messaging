@@ -31,8 +31,7 @@ class WorkerTest extends FunSpec
         (successful, 1, false, false, true, "noMetric", 0, true),
 
         (deterministicFailure, 1, false, false,false, "namespace/DeterministicFailure", 1, false),
-        (nonDeterministicFailure, 1, false, false, false, "namespace/NonDeterministicFailure", 1, false),
-        (resultProcessorFailure, 1, false, false, false, "namespace/ResultProcessorFailure", 1, false)
+        (nonDeterministicFailure, 1, false, false, false, "namespace/NonDeterministicFailure", 1, false)
       )
 
       forAll(processResults) {
@@ -43,7 +42,6 @@ class WorkerTest extends FunSpec
           val worker = new MyWorker(
             testProcess,
             toWorkFail,
-            toActionFail,
             monClientFail
           )
 

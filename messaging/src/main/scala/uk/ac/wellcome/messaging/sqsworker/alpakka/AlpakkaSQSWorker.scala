@@ -57,13 +57,6 @@ class AlpakkaSQSWorker[Work, Summary](
     Future.fromTry(maybeWork)
   }
 
-  override protected def processResult(result: Result[Summary]): Future[MessageAction] = Future {
-    result.asInstanceOf[Action] match {
-      case _: Retry => MessageAction.changeMessageVisibility(0)
-      case _: Completed => MessageAction.delete
-    }
-  }
-
   private val source =
     SqsSource(config.queueUrl)
   private val sink: Sink[(SQSMessage, MessageAction), Future[Done]] =
@@ -73,16 +66,12 @@ class AlpakkaSQSWorker[Work, Summary](
     source.mapAsyncUnordered(config.parallelism) {
       message => work(message.getMessageId, message)
     }.map { case
-      WorkCompletion(message, response, recorded) =>
-        log(recorded)
+      WorkCompletion(message, response, _) =>
 
-        response match {
-          case Successful(_, Some(action)) => (message, action)
-          case _ => (
-            message,
-            MessageAction.changeMessageVisibility(0)
-          )
-        }
+      response.asInstanceOf[Action] match {
+        case _: Retry => (message, MessageAction.changeMessageVisibility(0))
+        case _: Completed => (message, MessageAction.delete)
+      }
     }
 
   def start: Future[Unit] = {

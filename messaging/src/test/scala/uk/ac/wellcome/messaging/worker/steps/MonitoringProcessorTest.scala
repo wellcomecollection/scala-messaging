@@ -25,12 +25,12 @@ class MonitoringProcessorTest extends FunSpec
 
   val postProcessActions = Table(
     ("result", "metricName", "count", "noMetric", "monClientFail", "isA"),
-    (successful(work), successMetric, 1, false, false, shouldBeCompleted),
-    (successful(work), successMetric, 1, false, false, shouldBeCompleted),
-    (successful(work), "noMetric", -1, true, true, shouldBeCompleted),
-    (successful(work), "noMetric", -1, true, true, shouldBeCompleted),
-    (deterministicFailure(work), dFailMetric, 1, false, false, shouldBeCompleted),
-    (nonDeterministicFailure(work), nonDFailMetric, 1, false, false, shouldBeRetry)
+    (successful(work), successMetric, 1, false, false, shouldBeSuccessful),
+    (successful(work), successMetric, 1, false, false, shouldBeSuccessful),
+    (successful(work), "noMetric", -1, true, true, shouldBeMonitoringProcessorFailure),
+
+    (deterministicFailure(work), dFailMetric, 1, false, false, shouldBeSuccessful),
+    (nonDeterministicFailure(work), nonDFailMetric, 1, false, false, shouldBeSuccessful)
   )
 
   describe("when a monitoring process runs") {

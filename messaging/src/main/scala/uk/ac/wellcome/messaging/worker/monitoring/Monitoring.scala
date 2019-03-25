@@ -26,8 +26,6 @@ trait Monitoring {
         .incrementCount(metricName("DeterministicFailure"))
       case _: NonDeterministicFailure[_] => monitoringClient
         .incrementCount(metricName("NonDeterministicFailure"))
-      case _: ResultProcessorFailure[_] => monitoringClient
-        .incrementCount(metricName("ResultProcessorFailure"))
       case _: MonitoringProcessorFailure[_] => monitoringClient
         .incrementCount(metricName("MonitoringProcessorFailure"))
     }
