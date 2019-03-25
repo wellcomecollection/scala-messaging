@@ -1,16 +1,16 @@
-package uk.ac.wellcome.messaging.worker
+package uk.ac.wellcome.messaging.worker.steps
 
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
+import org.scalatest.prop.Tables._
 import org.scalatest.{FunSpec, Matchers}
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.messaging.fixtures.worker.WorkerFixtures
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
-import org.scalatest.prop.Tables._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ProcessorTest extends FunSpec
+class MessageProcessorTest extends FunSpec
   with Matchers
   with Akka
   with ScalaFutures
@@ -27,11 +27,12 @@ class ProcessorTest extends FunSpec
     (exceptionState, false, shouldBeDeterministicFailure)
   )
 
-  describe("when a process runs") {
-    it("results in the correct result type") {
+  describe("when a message process runs") {
+    it("returns the correct result type") {
       forAll(processResults) { (testProcess, messageToWorkShouldFail, checkType) =>
-        val processor = new MyProcessor(testProcess, messageToWorkShouldFail)
-        val futureResult = processor.doProcess("id", message)
+
+        val processor = new MyMessageProcessor(testProcess, messageToWorkShouldFail)
+        val futureResult = processor.process("id")(message)
 
         whenReady(futureResult)(checkType)
       }

@@ -24,35 +24,33 @@ class WorkerTest extends FunSpec
     it("increments metrics, processes work and returns the correct action") {
 
       val processResults = Table(
-        ("result", "called", "toWork", "toAction", "metrics", "metricName", "count", "empty"),
-        (successful,
-          true, false, false, false, "namespace/Successful", 1, false),
+        ("result", "calledCount", "messageFail", "resultFail", "monitorFail", "metricName", "count", "empty"),
+        (successful, 1, false, false, false, "namespace/Successful", 1, false),
+        (successful, 0, true, false, false, "namespace/DeterministicFailure", 1, false),
+        (successful, 1, false, true, false, "namespace/Successful", 1, false),
+        (successful, 1, false, false, true, "noMetric", 0, true),
 
-        (successful,
-          false, true, false, false, "namespace/DeterministicFailure", 1, false),
-//        (successful,
-//          true, false, true, false, "namespace/Successful", 1, false),
-        (successful,
-          true, false, false, true, "noMetric", 0, true),
-
-        (deterministicFailure,
-          true, false, false,false, "namespace/DeterministicFailure", 1, false),
-        (postProcessFailure,
-          true, false, false, false, "namespace/PostProcessFailure", 1, false),
-        (nonDeterministicFailure,
-          true, false, false, false, "namespace/NonDeterministicFailure", 1, false)
+        (deterministicFailure, 1, false, false,false, "namespace/DeterministicFailure", 1, false),
+        (nonDeterministicFailure, 1, false, false, false, "namespace/NonDeterministicFailure", 1, false),
+        (resultProcessorFailure, 1, false, false, false, "namespace/ResultProcessorFailure", 1, false)
       )
 
       forAll(processResults) {
-        (testProcess, called, toWorkFail,
+        (testProcess, calledCount, toWorkFail,
          toActionFail, monClientFail, metricName,
          metricCount, empty) => {
 
-          val worker = new MyWorker(testProcess, toWorkFail, toActionFail, monClientFail)
-          val process = worker.processMessage("id", message)
+          val worker = new MyWorker(
+            testProcess,
+            toWorkFail,
+            toActionFail,
+            monClientFail
+          )
+
+          val process = worker.work("id", message)
 
           whenReady(process) { _ =>
-            worker.process.called shouldBe called
+            worker.calledCount shouldBe calledCount
 
             assertMetricCount(worker.metrics,
               metricName, metricCount, empty)

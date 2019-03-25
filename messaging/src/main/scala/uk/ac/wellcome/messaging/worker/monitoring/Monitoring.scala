@@ -6,19 +6,19 @@ import uk.ac.wellcome.messaging.worker._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait ProcessMonitor {
+trait Monitoring {
 
   val namespace: String
 
   private def metricName(name: String) = s"$namespace/$name"
 
-  def monitor[ProcessMonitoringClient <: MonitoringClient](
+  def metric[ProcessMonitoringClient <: MonitoringClient](
                                            result: Result[_],
                                            startTime: Instant
                                          )(
                                            implicit monitoringClient: ProcessMonitoringClient,
                                            ec: ExecutionContext
-                                         ): Future[List[Unit]] = {
+                                         ): Future[Unit] = {
     val countResult = result match {
       case _: Successful[_] => monitoringClient
         .incrementCount(metricName("Successful"))
@@ -26,8 +26,10 @@ trait ProcessMonitor {
         .incrementCount(metricName("DeterministicFailure"))
       case _: NonDeterministicFailure[_] => monitoringClient
         .incrementCount(metricName("NonDeterministicFailure"))
-      case _: PostProcessFailure[_] => monitoringClient
-        .incrementCount(metricName("PostProcessFailure"))
+      case _: ResultProcessorFailure[_] => monitoringClient
+        .incrementCount(metricName("ResultProcessorFailure"))
+      case _: MonitoringProcessorFailure[_] => monitoringClient
+        .incrementCount(metricName("MonitoringProcessorFailure"))
     }
 
     val recordDuration =
@@ -41,6 +43,6 @@ trait ProcessMonitor {
 
     Future.sequence(
       List(countResult, recordDuration)
-    )
+    ).map(_ => ())
   }
 }

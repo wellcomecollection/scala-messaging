@@ -2,21 +2,21 @@ package uk.ac.wellcome.messaging.worker
 
 sealed trait Result[Summary] {
   val id: String
-  val summary: Summary
+  val summary: Option[Summary]
 
   def pretty(resultType: String) =
     s"""
        |$resultType: $id
        |$summary
        """.stripMargin
-
 }
 
 case class DeterministicFailure[Summary](
                                           id: String,
                                           failure: Throwable,
-                                          summary: Summary = None
+                                          summary: Option[Summary] = Option.empty[Summary]
                                         ) extends Result[Summary] with Completed {
+
   override def toString: String =
     pretty("DeterministicFailure")
 }
@@ -24,7 +24,7 @@ case class DeterministicFailure[Summary](
 case class NonDeterministicFailure[Summary](
                                              id: String,
                                              failure: Throwable,
-                                             summary: Summary = None
+                                             summary: Option[Summary] = Option.empty[Summary]
                                            ) extends Result[Summary] with Retry {
   override def toString: String =
     pretty("NonDeterministicFailure")
@@ -33,19 +33,28 @@ case class NonDeterministicFailure[Summary](
 
 case class Successful[Summary](
                                 id: String,
-                                summary: Summary = None
+                                summary: Option[Summary] = Option.empty[Summary]
                               ) extends Result[Summary] with Completed  {
   override def toString: String =
     pretty("Successful")
 }
 
-case class PostProcessFailure[Summary](
+case class ResultProcessorFailure[Summary](
                                         id: String,
                                         failure: Throwable,
-                                        summary: Summary = None
+                                        summary: Option[Summary] = Option.empty[Summary]
                                       ) extends Result[Summary] with Completed {
   override def toString: String =
-    pretty("PostProcessFailure")
+    pretty("ResultProcessorFailure")
+}
+
+case class MonitoringProcessorFailure[Summary](
+                                            id: String,
+                                            failure: Throwable,
+                                            summary: Option[Summary] = Option.empty[Summary]
+                                          ) extends Result[Summary] with Completed {
+  override def toString: String =
+    pretty("MonitoringProcessorFailure")
 }
 
 

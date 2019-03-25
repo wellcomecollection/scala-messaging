@@ -1,4 +1,4 @@
-package uk.ac.wellcome.messaging.worker
+package uk.ac.wellcome.messaging.worker.steps
 
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
@@ -10,7 +10,7 @@ import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits._
 
-class PostProcessorTest extends FunSpec
+class MonitoringProcessorTest extends FunSpec
   with Matchers
   with Akka
   with ScalaFutures
@@ -33,16 +33,16 @@ class PostProcessorTest extends FunSpec
     (nonDeterministicFailure(work), nonDFailMetric, 1, false, false, shouldBeRetry)
   )
 
-  describe("when a post process runs") {
-    it("performs the correct post process functions") {
+  describe("when a monitoring process runs") {
+    it("performs the correct monitoring functions") {
       forAll(postProcessActions) {
         (result, metricName, count, noMetric, monClientFail, checkType) =>
 
         val processor =
-          new MyPostProcessor(result, false, monClientFail)
+          new MyMonitoringProcessor(result, false, monClientFail)
 
           val metrics = processor.monitoringClient
-        val futureResult = processor.doPostProcess(result)
+        val futureResult = processor.record(result)
 
         whenReady(futureResult) { action =>
           checkType(action)

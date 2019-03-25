@@ -8,6 +8,8 @@ import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
 
+import scala.concurrent.{ExecutionContext, Future}
+
 
 trait AlpakkaSQSWorkerFixtures
   extends WorkerFixtures
@@ -18,15 +20,13 @@ trait AlpakkaSQSWorkerFixtures
                                queue: Queue,
                                actorSystem: ActorSystem,
                                snsClient: AmazonSQSAsync,
-                               process: MyProcess
+                               process: TestInnerProcess
                              )(
                                testWith: TestWith[(
                                  AlpakkaSQSWorker[
                                    MyWork,
-                                   Option[String],
-                                   MyProcess
-                                   ], AlpakkaSQSWorkerConfig, MyMonitoringClient), R])(
-    implicit fakeMonitoringClient: MyMonitoringClient = new MyMonitoringClient()
+                                   MySummary], AlpakkaSQSWorkerConfig, MyMonitoringClient), R])(
+    implicit fakeMonitoringClient: MyMonitoringClient = new MyMonitoringClient(), ec: ExecutionContext
   ): R = {
 
     val alpakkaSQSWorkerConfigNamespace = "namespace"
@@ -39,7 +39,10 @@ trait AlpakkaSQSWorkerFixtures
       queue.url
     )
 
-    val worker = new AlpakkaSQSWorker[MyWork, MySummary, MyProcess](config)(process)
+    val testProcess = (in: MyWork) => Future(process(in))
+
+    val worker =
+      new AlpakkaSQSWorker[MyWork, MySummary](config)(testProcess)
 
     testWith( (worker, config, fakeMonitoringClient) )
   }

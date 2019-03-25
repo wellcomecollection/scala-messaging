@@ -8,47 +8,47 @@ import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.{Done, NotUsed}
 import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.{Message => SQSMessage}
+import grizzled.slf4j.Logging
 import io.circe.Decoder
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
-import uk.ac.wellcome.messaging.worker.{BaseOperation, _}
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
+import uk.ac.wellcome.messaging.worker.{Action, _}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 object AlpakkaSQSWorker {
-  def apply[Work, Summary](
-                                                                       config: AlpakkaSQSWorkerConfig
-                                                                     )(
+  def apply[Work, Summary](config: AlpakkaSQSWorkerConfig)(
     process: Work => Future[Result[Summary]]
   )(implicit
     monitoringClient: MonitoringClient,
     sqsClient: AmazonSQSAsync,
     decoder: Decoder[Work],
-    actorSytem: ActorSystem) = {
-    val operation = new BaseOperation[Work, Summary] {
-      override def run(in: Work)(implicit ec: ExecutionContext): Future[Result[Summary]] =
-        process(in)
-    }
+    actorSystem: ActorSystem) = {
+
+    new AlpakkaSQSWorker[Work, Summary](config)(process)
+
   }
 }
 
-class AlpakkaSQSWorker[Work, Summary, Operation <: BaseOperation[Work, Summary]](
-   config: AlpakkaSQSWorkerConfig
- )(
-   messageProcess: Operation
- )(implicit
-   monitoringClient: MonitoringClient,
-   sqsClient: AmazonSQSAsync,
-   decoder: Decoder[Work],
-   actorSytem: ActorSystem
- ) extends Worker[SQSMessage, Work, Summary, Operation, MessageAction] {
+class AlpakkaSQSWorker[Work, Summary](
+                                       config: AlpakkaSQSWorkerConfig
+                                     )(
+                                       messageProcess: Work => Future[Result[Summary]]
+                                     )(implicit
+                                       monitoringClient: MonitoringClient,
+                                       sqsClient: AmazonSQSAsync,
+                                       decoder: Decoder[Work],
+                                       actorSystem: ActorSystem
+                                     ) extends Worker[SQSMessage, Work, Summary, MessageAction] with Logging {
 
-  implicit val _ec = actorSytem.dispatcher
+  implicit val _ec = actorSystem.dispatcher
   override val namespace: String = config.namespace
-  override protected val process: Operation =  messageProcess
 
-  override protected def toWork(message: SQSMessage): Future[Work] = {
+  override protected def processMessage(work: Work) =
+    messageProcess(work)
+
+  override protected def transform(message: SQSMessage): Future[Work] = {
     val maybeWork = for {
       notification <- fromJson[NotificationMessage](message.getBody)
       work <- fromJson[Work](notification.body)
@@ -57,8 +57,8 @@ class AlpakkaSQSWorker[Work, Summary, Operation <: BaseOperation[Work, Summary]]
     Future.fromTry(maybeWork)
   }
 
-  override protected def toAction(action: Action): Future[MessageAction] = Future {
-    action match {
+  override protected def processResult(result: Result[Summary]): Future[MessageAction] = Future {
+    result.asInstanceOf[Action] match {
       case _: Retry => MessageAction.changeMessageVisibility(0)
       case _: Completed => MessageAction.delete
     }
@@ -71,12 +71,23 @@ class AlpakkaSQSWorker[Work, Summary, Operation <: BaseOperation[Work, Summary]]
 
   private val processedSource: Source[(SQSMessage, MessageAction), NotUsed] =
     source.mapAsyncUnordered(config.parallelism) {
-      message: SQSMessage => processMessage(message.getMessageId, message)
+      message => work(message.getMessageId, message)
+    }.map { case
+      WorkCompletion(message, response, recorded) =>
+        log(recorded)
+
+        response match {
+          case Successful(_, Some(action)) => (message, action)
+          case _ => (
+            message,
+            MessageAction.changeMessageVisibility(0)
+          )
+        }
     }
 
   def start: Future[Unit] = {
     implicit val _ = ActorMaterializer(
-      ActorMaterializerSettings(actorSytem)
+      ActorMaterializerSettings(actorSystem)
     )
 
     processedSource
@@ -87,7 +98,7 @@ class AlpakkaSQSWorker[Work, Summary, Operation <: BaseOperation[Work, Summary]]
 }
 
 case class AlpakkaSQSWorkerConfig(
-                         namespace: String,
-                         queueUrl: String,
-                         parallelism: Int = 1
-                       )
+                                   namespace: String,
+                                   queueUrl: String,
+                                   parallelism: Int = 1
+                                 )
