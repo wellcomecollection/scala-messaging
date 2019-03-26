@@ -8,7 +8,8 @@ trait MessageProcessor[Message, Work, Summary] {
   protected def transform(message: Message): Future[Work]
   protected def processMessage(work: Work): Future[Result[Summary]]
 
-  protected def process(id: String)(message: Message)(implicit ec: ExecutionContext): Future[Result[Summary]] = {
+  protected def process(id: String)(message: Message)(
+    implicit ec: ExecutionContext): Future[Result[Summary]] = {
     val working = for {
       work <- transform(message)
       result <- processMessage(work)

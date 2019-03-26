@@ -6,7 +6,10 @@ import grizzled.slf4j.Logging
 import org.scalatest.{Assertion, Matchers}
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
-import uk.ac.wellcome.messaging.worker.steps.{MessageProcessor, MonitoringProcessor}
+import uk.ac.wellcome.messaging.worker.steps.{
+  MessageProcessor,
+  MonitoringProcessor
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -24,28 +27,36 @@ trait WorkerFixtures extends Matchers {
       new MyWork(message.s)
   }
 
-  class MyMonitoringClient(shouldFail: Boolean = false) extends MonitoringClient with Logging {
+  class MyMonitoringClient(shouldFail: Boolean = false)
+      extends MonitoringClient
+      with Logging {
     var incrementCountCalls: Map[String, Int] = Map.empty
     var recordValueCalls: Map[String, List[Double]] = Map.empty
 
-    override def incrementCount(metricName: String)(implicit ec: ExecutionContext): Future[Unit] = Future {
+    override def incrementCount(metricName: String)(
+      implicit ec: ExecutionContext): Future[Unit] = Future {
       info(s"MyMonitoringClient incrementing $metricName")
       if (shouldFail) {
-        throw new RuntimeException("FakeMonitoringClient incrementCount Error!")
+        throw new RuntimeException(
+          "FakeMonitoringClient incrementCount Error!")
       }
-      incrementCountCalls = incrementCountCalls + (metricName -> (incrementCountCalls.getOrElse(metricName, 0) + 1))
+      incrementCountCalls = incrementCountCalls + (metricName -> (incrementCountCalls
+        .getOrElse(metricName, 0) + 1))
     }
 
-    override def recordValue(metricName: String, value: Double)(implicit ec: ExecutionContext): Future[Unit] = Future {
+    override def recordValue(metricName: String, value: Double)(
+      implicit ec: ExecutionContext): Future[Unit] = Future {
       info(s"MyMonitoringClient recordValue $metricName: $value")
       if (shouldFail) {
         throw new RuntimeException("FakeMonitoringClient recordValue Error!")
       }
-      recordValueCalls = recordValueCalls + (metricName -> (recordValueCalls.getOrElse(metricName, List.empty) :+ value))
+      recordValueCalls = recordValueCalls + (metricName -> (recordValueCalls
+        .getOrElse(metricName, List.empty) :+ value))
     }
   }
 
-  def messageToWork(shouldFail: Boolean = false)(message: MyMessage)(implicit ec: ExecutionContext) = Future {
+  def messageToWork(shouldFail: Boolean = false)(message: MyMessage)(
+    implicit ec: ExecutionContext) = Future {
     if (shouldFail) {
       throw new RuntimeException("BOOM")
     } else {
@@ -53,7 +64,8 @@ trait WorkerFixtures extends Matchers {
     }
   }
 
-  def actionToAction(toActionShouldFail: Boolean)(result: Result[MySummary])(implicit ec: ExecutionContext): Future[MyExternalMessageAction] = Future {
+  def actionToAction(toActionShouldFail: Boolean)(result: Result[MySummary])(
+    implicit ec: ExecutionContext): Future[MyExternalMessageAction] = Future {
     if (toActionShouldFail) {
       throw new RuntimeException("BOOM")
     } else {
@@ -64,18 +76,19 @@ trait WorkerFixtures extends Matchers {
   case class MyExternalMessageAction(action: Action)
 
   class MyWorker(
-                  testProcess: TestInnerProcess,
-                  messageToWorkShouldFail: Boolean = false,
-                  monitoringClientShouldFail: Boolean = false
-                )(implicit executionContext: ExecutionContext) extends Worker[MyMessage, MyWork, MySummary, MyExternalMessageAction] {
+    testProcess: TestInnerProcess,
+    messageToWorkShouldFail: Boolean = false,
+    monitoringClientShouldFail: Boolean = false
+  )(implicit executionContext: ExecutionContext)
+      extends Worker[MyMessage, MyWork, MySummary, MyExternalMessageAction] {
 
     var calledCount = 0
 
     implicit val metrics = new MyMonitoringClient(monitoringClientShouldFail)
 
     override protected def transform(
-                                      message: MyMessage
-                                    ): Future[MyWork] = messageToWork(messageToWorkShouldFail)(message)
+      message: MyMessage
+    ): Future[MyWork] = messageToWork(messageToWorkShouldFail)(message)
 
     override def processMessage(work: MyWork) = Future {
       synchronized {
@@ -85,25 +98,39 @@ trait WorkerFixtures extends Matchers {
       testProcess(work)
     }
 
-    def work[ProcessMonitoringClient <: MonitoringClient](id: String, message: MyMessage): Future[WorkCompletion[MyMessage, MySummary]] = super.work(id, message)
+    def work[ProcessMonitoringClient <: MonitoringClient](
+      id: String,
+      message: MyMessage): Future[WorkCompletion[MyMessage, MySummary]] =
+      super.work(id, message)
 
     override val namespace: String = "namespace"
   }
 
-  class MyMessageProcessor(testProcess: TestInnerProcess, messageToWorkShouldFail: Boolean = false)(implicit executionContext: ExecutionContext) extends MessageProcessor[MyMessage, MyWork, MySummary] {
+  class MyMessageProcessor(testProcess: TestInnerProcess,
+                           messageToWorkShouldFail: Boolean = false)(
+    implicit executionContext: ExecutionContext)
+      extends MessageProcessor[MyMessage, MyWork, MySummary] {
     override protected def transform(message: MyMessage): Future[MyWork] =
       messageToWork(messageToWorkShouldFail)(message)
 
-    override def processMessage(work: MyWork):
-    Future[TestResult] = Future(testProcess(work))
+    override def processMessage(work: MyWork): Future[TestResult] =
+      Future(testProcess(work))
 
-    override def process(id: String)(message: MyMessage)(implicit ec: ExecutionContext): Future[Result[MySummary]] = super.process(id)(message)(ec)
+    override def process(id: String)(message: MyMessage)(
+      implicit ec: ExecutionContext): Future[Result[MySummary]] =
+      super.process(id)(message)(ec)
   }
 
-  class MyMonitoringProcessor(result: Result[_], toActionShouldFail: Boolean = false, monitoringClientShouldFail: Boolean = false) extends MonitoringProcessor {
-    implicit val monitoringClient: MyMonitoringClient = new MyMonitoringClient(monitoringClientShouldFail)
+  class MyMonitoringProcessor(result: Result[_],
+                              toActionShouldFail: Boolean = false,
+                              monitoringClientShouldFail: Boolean = false)
+      extends MonitoringProcessor {
+    implicit val monitoringClient: MyMonitoringClient = new MyMonitoringClient(
+      monitoringClientShouldFail)
 
-    def record[ProcessMonitoringClient <: MonitoringClient](result: Result[_])(implicit ec: ExecutionContext): Future[Result[_]] = super.record("id")(Instant.now, result)(monitoringClient, ec)
+    def record[ProcessMonitoringClient <: MonitoringClient](result: Result[_])(
+      implicit ec: ExecutionContext): Future[Result[_]] =
+      super.record("id")(Instant.now, result)(monitoringClient, ec)
 
     override val namespace: String = "namespace"
   }
@@ -115,7 +142,8 @@ trait WorkerFixtures extends Matchers {
     var calledCount = 0
   }
 
-  def createResult(op: TestInnerProcess, callCounter: CallCounter): MyWork => TestResult = {
+  def createResult(op: TestInnerProcess,
+                   callCounter: CallCounter): MyWork => TestResult = {
 
     val f = (in: MyWork) => {
       callCounter.calledCount = callCounter.calledCount + 1
@@ -133,22 +161,25 @@ trait WorkerFixtures extends Matchers {
     )
   }
 
-  val nonDeterministicFailure = (in: MyWork) => NonDeterministicFailure[MySummary](
-    in.toString,
-    new RuntimeException("NonDeterministicFailure"),
-    Some("Summary NonDeterministicFailure")
+  val nonDeterministicFailure = (in: MyWork) =>
+    NonDeterministicFailure[MySummary](
+      in.toString,
+      new RuntimeException("NonDeterministicFailure"),
+      Some("Summary NonDeterministicFailure")
   )
 
-  val deterministicFailure = (in: MyWork) => DeterministicFailure[MySummary](
-    in.toString,
-    new RuntimeException("DeterministicFailure"),
-    Some("Summary DeterministicFailure")
+  val deterministicFailure = (in: MyWork) =>
+    DeterministicFailure[MySummary](
+      in.toString,
+      new RuntimeException("DeterministicFailure"),
+      Some("Summary DeterministicFailure")
   )
 
-  val monitoringProcessorFailure = (in: MyWork) => MonitoringProcessorFailure[MySummary](
-    in.toString,
-    new RuntimeException("MonitoringProcessorFailure"),
-    Some("Summary MonitoringProcessorFailure")
+  val monitoringProcessorFailure = (in: MyWork) =>
+    MonitoringProcessorFailure[MySummary](
+      in.toString,
+      new RuntimeException("MonitoringProcessorFailure"),
+      Some("Summary MonitoringProcessorFailure")
   )
 
   val exceptionState = (_: MyWork) => {
@@ -166,6 +197,8 @@ trait WorkerFixtures extends Matchers {
   val shouldBeMonitoringProcessorFailure: Result[_] => Assertion =
     (r: Result[_]) => r shouldBe a[MonitoringProcessorFailure[_]]
 
-  val shouldBeCompleted: Result[_] => Assertion = (r: Result[_]) => r shouldBe a[Completed]
-  val shouldBeRetry: Result[_] => Assertion = (r: Result[_]) => r shouldBe a[Retry]
+  val shouldBeCompleted: Result[_] => Assertion = (r: Result[_]) =>
+    r shouldBe a[Completed]
+  val shouldBeRetry: Result[_] => Assertion = (r: Result[_]) =>
+    r shouldBe a[Retry]
 }

@@ -63,27 +63,32 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
     secretKey = sqsSecretKey
   )
 
-  private def withLocalSqsQueue[R](client: AmazonSQS): Fixture[Queue, R] = fixture[Queue, R](
-    create = {
-      val queueName: String = Random.alphanumeric take 10 mkString
-      val response = client.createQueue(queueName)
-      val arn = client
-        .getQueueAttributes(response.getQueueUrl, List("QueueArn").asJava)
-        .getAttributes
-        .get("QueueArn")
-      val queue = Queue(response.getQueueUrl, arn)
-      client
-        .setQueueAttributes(queue.url, Map("VisibilityTimeout" -> "1").asJava)
-      queue
-    },
-    destroy = { queue =>
-      client.purgeQueue(new PurgeQueueRequest().withQueueUrl(queue.url))
-      client.deleteQueue(queue.url)
-    }
-  )
+  private def withLocalSqsQueue[R](client: AmazonSQS): Fixture[Queue, R] =
+    fixture[Queue, R](
+      create = {
+        val queueName: String = Random.alphanumeric take 10 mkString
+        val response = client.createQueue(queueName)
+        val arn = client
+          .getQueueAttributes(response.getQueueUrl, List("QueueArn").asJava)
+          .getAttributes
+          .get("QueueArn")
+        val queue = Queue(response.getQueueUrl, arn)
+        client
+          .setQueueAttributes(
+            queue.url,
+            Map("VisibilityTimeout" -> "1").asJava)
+        queue
+      },
+      destroy = { queue =>
+        client.purgeQueue(new PurgeQueueRequest().withQueueUrl(queue.url))
+        client.deleteQueue(queue.url)
+      }
+    )
 
   def withLocalSqsQueue[R](testWith: TestWith[Queue, R]): R =
-    withLocalSqsQueue(sqsClient) { queue => testWith(queue) }
+    withLocalSqsQueue(sqsClient) { queue =>
+      testWith(queue)
+    }
 
   def withLocalSqsQueueAndDlq[R](testWith: TestWith[QueuePair, R]): R =
     withLocalSqsQueueAndDlqAndTimeout(visibilityTimeout = 1)(testWith)
@@ -113,7 +118,9 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
   )
 
   def withLocalStackSqsQueue[R](testWith: TestWith[Queue, R]): R =
-    withLocalSqsQueue(localStackSqsClient) { queue => testWith(queue) }
+    withLocalSqsQueue(localStackSqsClient) { queue =>
+      testWith(queue)
+    }
 
   def withSQSStream[T, R](queue: Queue, metricsSender: MetricsSender)(
     testWith: TestWith[SQSStream[T], R])(

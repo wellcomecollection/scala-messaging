@@ -42,7 +42,8 @@ class SQSStream[T](
   implicit val dispatcher = actorSystem.dispatcher
 
   private val source = SqsSource(sqsConfig.queueUrl)(sqsClient)
-  private val sink: Sink[(Message, MessageAction), Future[Done]] = SqsAckSink(sqsConfig.queueUrl)(sqsClient)
+  private val sink: Sink[(Message, MessageAction), Future[Done]] =
+    SqsAckSink(sqsConfig.queueUrl)(sqsClient)
 
   def foreach(streamName: String, process: T => Future[Unit])(
     implicit decoderT: Decoder[T]): Future[Done] =

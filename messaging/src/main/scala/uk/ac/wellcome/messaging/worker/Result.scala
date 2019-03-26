@@ -12,44 +12,41 @@ sealed trait Result[Summary] {
 }
 
 case class DeterministicFailure[Summary](
-                                          id: String,
-                                          failure: Throwable,
-                                          summary: Option[Summary] = Option.empty[Summary]
-                                        ) extends Result[Summary] with Completed {
+  id: String,
+  failure: Throwable,
+  summary: Option[Summary] = Option.empty[Summary]
+) extends Result[Summary]
+    with Completed {
 
   override def toString: String =
     pretty("DeterministicFailure")
 }
 
 case class NonDeterministicFailure[Summary](
-                                             id: String,
-                                             failure: Throwable,
-                                             summary: Option[Summary] = Option.empty[Summary]
-                                           ) extends Result[Summary] with Retry {
+  id: String,
+  failure: Throwable,
+  summary: Option[Summary] = Option.empty[Summary]
+) extends Result[Summary]
+    with Retry {
   override def toString: String =
     pretty("NonDeterministicFailure")
 }
 
-
 case class Successful[Summary](
-                                id: String,
-                                summary: Option[Summary] = Option.empty[Summary]
-                              ) extends Result[Summary] with Completed  {
+  id: String,
+  summary: Option[Summary] = Option.empty[Summary]
+) extends Result[Summary]
+    with Completed {
   override def toString: String =
     pretty("Successful")
 }
 
 case class MonitoringProcessorFailure[Summary](
-                                            id: String,
-                                            failure: Throwable,
-                                            summary: Option[Summary] = Option.empty[Summary]
-                                          ) extends Result[Summary] with Completed {
+  id: String,
+  failure: Throwable,
+  summary: Option[Summary] = Option.empty[Summary]
+) extends Result[Summary]
+    with Completed {
   override def toString: String =
     pretty("MonitoringProcessorFailure")
 }
-
-
-
-
-
-

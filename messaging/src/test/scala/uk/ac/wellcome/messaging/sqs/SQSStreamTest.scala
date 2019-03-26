@@ -17,7 +17,7 @@ import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 import scala.concurrent.Future
 
 class SQSStreamTest
-  extends FunSpec
+    extends FunSpec
     with Matchers
     with Messaging
     with Akka
@@ -229,17 +229,19 @@ class SQSStreamTest
       ExampleObject(s"Example value $i")
     }.toList
 
-  private def sendExampleObjects(queue: Queue, start: Int = 1, count: Int = 1) =
+  private def sendExampleObjects(queue: Queue,
+                                 start: Int = 1,
+                                 count: Int = 1) =
     createExampleObjects(start = start, count = count).map { exampleObject =>
       sendSqsMessage(queue = queue, obj = exampleObject)
     }
 
   def withSQSStreamFixtures[R](
-                                testWith: TestWith[(SQSStream[ExampleObject], QueuePair, MetricsSender), R])
-  : R =
+    testWith: TestWith[(SQSStream[ExampleObject], QueuePair, MetricsSender),
+                       R]): R =
     withActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
-        case queuePair@QueuePair(queue, _) =>
+        case queuePair @ QueuePair(queue, _) =>
           withMockMetricsSender { metricsSender =>
             withSQSStream[ExampleObject, R](queue, metricsSender) { stream =>
               testWith((stream, queuePair, metricsSender))

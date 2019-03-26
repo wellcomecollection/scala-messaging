@@ -20,8 +20,7 @@ import scala.concurrent.Future
 object AlpakkaSQSWorker {
   def apply[Work, Summary](config: AlpakkaSQSWorkerConfig)(
     process: Work => Future[Result[Summary]]
-  )(implicit
-    monitoringClient: MonitoringClient,
+  )(implicit monitoringClient: MonitoringClient,
     sqsClient: AmazonSQSAsync,
     decoder: Decoder[Work],
     actorSystem: ActorSystem) = {
@@ -32,15 +31,15 @@ object AlpakkaSQSWorker {
 }
 
 class AlpakkaSQSWorker[Work, Summary](
-                                       config: AlpakkaSQSWorkerConfig
-                                     )(
-                                       messageProcess: Work => Future[Result[Summary]]
-                                     )(implicit
-                                       monitoringClient: MonitoringClient,
-                                       sqsClient: AmazonSQSAsync,
-                                       decoder: Decoder[Work],
-                                       actorSystem: ActorSystem
-                                     ) extends Worker[SQSMessage, Work, Summary, MessageAction] with Logging {
+  config: AlpakkaSQSWorkerConfig
+)(
+  messageProcess: Work => Future[Result[Summary]]
+)(implicit monitoringClient: MonitoringClient,
+  sqsClient: AmazonSQSAsync,
+  decoder: Decoder[Work],
+  actorSystem: ActorSystem)
+    extends Worker[SQSMessage, Work, Summary, MessageAction]
+    with Logging {
 
   implicit val _ec = actorSystem.dispatcher
   override val namespace: String = config.namespace
@@ -63,16 +62,18 @@ class AlpakkaSQSWorker[Work, Summary](
     SqsAckSink(config.queueUrl)
 
   private val processedSource: Source[(SQSMessage, MessageAction), NotUsed] =
-    source.mapAsyncUnordered(config.parallelism) {
-      message => work(message.getMessageId, message)
-    }.map { case
-      WorkCompletion(message, response, _) =>
-
-      response.asInstanceOf[Action] match {
-        case _: Retry => (message, MessageAction.changeMessageVisibility(0))
-        case _: Completed => (message, MessageAction.delete)
+    source
+      .mapAsyncUnordered(config.parallelism) { message =>
+        work(message.getMessageId, message)
       }
-    }
+      .map {
+        case WorkCompletion(message, response, _) =>
+          response.asInstanceOf[Action] match {
+            case _: Retry =>
+              (message, MessageAction.changeMessageVisibility(0))
+            case _: Completed => (message, MessageAction.delete)
+          }
+      }
 
   def start: Future[Unit] = {
     implicit val _ = ActorMaterializer(
@@ -87,7 +88,7 @@ class AlpakkaSQSWorker[Work, Summary](
 }
 
 case class AlpakkaSQSWorkerConfig(
-                                   namespace: String,
-                                   queueUrl: String,
-                                   parallelism: Int = 1
-                                 )
+  namespace: String,
+  queueUrl: String,
+  parallelism: Int = 1
+)

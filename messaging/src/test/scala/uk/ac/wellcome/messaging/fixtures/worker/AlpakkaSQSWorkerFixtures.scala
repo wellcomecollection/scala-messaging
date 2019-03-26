@@ -6,28 +6,31 @@ import org.scalatest.Matchers
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
-import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
+import uk.ac.wellcome.messaging.sqsworker.alpakka.{
+  AlpakkaSQSWorker,
+  AlpakkaSQSWorkerConfig
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
 trait AlpakkaSQSWorkerFixtures
-  extends WorkerFixtures
+    extends WorkerFixtures
     with MetricsFixtures
     with Matchers {
 
   def withAlpakkaSQSWorker[R](
-                               queue: Queue,
-                               actorSystem: ActorSystem,
-                               snsClient: AmazonSQSAsync,
-                               process: TestInnerProcess
-                             )(
-                               testWith: TestWith[(
-                                 AlpakkaSQSWorker[
-                                   MyWork,
-                                   MySummary], AlpakkaSQSWorkerConfig, MyMonitoringClient,
-                                   CallCounter), R])(
-    implicit fakeMonitoringClient: MyMonitoringClient = new MyMonitoringClient(), ec: ExecutionContext
+    queue: Queue,
+    actorSystem: ActorSystem,
+    snsClient: AmazonSQSAsync,
+    process: TestInnerProcess
+  )(testWith: TestWith[(AlpakkaSQSWorker[MyWork, MySummary],
+                        AlpakkaSQSWorkerConfig,
+                        MyMonitoringClient,
+                        CallCounter),
+                       R])(
+    implicit fakeMonitoringClient: MyMonitoringClient =
+      new MyMonitoringClient(),
+    ec: ExecutionContext
   ): R = {
 
     val alpakkaSQSWorkerConfigNamespace = "namespace"
@@ -41,13 +44,14 @@ trait AlpakkaSQSWorkerFixtures
     )
 
     val callCounter = new CallCounter()
-    val testProcess = (o: MyWork) => Future {
-      createResult(process, callCounter)(o)
+    val testProcess = (o: MyWork) =>
+      Future {
+        createResult(process, callCounter)(o)
     }
 
     val worker =
       new AlpakkaSQSWorker[MyWork, MySummary](config)(testProcess)
 
-    testWith( (worker, config, fakeMonitoringClient, callCounter) )
+    testWith((worker, config, fakeMonitoringClient, callCounter))
   }
 }

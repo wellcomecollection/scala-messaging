@@ -3,7 +3,6 @@ val projectVersion = "1.6.0"
 
 enablePlugins(DockerComposePlugin)
 
-
 // Everything below this line is generic boilerplate that should be reusable,
 // unmodified, in all of our Scala libraries that have a "core" and a "typesafe"
 // version.
@@ -23,17 +22,14 @@ val settings: Seq[Def.Setting[_]] = Seq(
     "-language:postfixOps"
   ),
   parallelExecution in Test := false,
-
   resolvers ++= Seq(
     "S3 releases" at "s3://releases.mvn-repo.wellcomecollection.org/"
   ),
-
   publishMavenStyle := true,
   publishTo := Some(
     "S3 releases" at "s3://releases.mvn-repo.wellcomecollection.org/"
   ),
   publishArtifact in Test := true,
-
   version := projectVersion
 )
 
@@ -54,8 +50,9 @@ lazy val lib_typesafe =
 
 lazy val root = (project in file("."))
   .aggregate(lib, lib_typesafe)
-  .settings(Seq(
-    // We don't want to publish the aggregate project, just the sub projects.
-    // See https://stackoverflow.com/a/46986683/1558022
-    skip in publish := true
-  ))
+  .settings(
+    Seq(
+      // We don't want to publish the aggregate project, just the sub projects.
+      // See https://stackoverflow.com/a/46986683/1558022
+      skip in publish := true
+    ))

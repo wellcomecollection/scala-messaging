@@ -3,9 +3,12 @@ package uk.ac.wellcome.messaging.fixtures.worker
 import org.scalatest.Matchers
 
 trait MetricsFixtures extends WorkerFixtures with Matchers {
-  protected def assertMetricCount(metrics: MyMonitoringClient, metricName : String, expectedCount : Int, isEmpty: Boolean = false) = {
+  protected def assertMetricCount(metrics: MyMonitoringClient,
+                                  metricName: String,
+                                  expectedCount: Int,
+                                  isEmpty: Boolean = false) = {
 
-    if(isEmpty) {
+    if (isEmpty) {
       metrics.incrementCountCalls shouldBe Map.empty
     } else {
       metrics.incrementCountCalls shouldBe Map(
@@ -14,12 +17,15 @@ trait MetricsFixtures extends WorkerFixtures with Matchers {
     }
   }
 
-  protected def assertMetricDurations(metrics: MyMonitoringClient, metricName: String, expectedNumberDurations: Int, isEmpty: Boolean = false) = {
+  protected def assertMetricDurations(metrics: MyMonitoringClient,
+                                      metricName: String,
+                                      expectedNumberDurations: Int,
+                                      isEmpty: Boolean = false) = {
     val durationMetric = metrics.recordValueCalls.get(
       metricName
     )
 
-    if(isEmpty) {
+    if (isEmpty) {
       durationMetric shouldNot be(defined)
     } else {
       durationMetric shouldBe defined

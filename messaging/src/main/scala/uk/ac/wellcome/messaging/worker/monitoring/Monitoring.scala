@@ -13,34 +13,42 @@ trait Monitoring {
   private def metricName(name: String) = s"$namespace/$name"
 
   def metric[ProcessMonitoringClient <: MonitoringClient](
-                                           result: Result[_],
-                                           startTime: Instant
-                                         )(
-                                           implicit monitoringClient: ProcessMonitoringClient,
-                                           ec: ExecutionContext
-                                         ): Future[Unit] = {
+    result: Result[_],
+    startTime: Instant
+  )(
+    implicit monitoringClient: ProcessMonitoringClient,
+    ec: ExecutionContext
+  ): Future[Unit] = {
     val countResult = result match {
-      case _: Successful[_] => monitoringClient
-        .incrementCount(metricName("Successful"))
-      case _: DeterministicFailure[_] => monitoringClient
-        .incrementCount(metricName("DeterministicFailure"))
-      case _: NonDeterministicFailure[_] => monitoringClient
-        .incrementCount(metricName("NonDeterministicFailure"))
-      case _: MonitoringProcessorFailure[_] => monitoringClient
-        .incrementCount(metricName("MonitoringProcessorFailure"))
+      case _: Successful[_] =>
+        monitoringClient
+          .incrementCount(metricName("Successful"))
+      case _: DeterministicFailure[_] =>
+        monitoringClient
+          .incrementCount(metricName("DeterministicFailure"))
+      case _: NonDeterministicFailure[_] =>
+        monitoringClient
+          .incrementCount(metricName("NonDeterministicFailure"))
+      case _: MonitoringProcessorFailure[_] =>
+        monitoringClient
+          .incrementCount(metricName("MonitoringProcessorFailure"))
     }
 
     val recordDuration =
       monitoringClient.recordValue(
         metricName("Duration"),
-        Duration.between(
-          startTime,
-          Instant.now()
-        ).getSeconds
+        Duration
+          .between(
+            startTime,
+            Instant.now()
+          )
+          .getSeconds
       )
 
-    Future.sequence(
-      List(countResult, recordDuration)
-    ).map(_ => ())
+    Future
+      .sequence(
+        List(countResult, recordDuration)
+      )
+      .map(_ => ())
   }
 }

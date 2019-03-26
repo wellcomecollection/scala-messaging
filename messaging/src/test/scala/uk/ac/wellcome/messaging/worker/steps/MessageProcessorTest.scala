@@ -10,13 +10,14 @@ import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MessageProcessorTest extends FunSpec
-  with Matchers
-  with Akka
-  with ScalaFutures
-  with IntegrationPatience
-  with WorkerFixtures
-  with MetricsSenderFixture {
+class MessageProcessorTest
+    extends FunSpec
+    with Matchers
+    with Akka
+    with ScalaFutures
+    with IntegrationPatience
+    with WorkerFixtures
+    with MetricsSenderFixture {
 
   val processResults = Table(
     ("testProcess", "messageToWorkShouldFail", "isA"),
@@ -29,12 +30,13 @@ class MessageProcessorTest extends FunSpec
 
   describe("when a message process runs") {
     it("returns the correct result type") {
-      forAll(processResults) { (testProcess, messageToWorkShouldFail, checkType) =>
+      forAll(processResults) {
+        (testProcess, messageToWorkShouldFail, checkType) =>
+          val processor =
+            new MyMessageProcessor(testProcess, messageToWorkShouldFail)
+          val futureResult = processor.process("id")(message)
 
-        val processor = new MyMessageProcessor(testProcess, messageToWorkShouldFail)
-        val futureResult = processor.process("id")(message)
-
-        whenReady(futureResult)(checkType)
+          whenReady(futureResult)(checkType)
       }
     }
   }
