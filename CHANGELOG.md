@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.8.0 - 2019-03-26
+
+Simplify worker
+
 ## v1.7.0 - 2019-03-26
 
 Add a "worker" imlpementation.
