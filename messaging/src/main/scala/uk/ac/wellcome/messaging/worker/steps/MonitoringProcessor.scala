@@ -3,16 +3,12 @@ package uk.ac.wellcome.messaging.worker.steps
 import java.time.Instant
 
 import uk.ac.wellcome.messaging.worker.logging.Logger
-import uk.ac.wellcome.messaging.worker.models.{
+import uk.ac.wellcome.messaging.worker.monitoring.{Monitoring, MonitoringClient}
+import uk.ac.wellcome.messaging.worker.{
   MonitoringProcessorFailure,
   Result,
   Successful
 }
-import uk.ac.wellcome.messaging.worker.monitoring.{
-  Monitoring,
-  MonitoringClient
-}
-import uk.ac.wellcome.messaging.worker.{MonitoringProcessorFailure, Successful}
 
 import scala.concurrent.{ExecutionContext, Future}
 
