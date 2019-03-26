@@ -12,9 +12,9 @@ import grizzled.slf4j.Logging
 import io.circe.Decoder
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
-import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
+import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 
 import scala.concurrent.Future
 
@@ -41,8 +41,6 @@ class AlpakkaSQSWorker[Work, Summary](
   actorSystem: ActorSystem)
     extends Worker[Message, Work, Summary, MessageAction]
     with Logging {
-
-  import uk.ac.wellcome.messaging.sqs.Conversions._
 
   implicit val _ec = actorSystem.dispatcher
   override val namespace: String = config.namespace

@@ -2,7 +2,6 @@ package uk.ac.wellcome.messaging.worker.monitoring
 
 import java.time.{Duration, Instant}
 
-import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -20,19 +20,6 @@ trait WorkerFixtures extends Matchers {
   type TestInnerProcess = MyWork => TestResult
   type TestProcess = MyWork => Future[TestResult]
 
-  object Conversions {
-    import scala.language.implicitConversions
-
-    implicit class IdentifiedMyMessage(message: MyMessage) {
-      def toIdMessage: IdentifiedMessage[MyMessage] =
-        IdentifiedMessage("id", message)
-    }
-
-    implicit def toIdMessage(
-      message: MyMessage
-    ): IdentifiedMessage[MyMessage] = message.toIdMessage
-  }
-
   case class MyMessage(s: String)
   case class MyWork(s: String)
 
@@ -96,8 +83,6 @@ trait WorkerFixtures extends Matchers {
   )(implicit executionContext: ExecutionContext)
       extends Worker[MyMessage, MyWork, MySummary, MyExternalMessageAction] {
 
-    import Conversions._
-
     var calledCount = 0
 
     implicit val metrics = new MyMonitoringClient(monitoringClientShouldFail)
@@ -132,9 +117,9 @@ trait WorkerFixtures extends Matchers {
     override def processMessage(work: MyWork): Future[TestResult] =
       Future(testProcess(work))
 
-    override def process(id: String)(message: MyMessage)(
+    override def process(message: MyMessage)(
       implicit ec: ExecutionContext): Future[Result[MySummary]] =
-      super.process(id)(message)(ec)
+      super.process(message)(ec)
   }
 
   class MyMonitoringProcessor(result: Result[_],
@@ -146,7 +131,7 @@ trait WorkerFixtures extends Matchers {
 
     def record[ProcessMonitoringClient <: MonitoringClient](result: Result[_])(
       implicit ec: ExecutionContext): Future[Result[_]] =
-      super.record("id")(Instant.now, result)(monitoringClient, ec)
+      super.record(Instant.now, result)(monitoringClient, ec)
 
     override val namespace: String = "namespace"
   }
@@ -172,28 +157,24 @@ trait WorkerFixtures extends Matchers {
 
   val successful = (in: MyWork) => {
     Successful[MySummary](
-      in.toString,
       Some("Summary Successful")
     )
   }
 
   val nonDeterministicFailure = (in: MyWork) =>
     NonDeterministicFailure[MySummary](
-      in.toString,
       new RuntimeException("NonDeterministicFailure"),
       Some("Summary NonDeterministicFailure")
   )
 
   val deterministicFailure = (in: MyWork) =>
     DeterministicFailure[MySummary](
-      in.toString,
       new RuntimeException("DeterministicFailure"),
       Some("Summary DeterministicFailure")
   )
 
   val monitoringProcessorFailure = (in: MyWork) =>
     MonitoringProcessorFailure[MySummary](
-      in.toString,
       new RuntimeException("MonitoringProcessorFailure"),
       Some("Summary MonitoringProcessorFailure")
   )
@@ -201,7 +182,7 @@ trait WorkerFixtures extends Matchers {
   val exceptionState = (_: MyWork) => {
     throw new RuntimeException("BOOM")
 
-    Successful[MySummary]("exceptionState")
+    Successful[MySummary](Some("exceptionState"))
   }
 
   val shouldBeSuccessful: Result[_] => Assertion =
