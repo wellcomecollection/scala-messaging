@@ -34,7 +34,7 @@ class MessageProcessorTest
         (testProcess, messageToWorkShouldFail, checkType) =>
           val processor =
             new MyMessageProcessor(testProcess, messageToWorkShouldFail)
-          val futureResult = processor.process("id")(message)
+          val futureResult = processor.process(message)
 
           whenReady(futureResult)(checkType)
       }

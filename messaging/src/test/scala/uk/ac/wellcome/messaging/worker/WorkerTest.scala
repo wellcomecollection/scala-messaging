@@ -85,7 +85,7 @@ class WorkerTest
               monClientFail
             )
 
-            val process = worker.work("id", message)
+            val process = worker.work(message)
 
             whenReady(process) { _ =>
               worker.calledCount shouldBe calledCount

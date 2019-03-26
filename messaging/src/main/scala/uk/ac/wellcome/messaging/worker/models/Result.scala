@@ -1,52 +1,30 @@
-package uk.ac.wellcome.messaging.worker
+package uk.ac.wellcome.messaging.worker.models
 
 sealed trait Result[Summary] {
-  val id: String
   val summary: Option[Summary]
-
-  def pretty(resultType: String) =
-    s"""
-       |$resultType: $id
-       |$summary
-       """.stripMargin
+  def pretty =
+    s"${this.getClass.getSimpleName}: $summary"
 }
 
 case class DeterministicFailure[Summary](
-  id: String,
   failure: Throwable,
   summary: Option[Summary] = Option.empty[Summary]
 ) extends Result[Summary]
-    with Completed {
-
-  override def toString: String =
-    pretty("DeterministicFailure")
-}
+    with Completed
 
 case class NonDeterministicFailure[Summary](
-  id: String,
   failure: Throwable,
   summary: Option[Summary] = Option.empty[Summary]
 ) extends Result[Summary]
-    with Retry {
-  override def toString: String =
-    pretty("NonDeterministicFailure")
-}
+    with Retry
 
 case class Successful[Summary](
-  id: String,
   summary: Option[Summary] = Option.empty[Summary]
 ) extends Result[Summary]
-    with Completed {
-  override def toString: String =
-    pretty("Successful")
-}
+    with Completed
 
 case class MonitoringProcessorFailure[Summary](
-  id: String,
   failure: Throwable,
   summary: Option[Summary] = Option.empty[Summary]
 ) extends Result[Summary]
-    with Completed {
-  override def toString: String =
-    pretty("MonitoringProcessorFailure")
-}
+    with Completed
