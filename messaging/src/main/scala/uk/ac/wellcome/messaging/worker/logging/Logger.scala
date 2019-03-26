@@ -9,10 +9,10 @@ trait Logger extends Logging {
   def log[T](result: Result[T])(implicit ec: ExecutionContext): Future[Unit] =
     Future {
       result match {
-        case r@Successful(summary)                    => info(r.pretty)
-        case r@NonDeterministicFailure(e,summary)     => error(r.pretty, e)
-        case r@DeterministicFailure(e, summary)       => error(r.toString, e)
-        case r@MonitoringProcessorFailure(e, summary) => error(r.toString, e)
+        case r @ Successful(summary) => info(r.pretty)
+        case r @ NonDeterministicFailure(e, summary) => error(r.pretty, e)
+        case r @ DeterministicFailure(e, summary) => error(r.toString, e)
+        case r @ MonitoringProcessorFailure(e, summary) => error(r.toString, e)
       }
     }
 }

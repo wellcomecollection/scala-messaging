@@ -9,18 +9,22 @@ sealed trait Result[Summary] {
 case class DeterministicFailure[Summary](
   failure: Throwable,
   summary: Option[Summary] = Option.empty[Summary]
-) extends Result[Summary] with Completed
+) extends Result[Summary]
+    with Completed
 
 case class NonDeterministicFailure[Summary](
   failure: Throwable,
   summary: Option[Summary] = Option.empty[Summary]
-) extends Result[Summary] with Retry
+) extends Result[Summary]
+    with Retry
 
 case class Successful[Summary](
   summary: Option[Summary] = Option.empty[Summary]
-) extends Result[Summary] with Completed
+) extends Result[Summary]
+    with Completed
 
 case class MonitoringProcessorFailure[Summary](
   failure: Throwable,
   summary: Option[Summary] = Option.empty[Summary]
-) extends Result[Summary] with Completed
+) extends Result[Summary]
+    with Completed
