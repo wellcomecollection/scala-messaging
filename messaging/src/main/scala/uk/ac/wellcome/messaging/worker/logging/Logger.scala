@@ -2,6 +2,7 @@ package uk.ac.wellcome.messaging.worker.logging
 
 import grizzled.slf4j.Logging
 import uk.ac.wellcome.messaging.worker._
+import uk.ac.wellcome.messaging.worker.models._
 
 import scala.concurrent.{ExecutionContext, Future}
 

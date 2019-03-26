@@ -2,6 +2,10 @@ package uk.ac.wellcome.messaging.worker
 
 import java.time.Instant
 
+import uk.ac.wellcome.messaging.worker.models.{
+  IdentifiedMessage,
+  WorkCompletion
+}
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 import uk.ac.wellcome.messaging.worker.steps.{
   MessageProcessor,
@@ -10,22 +14,23 @@ import uk.ac.wellcome.messaging.worker.steps.{
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class WorkCompletion[Message, Summary](
-  message: Message,
-  summary: Result[Summary],
-  recorded: Result[Unit]
-)
-
 trait Worker[Message, Work, Summary, Response]
     extends MessageProcessor[Message, Work, Summary]
     with MonitoringProcessor {
 
   protected def work[ProcessMonitoringClient <: MonitoringClient](
-    id: String,
-    message: Message
+    in: Message
   )(implicit monitoringClient: ProcessMonitoringClient,
-    ec: ExecutionContext): Future[WorkCompletion[Message, Summary]] = {
+    ec: ExecutionContext,
+    messageToIdentified: Message => IdentifiedMessage[Message])
+    : Future[WorkCompletion[Message, Summary]] = {
+
     val startTime = Instant.now
+
+    val identifiedMessage = messageToIdentified(in)
+
+    val id = identifiedMessage.id
+    val message = identifiedMessage.message
 
     for {
       summary <- process(id)(message)

@@ -1,4 +1,4 @@
-package uk.ac.wellcome.messaging.worker
+package uk.ac.wellcome.messaging.worker.models
 
 sealed trait Action
 

@@ -5,6 +5,7 @@ import java.time.Instant
 import grizzled.slf4j.Logging
 import org.scalatest.{Assertion, Matchers}
 import uk.ac.wellcome.messaging.worker._
+import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 import uk.ac.wellcome.messaging.worker.steps.{
   MessageProcessor,
@@ -18,6 +19,19 @@ trait WorkerFixtures extends Matchers {
   type TestResult = Result[MySummary]
   type TestInnerProcess = MyWork => TestResult
   type TestProcess = MyWork => Future[TestResult]
+
+  object Conversions {
+    import scala.language.implicitConversions
+
+    implicit class IdentifiedMyMessage(message: MyMessage) {
+      def toIdMessage: IdentifiedMessage[MyMessage] =
+        IdentifiedMessage("id", message)
+    }
+
+    implicit def toIdMessage(
+      message: MyMessage
+    ): IdentifiedMessage[MyMessage] = message.toIdMessage
+  }
 
   case class MyMessage(s: String)
   case class MyWork(s: String)
@@ -82,6 +96,8 @@ trait WorkerFixtures extends Matchers {
   )(implicit executionContext: ExecutionContext)
       extends Worker[MyMessage, MyWork, MySummary, MyExternalMessageAction] {
 
+    import Conversions._
+
     var calledCount = 0
 
     implicit val metrics = new MyMonitoringClient(monitoringClientShouldFail)
@@ -101,7 +117,7 @@ trait WorkerFixtures extends Matchers {
     def work[ProcessMonitoringClient <: MonitoringClient](
       id: String,
       message: MyMessage): Future[WorkCompletion[MyMessage, MySummary]] =
-      super.work(id, message)
+      super.work(message)
 
     override val namespace: String = "namespace"
   }

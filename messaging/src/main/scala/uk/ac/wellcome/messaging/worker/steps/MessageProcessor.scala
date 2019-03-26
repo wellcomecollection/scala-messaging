@@ -1,6 +1,7 @@
 package uk.ac.wellcome.messaging.worker.steps
 
-import uk.ac.wellcome.messaging.worker.{DeterministicFailure, Result}
+import uk.ac.wellcome.messaging.worker.DeterministicFailure
+import uk.ac.wellcome.messaging.worker.models.{DeterministicFailure, Result}
 
 import scala.concurrent.{ExecutionContext, Future}
 
