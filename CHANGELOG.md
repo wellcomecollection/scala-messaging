@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.7.0 - 2019-03-26
+
+Add a "worker" imlpementation.
+
 ## v1.6.0 - 2019-03-12
 
 Some internal refactoring to use our new scala-monitoring library.
