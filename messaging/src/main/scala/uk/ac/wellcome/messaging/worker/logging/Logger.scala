@@ -6,13 +6,13 @@ import uk.ac.wellcome.messaging.worker.models._
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Logger extends Logging {
-  def log(result: Result[_])(implicit ec: ExecutionContext): Future[Unit] =
+  def log[T](result: Result[T])(implicit ec: ExecutionContext): Future[Unit] =
     Future {
       result match {
-        case r: Successful[_]                 => info(r.toString)
-        case r: NonDeterministicFailure[_]    => warn(r.toString)
-        case r: DeterministicFailure[_]       => error(r.toString)
-        case r: MonitoringProcessorFailure[_] => error(r.toString)
+        case r@Successful(summary)                    => info(r.pretty)
+        case r@NonDeterministicFailure(e,summary)     => error(r.pretty, e)
+        case r@DeterministicFailure(e, summary)       => error(r.toString, e)
+        case r@MonitoringProcessorFailure(e, summary) => error(r.toString, e)
       }
     }
 }

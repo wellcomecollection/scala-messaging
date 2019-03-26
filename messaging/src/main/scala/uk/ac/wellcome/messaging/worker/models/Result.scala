@@ -2,8 +2,8 @@ package uk.ac.wellcome.messaging.worker.models
 
 sealed trait Result[Summary] {
   val summary: Option[Summary]
-  def pretty(resultType: String) =
-    s"${this.getClass.getName}: $summary"
+  def pretty =
+    s"${this.getClass.getSimpleName}: $summary"
 }
 
 case class DeterministicFailure[Summary](
