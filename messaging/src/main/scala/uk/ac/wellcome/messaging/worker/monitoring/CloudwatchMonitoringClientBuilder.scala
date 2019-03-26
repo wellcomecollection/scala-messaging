@@ -8,9 +8,10 @@ import com.typesafe.config.Config
 import scala.concurrent.ExecutionContext
 
 object CloudwatchMonitoringClientBuilder {
-  def buildCloudwatchMonitoringClient(config: Config)(implicit
-                                                      materializer: ActorMaterializer,
-                                                      ec: ExecutionContext)= {
+  def buildCloudwatchMonitoringClient(config: Config)(
+    implicit
+    materializer: ActorMaterializer,
+    ec: ExecutionContext) = {
     new CloudwatchMonitoringClient(MetricsBuilder.buildMetricsSender(config))
   }
 }
