@@ -81,7 +81,7 @@ trait WorkerFixtures extends Matchers {
     messageToWorkShouldFail: Boolean = false,
     monitoringClientShouldFail: Boolean = false
   )(implicit executionContext: ExecutionContext)
-      extends Worker[MyMessage, MyWork, MySummary, MyExternalMessageAction] {
+      extends Worker[MyMessage, MyWork, MySummary] {
 
     var calledCount = 0
 
@@ -100,7 +100,6 @@ trait WorkerFixtures extends Matchers {
     }
 
     def work[ProcessMonitoringClient <: MonitoringClient](
-      id: String,
       message: MyMessage): Future[WorkCompletion[MyMessage, MySummary]] =
       super.work(message)
 

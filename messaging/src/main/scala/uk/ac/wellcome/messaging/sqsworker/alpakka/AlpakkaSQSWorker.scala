@@ -39,7 +39,7 @@ class AlpakkaSQSWorker[Work, Summary](
   sqsClient: AmazonSQSAsync,
   decoder: Decoder[Work],
   actorSystem: ActorSystem)
-    extends Worker[Message, Work, Summary, MessageAction]
+    extends Worker[Message, Work, Summary]
     with Logging {
 
   implicit val _ec = actorSystem.dispatcher
