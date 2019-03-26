@@ -8,11 +8,11 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{FunSpec, Matchers}
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.fixtures.TestWith
+import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
-import uk.ac.wellcome.json.JsonUtil._
 
 import scala.concurrent.Future
 
@@ -100,6 +100,7 @@ class SQSStreamTest
         val exampleObject = ExampleObject("some value 1")
 
         sendSqsMessage(queue, exampleObject)
+
         def processFailing(o: ExampleObject) = {
           Future.failed(new RuntimeException("BOOOOM!"))
         }
@@ -224,18 +225,20 @@ class SQSStreamTest
 
   private def createExampleObjects(start: Int = 1,
                                    count: Int): List[ExampleObject] =
-    (start to (start + count - 1)).map { i =>
+    (start until start + count).map { i =>
       ExampleObject(s"Example value $i")
     }.toList
 
-  private def sendExampleObjects(queue: Queue, start: Int = 1, count: Int = 1) =
+  private def sendExampleObjects(queue: Queue,
+                                 start: Int = 1,
+                                 count: Int = 1) =
     createExampleObjects(start = start, count = count).map { exampleObject =>
       sendSqsMessage(queue = queue, obj = exampleObject)
     }
 
   def withSQSStreamFixtures[R](
-    testWith: TestWith[(SQSStream[ExampleObject], QueuePair, MetricsSender), R])
-    : R =
+    testWith: TestWith[(SQSStream[ExampleObject], QueuePair, MetricsSender),
+                       R]): R =
     withActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>

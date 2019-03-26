@@ -36,7 +36,9 @@ trait Messaging
 
   case class ExampleObject(name: String)
 
-  def withLocalStackSubscription[R](queue: Queue, topic: Topic): Fixture[SubscribeResult, R] =
+  def withLocalStackSubscription[R](
+    queue: Queue,
+    topic: Topic): Fixture[SubscribeResult, R] =
     fixture[SubscribeResult, R](
       create = {
         val subRequest = new SubscribeRequest(topic.arn, "sqs", queue.arn)
@@ -51,12 +53,14 @@ trait Messaging
       }
     )
 
-  def withExampleObjectMessageWriter[R](bucket: Bucket,
-                                        topic: Topic,
-                                        writerSnsClient: AmazonSNS = snsClient)(
+  def withExampleObjectMessageWriter[R](
+    bucket: Bucket,
+    topic: Topic,
+    writerSnsClient: AmazonSNS = snsClient)(
     testWith: TestWith[MessageWriter[ExampleObject], R]): R =
-    withMessageWriter[ExampleObject, R](bucket, topic, writerSnsClient) { messageWriter =>
-      testWith(messageWriter)
+    withMessageWriter[ExampleObject, R](bucket, topic, writerSnsClient) {
+      messageWriter =>
+        testWith(messageWriter)
     }
 
   def withMessageWriter[T, R](bucket: Bucket,
@@ -78,8 +82,9 @@ trait Messaging
   }
 
   def withMessageStream[T, R](queue: SQS.Queue, metricsSender: MetricsSender)(
-    testWith: TestWith[MessageStream[T], R])(implicit actorSystem: ActorSystem,
-                                             objectStore: ObjectStore[T]): R = {
+    testWith: TestWith[MessageStream[T], R])(
+    implicit actorSystem: ActorSystem,
+    objectStore: ObjectStore[T]): R = {
     val stream = new MessageStream[T](
       sqsClient = asyncSqsClient,
       sqsConfig = createSQSConfigWith(queue),

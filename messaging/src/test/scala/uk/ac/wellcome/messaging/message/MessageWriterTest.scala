@@ -184,19 +184,19 @@ class MessageWriterTest
             Thread.sleep(2)
             val eventualAttempt2 = messageWriter.write(largeMessage, subject)
 
-            whenReady(Future.sequence(List(eventualAttempt1, eventualAttempt2))) {
-              _ =>
-                val messages = listMessagesReceivedFromSNS(topic)
-                messages should have size (2)
+            whenReady(
+              Future.sequence(List(eventualAttempt1, eventualAttempt2))) { _ =>
+              val messages = listMessagesReceivedFromSNS(topic)
+              messages should have size (2)
 
-                val locations = messages
-                  .map { msg =>
-                    fromJson[MessageNotification](msg.message).get
-                  }
-                  .map { _.asInstanceOf[RemoteNotification] }
-                  .map { _.location }
+              val locations = messages
+                .map { msg =>
+                  fromJson[MessageNotification](msg.message).get
+                }
+                .map { _.asInstanceOf[RemoteNotification] }
+                .map { _.location }
 
-                locations.distinct should have size 2
+              locations.distinct should have size 2
             }
           }
         }
