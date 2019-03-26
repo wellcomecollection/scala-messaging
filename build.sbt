@@ -1,5 +1,5 @@
 val projectName = "messaging"
-val projectVersion = "1.6.0"
+val projectVersion = "1.7.0"
 
 enablePlugins(DockerComposePlugin)
 
