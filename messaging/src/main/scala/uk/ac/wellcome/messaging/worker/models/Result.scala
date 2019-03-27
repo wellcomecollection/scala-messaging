@@ -7,7 +7,7 @@ sealed trait Result[Summary] {
 }
 
 case class DeterministicFailure[Summary](
-                                         failure: Throwable,
+  failure: Throwable,
   summary: Option[Summary] = Option.empty[Summary]
 ) extends Result[Summary]
     with Completed
