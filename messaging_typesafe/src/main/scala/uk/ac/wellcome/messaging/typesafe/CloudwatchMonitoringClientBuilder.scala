@@ -11,5 +11,6 @@ object CloudwatchMonitoringClientBuilder {
   def buildCloudwatchMonitoringClient(config: Config)(
     implicit
     materializer: ActorMaterializer,
-    ec: ExecutionContext) = new CloudwatchMonitoringClient(MetricsBuilder.buildMetricsSender(config))
+    ec: ExecutionContext) =
+    new CloudwatchMonitoringClient(MetricsBuilder.buildMetricsSender(config))
 }
