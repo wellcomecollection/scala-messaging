@@ -3,7 +3,7 @@ package uk.ac.wellcome.messaging.worker.models
 sealed trait Result[Summary] {
   val summary: Option[Summary]
   def pretty =
-    s"${this.getClass.getSimpleName}: ${summary.getOrElse("no-summary")}"
+    s"${this.getClass.getSimpleName}: ${summary.getOrElse("<no-summary>")}"
 }
 
 case class DeterministicFailure[Summary](
