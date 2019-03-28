@@ -91,10 +91,11 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
 
   class MyMonitoringProcessor(result: Result[_],
                               toActionShouldFail: Boolean = false,
-                              monitoringClientShouldFail: Boolean = false)
+                              monitoringClientShouldFail: Boolean = false)(
+                               implicit ec: ExecutionContext)
       extends MonitoringProcessor {
-    implicit val monitoringClient: FakeMonitoringClient = new FakeMonitoringClient(
-      monitoringClientShouldFail)
+    implicit val monitoringClient: FakeMonitoringClient =
+      new FakeMonitoringClient(monitoringClientShouldFail)
 
     def record[ProcessMonitoringClient <: MonitoringClient](result: Result[_])(
       implicit ec: ExecutionContext): Future[Result[_]] =

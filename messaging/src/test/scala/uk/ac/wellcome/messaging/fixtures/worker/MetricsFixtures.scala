@@ -9,14 +9,14 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait MetricsFixtures extends Matchers {
 
-  class FakeMonitoringClient(shouldFail: Boolean = false)
+  class FakeMonitoringClient(shouldFail: Boolean = false)(
+    implicit ec: ExecutionContext)
     extends MonitoringClient
       with Logging {
     var incrementCountCalls: Map[String, Int] = Map.empty
     var recordValueCalls: Map[String, List[Double]] = Map.empty
 
-    override def incrementCount(metricName: String)(
-      implicit ec: ExecutionContext): Future[Unit] = Future {
+    override def incrementCount(metricName: String): Future[Unit] = Future {
       info(s"MyMonitoringClient incrementing $metricName")
       if (shouldFail) {
         throw new RuntimeException(
@@ -26,8 +26,7 @@ trait MetricsFixtures extends Matchers {
         .getOrElse(metricName, 0) + 1))
     }
 
-    override def recordValue(metricName: String, value: Double)(
-      implicit ec: ExecutionContext): Future[Unit] = Future {
+    override def recordValue(metricName: String, value: Double): Future[Unit] = Future {
       info(s"MyMonitoringClient recordValue $metricName: $value")
       if (shouldFail) {
         throw new RuntimeException("FakeMonitoringClient recordValue Error!")
@@ -37,7 +36,8 @@ trait MetricsFixtures extends Matchers {
     }
   }
 
-  def withFakeMonitoringClient[R](shouldFail: Boolean = false)(testWith: TestWith[FakeMonitoringClient, R]): R = {
+  def withFakeMonitoringClient[R](shouldFail: Boolean = false)(testWith: TestWith[FakeMonitoringClient, R])(
+    implicit ec: ExecutionContext): R = {
     val fakeMonitoringClient = new FakeMonitoringClient(shouldFail)
     testWith(fakeMonitoringClient)
   }
