@@ -10,12 +10,12 @@ trait MessageProcessor[Message, Work, Summary] {
 
   protected def process(message: Message)(
     implicit ec: ExecutionContext): Future[Result[Summary]] = {
-    val working = for {
+    val futureResult: Future[Result[Summary]] = for {
       work <- transform(message)
       result <- processMessage(work)
     } yield result
 
-    working recover {
+    futureResult recover {
       case e => DeterministicFailure[Summary](e)
     }
   }
