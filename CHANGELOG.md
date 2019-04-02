@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.9.0 - 2019-04-02
+
+add a cloudwatch implementation for the monitoring client
+
 ## v1.8.0 - 2019-03-26
 
 Simplify worker
