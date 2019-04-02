@@ -14,7 +14,7 @@ import uk.ac.wellcome.messaging.sqsworker.alpakka.{
 import scala.concurrent.{ExecutionContext, Future}
 
 trait AlpakkaSQSWorkerFixtures
-    extends WorkerFixtures
+  extends WorkerFixtures
     with MetricsFixtures
     with Matchers {
 
@@ -25,13 +25,11 @@ trait AlpakkaSQSWorkerFixtures
     process: TestInnerProcess
   )(testWith: TestWith[(AlpakkaSQSWorker[MyWork, MySummary],
                         AlpakkaSQSWorkerConfig,
-                        MyMonitoringClient,
+                        FakeMonitoringClient,
                         CallCounter),
                        R])(
-    implicit fakeMonitoringClient: MyMonitoringClient =
-      new MyMonitoringClient(),
-    ec: ExecutionContext
-  ): R = {
+    implicit ec: ExecutionContext): R = {
+    implicit val fakeMonitoringClient: FakeMonitoringClient = new FakeMonitoringClient()
 
     val alpakkaSQSWorkerConfigNamespace = "namespace"
 

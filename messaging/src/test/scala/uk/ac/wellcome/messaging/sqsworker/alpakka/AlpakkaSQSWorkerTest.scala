@@ -24,7 +24,7 @@ class AlpakkaSQSWorkerTest
 
   describe("When a message is processed") {
     it(
-      "increments metrics, consumes the message, and for nonDeterministicFailures places a message on the DLQ") {
+      "increments metrics, consumes the message, and for a x3 retried nonDeterministicFailure places the message on the DLQ") {
 
       val processResults = Table(
         ("testProcess", "metricName", "metricCount", "dlqSize"),
