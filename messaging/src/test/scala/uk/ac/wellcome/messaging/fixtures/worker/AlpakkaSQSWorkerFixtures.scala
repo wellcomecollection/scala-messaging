@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import org.scalatest.Matchers
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
+import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.sqsworker.alpakka.{
   AlpakkaSQSWorker,
@@ -16,7 +17,8 @@ import scala.util.Random
 trait AlpakkaSQSWorkerFixtures
   extends WorkerFixtures
     with MetricsFixtures
-    with Matchers {
+    with Matchers
+    with SQS {
 
   def createAlpakkaSQSWorkerConfig(
     queue: Queue,

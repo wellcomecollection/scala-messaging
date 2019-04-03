@@ -3,12 +3,10 @@ package uk.ac.wellcome.messaging.sqsworker.alpakka
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{FunSpec, Matchers}
-import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.fixtures.SQS.QueuePair
 import uk.ac.wellcome.messaging.fixtures.worker.AlpakkaSQSWorkerFixtures
-import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -16,11 +14,9 @@ class AlpakkaSQSWorkerTest
     extends FunSpec
     with Matchers
     with Messaging
-    with Akka
     with AlpakkaSQSWorkerFixtures
     with ScalaFutures
-    with IntegrationPatience
-    with MetricsSenderFixture {
+    with IntegrationPatience {
 
   describe("When a message is processed") {
     it(
@@ -41,12 +37,8 @@ class AlpakkaSQSWorkerTest
           {
             withLocalSqsQueueAndDlq {
               case QueuePair(queue, dlq) =>
-                withActorSystem { actorSystem =>
-                  withAlpakkaSQSWorker(
-                    queue,
-                    actorSystem,
-                    asyncSqsClient,
-                    testProcess) {
+                withActorSystem { implicit actorSystem =>
+                  withAlpakkaSQSWorker(queue, testProcess) {
                     case (worker, _, metrics, callCounter) =>
                       worker.start
 
@@ -88,12 +80,8 @@ class AlpakkaSQSWorkerTest
       forAll(messages) { message =>
         withLocalSqsQueueAndDlq {
           case QueuePair(queue, dlq) =>
-            withActorSystem { actorSystem =>
-              withAlpakkaSQSWorker(
-                queue,
-                actorSystem,
-                asyncSqsClient,
-                successful) {
+            withActorSystem { implicit actorSystem =>
+              withAlpakkaSQSWorker(queue, successful) {
                 case (worker, _, metrics, _) =>
                   worker.start
 
