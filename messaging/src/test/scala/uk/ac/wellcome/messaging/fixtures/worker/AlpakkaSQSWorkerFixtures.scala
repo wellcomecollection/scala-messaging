@@ -30,7 +30,8 @@ trait AlpakkaSQSWorkerFixtures
 
   def withAlpakkaSQSWorker[R](
     queue: Queue,
-    process: TestInnerProcess
+    process: TestInnerProcess,
+    namespace: String = Random.alphanumeric take 10 mkString
   )(testWith: TestWith[(AlpakkaSQSWorker[MyWork, MySummary],
                         AlpakkaSQSWorkerConfig,
                         FakeMonitoringClient,
@@ -41,7 +42,7 @@ trait AlpakkaSQSWorkerFixtures
     ec: ExecutionContext): R = {
     implicit val fakeMonitoringClient: FakeMonitoringClient = new FakeMonitoringClient()
 
-    val config = createAlpakkaSQSWorkerConfig(queue)
+    val config = createAlpakkaSQSWorkerConfig(queue, namespace)
 
     val callCounter = new CallCounter()
     val testProcess = (o: MyWork) =>
