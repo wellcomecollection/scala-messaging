@@ -41,7 +41,7 @@ trait SNS extends Matchers with Logging {
   private val accessKey = "access"
   private val secretKey = "secret"
 
-  val snsClient: AmazonSNS = SNSClientFactory.create(
+  implicit val snsClient: AmazonSNS = SNSClientFactory.create(
     region = regionName,
     endpoint = localSNSEndpointUrl,
     accessKey = accessKey,
@@ -170,7 +170,7 @@ trait SNS extends Matchers with Logging {
     val messages = getMessages(topic)
 
     messages match {
-      case Left(e) => throw (e)
+      case Left(e) => throw e
       case Right(t) => t.size
     }
   }
