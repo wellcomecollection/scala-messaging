@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.10.0 - 2019-04-04
+
+Improvements to ergonomics of the new AlpakkaSQSWorker-related fixtures.
+
 ## v1.9.0 - 2019-04-02
 
 add a cloudwatch implementation for the monitoring client
