@@ -3,12 +3,10 @@ package uk.ac.wellcome.messaging.sqsworker.alpakka
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{FunSpec, Matchers}
-import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.fixtures.SQS.QueuePair
 import uk.ac.wellcome.messaging.fixtures.worker.AlpakkaSQSWorkerFixtures
-import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -16,11 +14,11 @@ class AlpakkaSQSWorkerTest
     extends FunSpec
     with Matchers
     with Messaging
-    with Akka
     with AlpakkaSQSWorkerFixtures
     with ScalaFutures
-    with IntegrationPatience
-    with MetricsSenderFixture {
+    with IntegrationPatience {
+
+  val namespace = "AlpakkaSQSWorkerTest"
 
   describe("When a message is processed") {
     it(
@@ -28,9 +26,9 @@ class AlpakkaSQSWorkerTest
 
       val processResults = Table(
         ("testProcess", "metricName", "metricCount", "dlqSize"),
-        (successful, "namespace/Successful", 1, 0),
-        (deterministicFailure, "namespace/DeterministicFailure", 1, 0),
-        (nonDeterministicFailure, "namespace/NonDeterministicFailure", 3, 1)
+        (successful, s"$namespace/Successful", 1, 0),
+        (deterministicFailure, s"$namespace/DeterministicFailure", 1, 0),
+        (nonDeterministicFailure, s"$namespace/NonDeterministicFailure", 3, 1)
       )
 
       forAll(processResults) {
@@ -41,12 +39,8 @@ class AlpakkaSQSWorkerTest
           {
             withLocalSqsQueueAndDlq {
               case QueuePair(queue, dlq) =>
-                withActorSystem { actorSystem =>
-                  withAlpakkaSQSWorker(
-                    queue,
-                    actorSystem,
-                    asyncSqsClient,
-                    testProcess) {
+                withActorSystem { implicit actorSystem =>
+                  withAlpakkaSQSWorker(queue, testProcess, namespace) {
                     case (worker, _, metrics, callCounter) =>
                       worker.start
 
@@ -58,13 +52,15 @@ class AlpakkaSQSWorkerTest
                         callCounter.calledCount shouldBe expectedMetricCount
 
                         assertMetricCount(
-                          metrics,
-                          metricName,
-                          expectedMetricCount)
+                          metrics = metrics,
+                          metricName = metricName,
+                          expectedCount = expectedMetricCount
+                        )
                         assertMetricDurations(
-                          metrics,
-                          "namespace/Duration",
-                          expectedMetricCount)
+                          metrics = metrics,
+                          metricName = s"$namespace/Duration",
+                          expectedNumberDurations = expectedMetricCount
+                        )
 
                         assertQueueEmpty(queue)
                         assertQueueHasSize(dlq, expectedDlqSize)
@@ -88,12 +84,8 @@ class AlpakkaSQSWorkerTest
       forAll(messages) { message =>
         withLocalSqsQueueAndDlq {
           case QueuePair(queue, dlq) =>
-            withActorSystem { actorSystem =>
-              withAlpakkaSQSWorker(
-                queue,
-                actorSystem,
-                asyncSqsClient,
-                successful) {
+            withActorSystem { implicit actorSystem =>
+              withAlpakkaSQSWorker(queue, successful, namespace) {
                 case (worker, _, metrics, _) =>
                   worker.start
 
@@ -103,10 +95,15 @@ class AlpakkaSQSWorkerTest
                     //process.called shouldBe false
 
                     assertMetricCount(
-                      metrics,
-                      "namespace/DeterministicFailure",
-                      1)
-                    assertMetricDurations(metrics, "namespace/Duration", 1)
+                      metrics = metrics,
+                      metricName = s"$namespace/DeterministicFailure",
+                      expectedCount = 1
+                    )
+                    assertMetricDurations(
+                      metrics = metrics,
+                      metricName = s"$namespace/Duration",
+                      expectedNumberDurations = 1
+                    )
 
                     assertQueueEmpty(queue)
                     assertQueueEmpty(dlq)

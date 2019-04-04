@@ -1,7 +1,7 @@
 package uk.ac.wellcome.messaging.fixtures.worker
 
 import grizzled.slf4j.Logging
-import org.scalatest.Matchers
+import org.scalatest.{Assertion, Matchers}
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 
@@ -45,8 +45,7 @@ trait MetricsFixtures extends Matchers {
   protected def assertMetricCount(metrics: FakeMonitoringClient,
                                   metricName: String,
                                   expectedCount: Int,
-                                  isEmpty: Boolean = false) = {
-
+                                  isEmpty: Boolean = false): Assertion =
     if (isEmpty) {
       metrics.incrementCountCalls shouldBe Map.empty
     } else {
@@ -54,7 +53,6 @@ trait MetricsFixtures extends Matchers {
         metricName -> expectedCount
       )
     }
-  }
 
   protected def assertMetricDurations(metrics: FakeMonitoringClient,
                                       metricName: String,

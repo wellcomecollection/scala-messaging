@@ -49,14 +49,14 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
   def localStackEndpoint(queue: Queue) =
     s"sqs://${queue.name}"
 
-  val sqsClient: AmazonSQS = SQSClientFactory.createSyncClient(
+  implicit val sqsClient: AmazonSQS = SQSClientFactory.createSyncClient(
     region = regionName,
     endpoint = sqsEndpointUrl,
     accessKey = sqsAccessKey,
     secretKey = sqsSecretKey
   )
 
-  val asyncSqsClient: AmazonSQSAsync = SQSClientFactory.createAsyncClient(
+  implicit val asyncSqsClient: AmazonSQSAsync = SQSClientFactory.createAsyncClient(
     region = regionName,
     endpoint = sqsEndpointUrl,
     accessKey = sqsAccessKey,

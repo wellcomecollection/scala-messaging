@@ -9,11 +9,9 @@ class CloudwatchMonitoringClient(metricsSender: MetricsSender)
     extends MonitoringClient
     with Logging {
 
-  override def incrementCount(metricName: String): Future[Unit] = {
+  override def incrementCount(metricName: String): Future[Unit] =
     metricsSender.incrementCount(metricName)
-  }
 
-  override def recordValue(metricName: String, value: Double): Future[Unit] = {
+  override def recordValue(metricName: String, value: Double): Future[Unit] =
     metricsSender.recordValue(metricName, value)
-  }
 }

@@ -1,10 +1,10 @@
 package uk.ac.wellcome.messaging.fixtures.worker
 
 import akka.actor.ActorSystem
-import com.amazonaws.services.sqs.AmazonSQSAsync
 import org.scalatest.Matchers
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
+import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.sqsworker.alpakka.{
   AlpakkaSQSWorker,
@@ -12,34 +12,37 @@ import uk.ac.wellcome.messaging.sqsworker.alpakka.{
 }
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Random
 
 trait AlpakkaSQSWorkerFixtures
   extends WorkerFixtures
     with MetricsFixtures
-    with Matchers {
+    with Matchers
+    with SQS {
+
+  def createAlpakkaSQSWorkerConfig(
+    queue: Queue,
+    namespace: String = Random.alphanumeric take 10 mkString): AlpakkaSQSWorkerConfig =
+    AlpakkaSQSWorkerConfig(
+      namespace = namespace,
+      queueUrl = queue.url
+    )
 
   def withAlpakkaSQSWorker[R](
     queue: Queue,
-    actorSystem: ActorSystem,
-    snsClient: AmazonSQSAsync,
-    process: TestInnerProcess
+    process: TestInnerProcess,
+    namespace: String = Random.alphanumeric take 10 mkString
   )(testWith: TestWith[(AlpakkaSQSWorker[MyWork, MySummary],
                         AlpakkaSQSWorkerConfig,
                         FakeMonitoringClient,
                         CallCounter),
                        R])(
-    implicit ec: ExecutionContext): R = {
+    implicit
+    actorSystem: ActorSystem,
+    ec: ExecutionContext): R = {
     implicit val fakeMonitoringClient: FakeMonitoringClient = new FakeMonitoringClient()
 
-    val alpakkaSQSWorkerConfigNamespace = "namespace"
-
-    implicit val _snsClient = snsClient
-    implicit val _actorSystem = actorSystem
-
-    val config = AlpakkaSQSWorkerConfig(
-      alpakkaSQSWorkerConfigNamespace,
-      queue.url
-    )
+    val config = createAlpakkaSQSWorkerConfig(queue, namespace)
 
     val callCounter = new CallCounter()
     val testProcess = (o: MyWork) =>
