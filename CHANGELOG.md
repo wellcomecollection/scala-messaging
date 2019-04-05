@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.10.1 - 2019-04-05
+
+Bump scala-storage dependency.
+
 ## v1.10.0 - 2019-04-04
 
 Improvements to ergonomics of the new AlpakkaSQSWorker-related fixtures.
