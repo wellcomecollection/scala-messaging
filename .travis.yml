@@ -4,6 +4,13 @@ before_script:
   - openssl aes-256-cbc -K $encrypted_29d7b6eda40d_key -iv $encrypted_29d7b6eda40d_iv -in secrets.zip.enc -out secrets.zip -d
   - git remote add ssh-origin "git@github.com:wellcometrust/scala-messaging.git"
 
+cache:
+  directories:
+    - $HOME/.sbt
+    - $HOME/.ivy2/cache
+    - project/target
+    - messaging/target
+    - messaging_typesafe/target
 
 
 # Everything below this line is boilerplate that should be reusable,
@@ -13,13 +20,6 @@ sudo: false
 
 scala:
 - 2.12.6
-
-cache:
-  directories:
-    - $HOME/.sbt
-    - $HOME/.ivy2/cache
-    - project/target
-    - target
 
 branches:
   only:
