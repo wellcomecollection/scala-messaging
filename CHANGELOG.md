@@ -6,7 +6,7 @@ Bump the version of scala-storage.
 
 ## v1.10.1 - 2019-04-05
 
-Bump scala-storage dependency.
+Bump the version of scala-storage.
 
 ## v1.10.0 - 2019-04-04
 
