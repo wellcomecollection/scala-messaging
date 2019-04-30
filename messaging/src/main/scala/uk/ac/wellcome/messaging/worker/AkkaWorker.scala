@@ -7,9 +7,8 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 
 import scala.concurrent.Future
 
-
 trait AkkaWorker[Message, Work, Summary, Action]
-  extends Worker[Message, Work, Summary, Action] {
+    extends Worker[Message, Work, Summary, Action] {
 
   implicit val as: ActorSystem
   implicit val am: ActorMaterializer =
@@ -34,8 +33,8 @@ trait AkkaWorker[Message, Work, Summary, Action]
   private def completionSource(parallelism: Int): ProcessedSource =
     source.mapAsyncUnordered(parallelism)(processMessage)
 
-  def start: Future[Done] = completionSource(parallelism)
+  def start: Future[Done] =
+    completionSource(parallelism)
       .toMat(sink)(Keep.right)
       .run()
 }
-

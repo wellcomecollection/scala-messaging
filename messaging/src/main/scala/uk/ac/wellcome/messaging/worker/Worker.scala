@@ -2,14 +2,14 @@ package uk.ac.wellcome.messaging.worker
 
 import java.time.Instant
 
-
-
-import uk.ac.wellcome.messaging.worker.models.{Completed, WorkCompletion, Retry}
+import uk.ac.wellcome.messaging.worker.models.{Completed, Retry, WorkCompletion}
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
-import uk.ac.wellcome.messaging.worker.steps.{MessageProcessor, MonitoringProcessor}
+import uk.ac.wellcome.messaging.worker.steps.{
+  MessageProcessor,
+  MonitoringProcessor
+}
 
 import scala.concurrent.{ExecutionContext, Future}
-
 
 trait Worker[Message, Work, Summary, Action]
     extends MessageProcessor[Message, Work, Summary]
@@ -35,7 +35,8 @@ trait Worker[Message, Work, Summary, Action]
     for {
       summary <- process(message)
       monitor <- record(startTime, summary)
-    } yield WorkCompletion(
+    } yield
+      WorkCompletion(
         message,
         summary,
         monitor
@@ -46,7 +47,7 @@ trait Worker[Message, Work, Summary, Action]
     done match {
       case WorkCompletion(message, response, _) =>
         response.asInstanceOf[Action] match {
-          case _: Retry => retryAction(message)
+          case _: Retry     => retryAction(message)
           case _: Completed => completedAction(message)
         }
     }

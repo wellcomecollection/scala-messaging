@@ -11,8 +11,7 @@ sealed trait MessageTransform[Message, Work] {
   val transform: Message => Future[Work]
 }
 
-trait SnsSqsTransform[Work]
-  extends MessageTransform[SQSMessage, Work] {
+trait SnsSqsTransform[Work] extends MessageTransform[SQSMessage, Work] {
 
   type SQSTransform = SQSMessage => Future[Work]
 
@@ -22,10 +21,8 @@ trait SnsSqsTransform[Work]
   val transform: SQSTransform = (message: SQSMessage) =>
     Future.fromTry(
       for {
-        notification <-
-          fromJson[NotificationMessage](message.getBody)
-        work <-
-          fromJson[Work](notification.body)
+        notification <- fromJson[NotificationMessage](message.getBody)
+        work <- fromJson[Work](notification.body)
       } yield work
-    )
+  )
 }
