@@ -85,15 +85,17 @@ class WorkerTest
               monClientFail
             )
 
-            val process = worker.work(message)
+            val process = worker.processMessage(message)
 
             whenReady(process) { _ =>
-              worker.calledCount shouldBe calledCount
+              worker.callCounter.calledCount shouldBe calledCount
 
-              assertMetricCount(worker.metrics, metricName, metricCount, empty)
+              assertMetricCount(
+                worker.mc, metricName, metricCount, empty
+              )
 
               assertMetricDurations(
-                worker.metrics,
+                worker.mc,
                 "namespace/Duration",
                 metricCount,
                 empty)

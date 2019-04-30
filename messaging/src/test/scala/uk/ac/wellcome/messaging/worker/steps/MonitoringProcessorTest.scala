@@ -58,23 +58,29 @@ class MonitoringProcessorTest
     it("performs the correct monitoring functions") {
       forAll(postProcessActions) {
         (result, metricName, count, noMetric, monClientFail, checkType) =>
+
           val processor =
-            new MyMonitoringProcessor(result, false, monClientFail)
+            new MyMonitoringProcessor(
+              toActionShouldFail = false,
+              monitoringClientShouldFail = monClientFail
+            )
 
-          val metrics = processor.monitoringClient
-          val futureResult = processor.record(result)
+          val metrics = processor.mc
 
-          whenReady(futureResult) { action =>
-            checkType(action)
+            val recorded = processor.record(result)
 
-            assertMetricCount(metrics, metricName, count, noMetric)
-            assertMetricDurations(
-              metrics,
-              "namespace/Duration",
-              count,
-              noMetric)
+            whenReady(recorded) { action =>
+              checkType(action)
+
+              assertMetricCount(metrics, metricName, count, noMetric)
+              assertMetricDurations(
+                metrics,
+                "namespace/Duration",
+                count,
+                noMetric)
+            }
           }
-      }
+
     }
   }
 }

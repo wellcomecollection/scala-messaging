@@ -6,12 +6,10 @@ import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
-import uk.ac.wellcome.messaging.sqsworker.alpakka.{
-  AlpakkaSQSWorker,
-  AlpakkaSQSWorkerConfig
-}
+import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
+import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.Random
 
 trait AlpakkaSQSWorkerFixtures
@@ -32,27 +30,25 @@ trait AlpakkaSQSWorkerFixtures
     queue: Queue,
     process: TestInnerProcess,
     namespace: String = Random.alphanumeric take 10 mkString
-  )(testWith: TestWith[(AlpakkaSQSWorker[MyWork, MySummary],
+  )(testWith: TestWith[(AlpakkaSQSWorker[MyWork, MySummary, MonitoringClient],
                         AlpakkaSQSWorkerConfig,
                         FakeMonitoringClient,
                         CallCounter),
                        R])(
     implicit
-    actorSystem: ActorSystem,
+    as: ActorSystem,
     ec: ExecutionContext): R = {
-    implicit val fakeMonitoringClient: FakeMonitoringClient = new FakeMonitoringClient()
+    implicit val mc: FakeMonitoringClient = new FakeMonitoringClient()
 
     val config = createAlpakkaSQSWorkerConfig(queue, namespace)
 
     val callCounter = new CallCounter()
     val testProcess = (o: MyWork) =>
-      Future {
-        createResult(process, callCounter)(o)
-    }
+        createResult(process, callCounter)(ec)(o)
 
     val worker =
-      new AlpakkaSQSWorker[MyWork, MySummary](config)(testProcess)
+      new AlpakkaSQSWorker[MyWork, MySummary, MonitoringClient](config)(testProcess)
 
-    testWith((worker, config, fakeMonitoringClient, callCounter))
+    testWith((worker, config, mc, callCounter))
   }
 }
