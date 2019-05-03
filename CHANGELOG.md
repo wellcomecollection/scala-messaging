@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v4.0.0 - 2019-05-03
+
+Adds an intermediate AkkaWorker type and further generalises Worker behaviour
+
 ## v3.0.0 - 2019-05-02
 
 Bump the version of scala-storage to 4.1.0.
