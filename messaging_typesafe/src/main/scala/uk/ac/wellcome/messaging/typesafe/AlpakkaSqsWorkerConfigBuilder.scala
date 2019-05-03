@@ -1,18 +1,14 @@
-package uk.ac.wellcome.platform.archive.bagunpacker.config.builders
+package uk.ac.wellcome.messaging.typesafe
 
 import com.typesafe.config.Config
 import uk.ac.wellcome.messaging.sqsworker.alpakka.AlpakkaSQSWorkerConfig
-import uk.ac.wellcome.messaging.typesafe.SQSBuilder.buildSQSConfig
-import uk.ac.wellcome.typesafe.config.builders.EnrichConfig._
+import uk.ac.wellcome.messaging.typesafe.SQSBuilder
+import uk.ac.wellcome.monitoring.typesafe.MetricsBuilder
 
 object AlpakkaSqsWorkerConfigBuilder {
-  def build(config: Config) = {
-    val sqsConfig = buildSQSConfig(config)
-    val metricsNamespace = config.required[String]("aws.metrics.namespace")
+  def build(config: Config) =
     AlpakkaSQSWorkerConfig(
-      metricsNamespace,
-      sqsConfig.queueUrl,
-      sqsConfig.parallelism
+      metricsConfig = MetricsBuilder.buildMetricsConfig(config),
+      sqsConfig = SQSBuilder.buildSQSConfig(config)
     )
-  }
 }

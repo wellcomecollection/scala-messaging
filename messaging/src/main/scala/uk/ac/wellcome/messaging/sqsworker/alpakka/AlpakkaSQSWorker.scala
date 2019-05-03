@@ -29,9 +29,9 @@ class AlpakkaSQSWorker[Work, Summary, MonitoringClientImpl <: MonitoringClient](
 
   type SQSAction = SQSMessage => (SQSMessage, sqs.MessageAction)
 
-  val parallelism: Int = config.parallelism
-  val source = SqsSource(config.queueUrl)
-  val sink = SqsAckSink(config.queueUrl)
+  val parallelism: Int = config.sqsConfig.parallelism
+  val source = SqsSource(config.sqsConfig.queueUrl)
+  val sink = SqsAckSink(config.sqsConfig.queueUrl)
 
   private val makeVisibleAction = MessageAction
     .changeMessageVisibility(visibilityTimeout = 0)
@@ -42,7 +42,7 @@ class AlpakkaSQSWorker[Work, Summary, MonitoringClientImpl <: MonitoringClient](
   val completedAction: SQSAction = (message: SQSMessage) =>
     (message, MessageAction.delete)
 
-  override val namespace: String = config.namespace
+  override val namespace: String = config.metricsConfig.namespace
 }
 
 object AlpakkaSQSWorker {

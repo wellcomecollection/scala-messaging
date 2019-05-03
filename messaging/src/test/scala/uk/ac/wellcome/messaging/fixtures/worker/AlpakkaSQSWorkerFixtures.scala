@@ -8,7 +8,9 @@ import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
 import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
+import uk.ac.wellcome.monitoring.MetricsConfig
 
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.util.Random
 
@@ -22,8 +24,8 @@ trait AlpakkaSQSWorkerFixtures
     queue: Queue,
     namespace: String = Random.alphanumeric take 10 mkString): AlpakkaSQSWorkerConfig =
     AlpakkaSQSWorkerConfig(
-      namespace = namespace,
-      queueUrl = queue.url
+      metricsConfig = MetricsConfig(namespace, flushInterval = 1.second),
+      sqsConfig = createSQSConfigWith(queue)
     )
 
   def withAlpakkaSQSWorker[R](
