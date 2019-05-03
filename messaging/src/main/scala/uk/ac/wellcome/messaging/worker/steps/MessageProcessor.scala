@@ -5,17 +5,20 @@ import uk.ac.wellcome.messaging.worker.models.{DeterministicFailure, Result}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MessageProcessor[Message, Work, Summary] {
-  protected def transform(message: Message): Future[Work]
-  protected def processMessage(work: Work): Future[Result[Summary]]
+  type ResultSummary = Future[Result[Summary]]
+
+  val transform: Message => Future[Work]
+  val doWork: Work => ResultSummary
 
   protected def process(message: Message)(
-    implicit ec: ExecutionContext): Future[Result[Summary]] = {
-    val futureResult: Future[Result[Summary]] = for {
+    implicit ec: ExecutionContext): ResultSummary = {
+
+    val working = for {
       work <- transform(message)
-      result <- processMessage(work)
+      result <- doWork(work)
     } yield result
 
-    futureResult recover {
+    working recover {
       case e => DeterministicFailure[Summary](e)
     }
   }

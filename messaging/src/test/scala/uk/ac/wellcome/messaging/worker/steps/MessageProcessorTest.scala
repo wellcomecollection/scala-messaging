@@ -33,7 +33,7 @@ class MessageProcessorTest
       forAll(processResults) {
         (testProcess, messageToWorkShouldFail, checkType) =>
           val processor =
-            new MyMessageProcessor(testProcess, messageToWorkShouldFail)
+            new MyMessageProcessor(createResult(testProcess, new CallCounter), messageToWorkShouldFail)
           val futureResult = processor.process(message)
 
           whenReady(futureResult)(checkType)
