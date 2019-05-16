@@ -4,7 +4,10 @@ import com.amazonaws.services.sns.AmazonSNS
 import com.typesafe.config.Config
 import uk.ac.wellcome.config.models.AWSClientConfig
 import uk.ac.wellcome.messaging.sns._
-import uk.ac.wellcome.typesafe.config.builders.{AWSClientConfigBuilder, AkkaBuilder}
+import uk.ac.wellcome.typesafe.config.builders.{
+  AWSClientConfigBuilder,
+  AkkaBuilder
+}
 import uk.ac.wellcome.typesafe.config.builders.EnrichConfig._
 
 object SNSBuilder extends AWSClientConfigBuilder {
@@ -34,10 +37,13 @@ object SNSBuilder extends AWSClientConfigBuilder {
 
   def buildSNSWriter(config: Config, namespace: String = ""): SNSWriter =
     new SNSWriter(
-      snsMessageSender = buildBetterSNSMessageSender(config, namespace = namespace)
+      snsMessageSender =
+        buildBetterSNSMessageSender(config, namespace = namespace)
     )
 
-  def buildBetterSNSMessageSender(config: Config, namespace: String = ""): BetterSNSMessageSender =
+  def buildBetterSNSMessageSender(
+    config: Config,
+    namespace: String = ""): BetterSNSMessageSender =
     new BetterSNSMessageSender(
       snsClient = buildSNSClient(config),
       snsConfig = buildSNSConfig(config, namespace = namespace)

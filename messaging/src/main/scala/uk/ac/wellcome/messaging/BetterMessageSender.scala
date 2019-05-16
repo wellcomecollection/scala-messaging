@@ -15,10 +15,9 @@ trait BetterMessageSender[DestinationConfig] extends Logging {
     destination: DestinationConfig
   ): Try[Unit]
 
-  def send(
-    message: String,
-    subject: String,
-    destination: DestinationConfig = defaultDestination): Try[Unit] = {
+  def send(message: String,
+           subject: String,
+           destination: DestinationConfig = defaultDestination): Try[Unit] = {
     debug(s"Sending message <<$message>> to $destination")
     sendIndividualMessage(message, subject, destination) match {
       case success @ Success(_) =>
@@ -30,10 +29,9 @@ trait BetterMessageSender[DestinationConfig] extends Logging {
     }
   }
 
-  def sendT[T](
-    message: T,
-    subject: String,
-    destination: DestinationConfig = defaultDestination)(
+  def sendT[T](message: T,
+               subject: String,
+               destination: DestinationConfig = defaultDestination)(
     implicit encoder: Encoder[T]): Try[Unit] =
     toJson(message).flatMap {
       send(_, subject, destination)
