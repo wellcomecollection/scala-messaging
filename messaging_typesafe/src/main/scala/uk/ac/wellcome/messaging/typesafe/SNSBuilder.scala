@@ -34,8 +34,7 @@ object SNSBuilder extends AWSClientConfigBuilder {
 
   def buildSNSWriter(config: Config, namespace: String = ""): SNSWriter =
     new SNSWriter(
-      snsMessageWriter = buildSNSMessageWriter(config),
-      snsConfig = buildSNSConfig(config, namespace = namespace)
+      snsMessageSender = buildBetterSNSMessageSender(config, namespace = namespace)
     )
 
   def buildBetterSNSMessageSender(config: Config, namespace: String = ""): BetterSNSMessageSender =
