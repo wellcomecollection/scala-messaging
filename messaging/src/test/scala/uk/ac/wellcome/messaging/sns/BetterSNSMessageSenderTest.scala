@@ -7,10 +7,10 @@ import uk.ac.wellcome.messaging.fixtures.SNS.Topic
 
 import scala.util.{Failure, Success}
 
-class BetterSNSMessageWriterTest extends FunSpec with Matchers with SNS {
+class BetterSNSMessageSenderTest extends FunSpec with Matchers with SNS {
   it("sends a message to SNS") {
     withLocalSnsTopic { topic =>
-      withBetterSNSMessageWriter(topic) { writer =>
+      withBetterSNSMessageSender(topic) { writer =>
         val result = writer.send(
           message = "hello world",
           subject = "my first message"
@@ -29,7 +29,7 @@ class BetterSNSMessageWriterTest extends FunSpec with Matchers with SNS {
   }
 
   it("fails if it cannot send to SNS") {
-    withBetterSNSMessageWriter(Topic("does not exist")) { writer =>
+    withBetterSNSMessageSender(Topic("does not exist")) { writer =>
       val result = writer.send(
         message = "hello world",
         subject = "my first message"

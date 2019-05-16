@@ -10,7 +10,7 @@ class BetterMemoryMessageSender(val defaultDestination: String) extends BetterMe
 
   var messages: List[Message] = List.empty
 
-  override def send(message: String, subject: String, destination: String = defaultDestination): Try[Unit] = Try {
+  override def sendIndividualMessage(message: String, subject: String, destination: String): Try[Unit] = Try {
     messages = messages :+ Message(
       body = MessageBody(message, subject),
       destination = destination

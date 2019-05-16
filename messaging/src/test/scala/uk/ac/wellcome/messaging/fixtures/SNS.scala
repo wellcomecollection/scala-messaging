@@ -189,7 +189,7 @@ trait SNS extends Matchers with Logging {
     notifications.head.get
   }
 
-  def withBetterSNSMessageWriter[R](topic: Topic)(testWith: TestWith[BetterSNSMessageSender, R]): R = {
+  def withBetterSNSMessageSender[R](topic: Topic)(testWith: TestWith[BetterSNSMessageSender, R]): R = {
     val writer = new BetterSNSMessageSender(
       snsClient = snsClient,
       snsConfig = createSNSConfigWith(topic)

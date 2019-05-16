@@ -12,10 +12,10 @@ class BetterSNSMessageSender(
 ) extends BetterMessageSender[SNSConfig] {
   override val defaultDestination: SNSConfig = snsConfig
 
-  override def send(
+  override def sendIndividualMessage(
     message: String,
     subject: String,
-    destination: SNSConfig = defaultDestination): Try[Unit] = Try {
+    destination: SNSConfig): Try[Unit] = Try {
     val request = new PublishRequest(destination.topicArn, message, subject)
 
     snsClient.publish(request)
