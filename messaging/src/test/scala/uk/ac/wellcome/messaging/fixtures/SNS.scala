@@ -76,11 +76,8 @@ trait SNS extends Matchers with Logging {
     testWith(new SNSMessageWriter(snsClient = snsClient))
 
   def withSNSWriter[R](topic: Topic)(testWith: TestWith[SNSWriter, R]): R =
-    withSNSMessageWriter { snsMessageWriter =>
-      val snsWriter = new SNSWriter(
-        snsMessageWriter = snsMessageWriter,
-        snsConfig = SNSConfig(topic.arn)
-      )
+    withBetterSNSMessageSender(topic) { snsMessageSender =>
+      val snsWriter = new SNSWriter(snsMessageSender)
       testWith(snsWriter)
     }
 

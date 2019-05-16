@@ -5,25 +5,15 @@ import io.circe.Encoder
 
 import scala.concurrent.Future
 
-/** Writes messages to SNS.  This class is configured with a single topic in
-  * `snsConfig`, and writes to the same topic on every request.
-  *
-  */
-class SNSWriter(snsMessageWriter: SNSMessageWriter, snsConfig: SNSConfig)
+class SNSWriter(snsMessageSender: BetterSNSMessageSender)
     extends Logging {
 
-  def writeMessage(message: String, subject: String): Future[PublishAttempt] =
-    snsMessageWriter.writeMessage(
-      message = message,
-      subject = subject,
-      snsConfig = snsConfig
-    )
+  def writeMessage(message: String, subject: String): Future[Unit] = Future.fromTry {
+    snsMessageSender.send(message, subject)
+  }
 
   def writeMessage[T](message: T, subject: String)(
-    implicit encoder: Encoder[T]): Future[PublishAttempt] =
-    snsMessageWriter.writeMessage[T](
-      message = message,
-      subject = subject,
-      snsConfig = snsConfig
-    )
+    implicit encoder: Encoder[T]): Future[Unit] = Future.fromTry {
+    snsMessageSender.sendT(message, subject)
+  }
 }

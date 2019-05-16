@@ -12,6 +12,7 @@ import scala.concurrent.{blocking, ExecutionContext, Future}
   * every request.
   *
   */
+@deprecated("Use BetterSNSMessageSender instead", since = "2019-05-16")
 class SNSMessageWriter(snsClient: AmazonSNS)(implicit ec: ExecutionContext)
     extends Logging {
   def writeMessage(message: String,
