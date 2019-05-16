@@ -1,10 +1,10 @@
 package uk.ac.wellcome.messaging.memory
 
-import uk.ac.wellcome.messaging.BetterMessageWriter
+import uk.ac.wellcome.messaging.BetterMessageSender
 
 import scala.util.Try
 
-class BetterMemoryMessageWriter extends BetterMessageWriter[String] {
+class BetterMemoryMessageSender extends BetterMessageSender[String] {
   override val defaultDestination: String = "defaultDestination"
 
   case class MessageBody(message: String, subject: String)
@@ -12,7 +12,7 @@ class BetterMemoryMessageWriter extends BetterMessageWriter[String] {
 
   var messages: List[Message] = List.empty
 
-  override def writeMessage(message: String, subject: String, destination: String): Try[Unit] = Try {
+  override def send(message: String, subject: String, destination: String): Try[Unit] = Try {
     messages = messages :+ Message(
       body = MessageBody(message, subject),
       destination = destination

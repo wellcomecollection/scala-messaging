@@ -5,20 +5,20 @@ import uk.ac.wellcome.json.JsonUtil.toJson
 
 import scala.util.Try
 
-trait BetterMessageWriter[DestinationConfig] {
+trait BetterMessageSender[DestinationConfig] {
   val defaultDestination: DestinationConfig
 
-  def writeMessage(
+  def send(
     message: String,
     subject: String,
     destination: DestinationConfig = defaultDestination): Try[Unit]
 
-  def writeT[T](
+  def sendT[T](
     message: T,
     subject: String,
     destination: DestinationConfig = defaultDestination)(
     implicit encoder: Encoder[T]): Try[Unit] =
     toJson(message).flatMap {
-      writeMessage(_, subject, destination)
+      send(_, subject, destination)
     }
 }
