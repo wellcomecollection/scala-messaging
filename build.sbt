@@ -17,7 +17,10 @@ val settings: Seq[Def.Setting[_]] = Seq(
     "UTF-8",
     "-Xlint",
     "-Xverify",
-    "-Xfatal-warnings",
+
+    // Temporarily removed while we have deprecations
+    // "-Xfatal-warnings",
+
     "-feature",
     "-language:postfixOps"
   ),

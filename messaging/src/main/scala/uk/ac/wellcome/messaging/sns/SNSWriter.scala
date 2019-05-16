@@ -5,6 +5,7 @@ import io.circe.Encoder
 
 import scala.concurrent.Future
 
+@deprecated("Use BetterSNSMessageSender instead", since = "2019-05-16")
 class SNSWriter(snsMessageSender: BetterSNSMessageSender)
     extends Logging {
 
