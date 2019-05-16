@@ -29,8 +29,6 @@ class MessageWriter[T](
     snsConfig = messageConfig.snsConfig
   )
 
-  private val sns = new SNSWriter(snsMessageSender)
-
   private val dateFormat = new SimpleDateFormat("YYYY/MM/dd")
 
   private def getKeyPrefix(): String = {
@@ -65,12 +63,10 @@ class MessageWriter[T](
         Future.successful(encodedNotification)
       }
 
-      publishAttempt <- sns.writeMessage(
-        message = notification,
-        subject = subject
-      )
-      _ = debug(publishAttempt)
-    } yield publishAttempt
+      _ <- Future.fromTry {
+        snsMessageSender.send(notification, subject)
+      }
+    } yield ()
 
   private def createRemoteNotification(message: T): Future[String] =
     for {
