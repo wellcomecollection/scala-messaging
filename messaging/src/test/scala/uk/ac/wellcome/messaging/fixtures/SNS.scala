@@ -3,20 +3,14 @@ package uk.ac.wellcome.messaging.fixtures
 import com.amazonaws.services.sns.AmazonSNS
 import grizzled.slf4j.Logging
 import io.circe.generic.extras.JsonKey
-import io.circe.{yaml, Decoder, Json, ParsingFailure}
+import io.circe.{Decoder, Json, ParsingFailure, yaml}
 import org.scalatest.Matchers
 import uk.ac.wellcome.fixtures._
 import uk.ac.wellcome.json.JsonUtil._
-import uk.ac.wellcome.messaging.sns.{
-  SNSClientFactory,
-  SNSConfig,
-  SNSMessageWriter,
-  SNSWriter
-}
+import uk.ac.wellcome.messaging.sns.{SNSClientFactory, SNSConfig}
 
-import scala.language.higherKinds
 import scala.collection.immutable.Seq
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.language.higherKinds
 import scala.util.{Random, Success, Try}
 
 object SNS {
@@ -76,18 +70,6 @@ trait SNS extends Matchers with Logging {
       localStackSnsClient.deleteTopic(topic.arn)
     }
   )
-
-  def withSNSMessageWriter[R](testWith: TestWith[SNSMessageWriter, R]): R =
-    testWith(new SNSMessageWriter(snsClient = snsClient))
-
-  def withSNSWriter[R](topic: Topic)(testWith: TestWith[SNSWriter, R]): R =
-    withSNSMessageWriter { snsMessageWriter =>
-      val snsWriter = new SNSWriter(
-        snsMessageWriter = snsMessageWriter,
-        snsConfig = SNSConfig(topic.arn)
-      )
-      testWith(snsWriter)
-    }
 
   // For some reason, Circe struggles to decode MessageInfo if you use @JsonKey
   // to annotate the fields, and I don't care enough to work out why right now.
