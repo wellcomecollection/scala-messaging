@@ -49,9 +49,6 @@ object MessagingBuilder {
     implicit
     encoderT: Encoder[T],
     serialisationStrategy: SerialisationStrategy[T]): MessageWriter[T] = {
-    implicit val executionContext: ExecutionContext =
-      AkkaBuilder.buildExecutionContext()
-
     implicit val storageBackend: S3StorageBackend = new S3StorageBackend(
       s3Client = S3Builder.buildS3Client(config)
     )
