@@ -7,7 +7,7 @@ import com.amazonaws.services.sns.AmazonSNS
 import grizzled.slf4j.Logging
 import io.circe.Encoder
 import uk.ac.wellcome.json.JsonUtil._
-import uk.ac.wellcome.messaging.sns.{PublishAttempt, SNSConfig, SNSMessageWriter, SNSWriter}
+import uk.ac.wellcome.messaging.sns.{SNSConfig, SNSMessageWriter, SNSWriter}
 import uk.ac.wellcome.storage.s3.S3Config
 import uk.ac.wellcome.storage.{KeyPrefix, ObjectStore}
 
@@ -41,7 +41,7 @@ class MessageWriter[T](
   }
 
   def write(message: T, subject: String)(
-    implicit encoder: Encoder[T]): Future[PublishAttempt] =
+    implicit encoder: Encoder[T]): Future[Unit] =
     for {
       jsonString <- Future.fromTry(toJson(message))
       encodedNotification <- Future.fromTry(

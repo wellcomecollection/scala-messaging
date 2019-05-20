@@ -12,7 +12,7 @@ import scala.concurrent.Future
 class SNSWriter(snsMessageWriter: SNSMessageWriter, snsConfig: SNSConfig)
     extends Logging {
 
-  def writeMessage(message: String, subject: String): Future[PublishAttempt] =
+  def writeMessage(message: String, subject: String): Future[Unit] =
     snsMessageWriter.writeMessage(
       message = message,
       subject = subject,
@@ -20,7 +20,7 @@ class SNSWriter(snsMessageWriter: SNSMessageWriter, snsConfig: SNSConfig)
     )
 
   def writeMessage[T](message: T, subject: String)(
-    implicit encoder: Encoder[T]): Future[PublishAttempt] =
+    implicit encoder: Encoder[T]): Future[Unit] =
     snsMessageWriter.writeMessage[T](
       message = message,
       subject = subject,
