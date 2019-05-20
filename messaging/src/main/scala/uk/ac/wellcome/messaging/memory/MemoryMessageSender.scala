@@ -22,7 +22,7 @@ class MemoryMessageSender(
   val destination: String,
   val subject: String
 ) extends MessageSender[String] {
-  override protected val underlying: MemoryIndividualMessageSender =
+  override val underlying: MemoryIndividualMessageSender =
     new MemoryIndividualMessageSender()
 
   def messages: List[underlying.MemoryMessage] = underlying.messages

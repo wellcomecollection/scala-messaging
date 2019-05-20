@@ -15,8 +15,8 @@ trait IndividualMessageSender[Destination] {
 trait MessageSender[Destination] {
   protected val underlying: IndividualMessageSender[Destination]
 
-  protected val subject: String
-  protected val destination: Destination
+  val subject: String
+  val destination: Destination
 
   def send(body: String): Try[Unit] =
     underlying.send(body)(subject, destination)
