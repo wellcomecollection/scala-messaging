@@ -38,7 +38,8 @@ class MessageStream[T](sqsClient: AmazonSQSAsync,
 
   def runStream(
     streamName: String,
-    modifySource: Source[(Message, T), NotUsed] => Source[Message, NotUsed]): Future[Done] =
+    modifySource: Source[(Message, T), NotUsed] => Source[Message, NotUsed])
+    : Future[Done] =
     sqsStream.runStream(
       streamName,
       source => modifySource(messageFromS3Source(source)))
@@ -56,7 +57,8 @@ class MessageStream[T](sqsClient: AmazonSQSAsync,
     )
 
   private def messageFromS3Source(
-    source: Source[(Message, NotificationMessage), NotUsed]): Source[(Message, T), NotUsed] = {
+    source: Source[(Message, NotificationMessage), NotUsed])
+    : Source[(Message, T), NotUsed] = {
     source.mapAsyncUnordered(sqsConfig.parallelism) {
       case (message, notification) =>
         for {

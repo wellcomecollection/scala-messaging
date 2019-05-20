@@ -8,7 +8,8 @@ import scala.util.Try
 trait IndividualMessageSender[Destination] {
   def send(body: String)(subject: String, destination: Destination): Try[Unit]
 
-  def sendT[T](t: T)(subject: String, destination: Destination)(implicit encoder: Encoder[T]): Try[Unit] =
+  def sendT[T](t: T)(subject: String, destination: Destination)(
+    implicit encoder: Encoder[T]): Try[Unit] =
     toJson(t).flatMap { send(_)(subject, destination) }
 }
 

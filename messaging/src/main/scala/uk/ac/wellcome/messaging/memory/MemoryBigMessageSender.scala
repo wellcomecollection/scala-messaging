@@ -23,5 +23,6 @@ class MemoryBigMessageSender[T](
   override val namespace: String = storeNamespace
   override val maxMessageSize: Int = maxSize
 
-  def messages: List[messageSender.underlying.MemoryMessage] = messageSender.messages
+  def messages: List[messageSender.underlying.MemoryMessage] =
+    messageSender.messages
 }

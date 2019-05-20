@@ -6,7 +6,11 @@ import java.util.Date
 import grizzled.slf4j.Logging
 import io.circe.Encoder
 import uk.ac.wellcome.json.JsonUtil._
-import uk.ac.wellcome.messaging.message.{InlineNotification, MessageNotification, RemoteNotification}
+import uk.ac.wellcome.messaging.message.{
+  InlineNotification,
+  MessageNotification,
+  RemoteNotification
+}
 import uk.ac.wellcome.storage.{KeyPrefix, ObjectStore}
 
 import scala.util.{Success, Try}
@@ -36,8 +40,8 @@ trait BigMessageSender[Destination, T] extends Logging {
       encodedInlineNotification <- toJson(inlineNotification)
 
       notification <- if (encodedInlineNotification
-        .getBytes("UTF-8")
-        .length > maxMessageSize) {
+                            .getBytes("UTF-8")
+                            .length > maxMessageSize) {
         createRemoteNotification(t)
       } else {
         Success(inlineNotification)

@@ -28,15 +28,18 @@ object SNSBuilder extends AWSClientConfigBuilder {
       awsClientConfig = buildAWSClientConfig(config, namespace = "sns")
     )
 
-  def buildSNSIndividualMessageSender(config: Config): SNSIndividualMessageSender =
+  def buildSNSIndividualMessageSender(
+    config: Config): SNSIndividualMessageSender =
     new SNSIndividualMessageSender(
       snsClient = buildSNSClient(config)
     )
 
-  def buildSNSMessageSender(config: Config, namespace: String = "", subject: String): SNSMessageSender =
+  def buildSNSMessageSender(config: Config,
+                            namespace: String = "",
+                            subject: String): SNSMessageSender =
     new SNSMessageSender(
       snsClient = buildSNSClient(config),
-      snsConfig =  buildSNSConfig(config, namespace = namespace),
+      snsConfig = buildSNSConfig(config, namespace = namespace),
       subject = subject
     )
 }
