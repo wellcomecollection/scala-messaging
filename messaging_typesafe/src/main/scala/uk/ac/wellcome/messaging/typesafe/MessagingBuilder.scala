@@ -4,7 +4,11 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
 import io.circe.{Decoder, Encoder}
-import uk.ac.wellcome.messaging.message.{MessageStream, MessageWriter, MessageWriterConfig}
+import uk.ac.wellcome.messaging.message.{
+  MessageStream,
+  MessageWriter,
+  MessageWriterConfig
+}
 import uk.ac.wellcome.monitoring.typesafe.MetricsBuilder
 import uk.ac.wellcome.storage.SerialisationStrategy
 import uk.ac.wellcome.storage.s3.S3StorageBackend
@@ -44,8 +48,7 @@ object MessagingBuilder {
   def buildMessageWriter[T](config: Config)(
     implicit
     encoderT: Encoder[T],
-    serialisationStrategy: SerialisationStrategy[T])
-    : MessageWriter[T] = {
+    serialisationStrategy: SerialisationStrategy[T]): MessageWriter[T] = {
     implicit val executionContext: ExecutionContext =
       AkkaBuilder.buildExecutionContext()
 
