@@ -6,17 +6,13 @@ import java.util.Date
 import com.amazonaws.services.sns.AmazonSNS
 import grizzled.slf4j.Logging
 import io.circe.Encoder
-import uk.ac.wellcome.messaging.sns.{
-  PublishAttempt,
-  SNSConfig,
-  SNSMessageWriter,
-  SNSWriter
-}
+import uk.ac.wellcome.messaging.sns.{PublishAttempt, SNSConfig, SNSMessageWriter, SNSWriter}
 import uk.ac.wellcome.storage.s3.S3Config
 import uk.ac.wellcome.storage.{KeyPrefix, ObjectStore}
 import uk.ac.wellcome.json.JsonUtil._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 case class MessageWriterConfig(
   snsConfig: SNSConfig,
@@ -38,7 +34,7 @@ class MessageWriter[T](
 
   private val dateFormat = new SimpleDateFormat("YYYY/MM/dd")
 
-  private def getKeyPrefix(): String = {
+  private def getKeyPrefix: String = {
     val topicName = messageConfig.snsConfig.topicArn.split(":").last
     val currentTime = new Date()
     s"$topicName/${dateFormat.format(currentTime)}/${currentTime.getTime.toString}"
@@ -65,7 +61,9 @@ class MessageWriter[T](
       notification: String <- if (encodedNotification
                                     .getBytes("UTF-8")
                                     .length > 250 * 1000) {
-        createRemoteNotification(message)
+        Future.fromTry {
+          createRemoteNotification(message)
+        }
       } else {
         Future.successful(encodedNotification)
       }
@@ -77,14 +75,14 @@ class MessageWriter[T](
       _ = debug(publishAttempt)
     } yield publishAttempt
 
-  private def createRemoteNotification(message: T): Future[String] =
+  private def createRemoteNotification(message: T): Try[String] =
     for {
       location <- objectStore.put(messageConfig.s3Config.bucketName)(
         message,
-        keyPrefix = KeyPrefix(getKeyPrefix())
+        keyPrefix = KeyPrefix(getKeyPrefix)
       )
       _ = info(s"Successfully stored message in location: $location")
       notification = RemoteNotification(location = location)
-      jsonString <- Future.fromTry(toJson[MessageNotification](notification))
+      jsonString <- toJson[MessageNotification](notification)
     } yield jsonString
 }

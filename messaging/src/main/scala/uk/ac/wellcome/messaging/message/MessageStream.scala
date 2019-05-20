@@ -13,6 +13,7 @@ import uk.ac.wellcome.storage.ObjectStore
 import uk.ac.wellcome.json.JsonUtil._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 class MessageStream[T](sqsClient: AmazonSQSAsync,
                        sqsConfig: SQSConfig,
@@ -41,7 +42,9 @@ class MessageStream[T](sqsClient: AmazonSQSAsync,
       streamName = streamName,
       process = (notification: NotificationMessage) =>
         for {
-          body <- getBody(notification.body)
+          body <- Future.fromTry {
+            getBody(notification.body)
+          }
           result <- process(body)
         } yield result
     )
@@ -52,21 +55,19 @@ class MessageStream[T](sqsClient: AmazonSQSAsync,
     source.mapAsyncUnordered(sqsConfig.parallelism) {
       case (message, notification) =>
         for {
-          deserialisedObject <- getBody(notification.body)
+          deserialisedObject <- Future.fromTry {
+            getBody(notification.body)
+          }
         } yield (message, deserialisedObject)
     }
   }
 
   private def getBody(messageString: String)(
-    implicit decoder: Decoder[T]): Future[T] =
-    for {
-      notification <- Future.fromTry(
-        fromJson[MessageNotification](messageString))
-      body <- notification match {
-        case inlineNotification: InlineNotification =>
-          Future.fromTry(fromJson[T](inlineNotification.jsonString))
-        case remoteNotification: RemoteNotification =>
-          objectStore.get(remoteNotification.location)
-      }
-    } yield body
+    implicit decoder: Decoder[T]): Try[T] =
+    fromJson[MessageNotification](messageString).flatMap {
+      case inlineNotification: InlineNotification =>
+        fromJson[T](inlineNotification.jsonString)
+      case remoteNotification: RemoteNotification =>
+        objectStore.get(remoteNotification.location)
+    }
 }
