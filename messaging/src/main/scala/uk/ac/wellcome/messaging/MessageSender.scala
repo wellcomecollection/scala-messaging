@@ -22,5 +22,5 @@ trait MessageSender[Destination] {
     underlying.send(body)(subject, destination)
 
   def sendT[T](t: T)(implicit encoder: Encoder[T]): Try[Unit] =
-    underlying.sendT(t)(subject, destination)
+    underlying.sendT[T](t)(subject, destination)
 }

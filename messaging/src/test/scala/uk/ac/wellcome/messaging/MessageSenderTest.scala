@@ -42,6 +42,25 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     }
   }
 
+  sealed trait Container {}
+
+  case class Box(sides: Int) extends Container
+  case class Bottle(height: Int) extends Container
+
+  val containers = Seq(Box(sides = 3), Box(sides = 4), Bottle(height = 5))
+
+  it("encodes case classes using the type parameter") {
+    val sender = new MemoryIndividualMessageSender()
+
+    containers.map { c =>
+      sender.sendT[Container](c)(destination = "containers", subject = "stuff to store things in") shouldBe Success(())
+    }
+
+    containers.zip(sender.messages).map { case (container, message) =>
+      fromJson[Container](message.body).get shouldBe container
+    }
+  }
+
   it("sends messages to a default destination/subject") {
     val sender = new MemoryMessageSender(
       destination = "colours",
@@ -72,4 +91,17 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     sender.messages.map { _.destination } shouldBe Seq("trees", "trees", "trees")
     sender.messages.map { _.subject } shouldBe Seq("ideas for my garden", "ideas for my garden", "ideas for my garden")
   }
+
+  it("sends type-parameter encoded case classes to a default destination/subject") {
+    val sender = new MemoryMessageSender(destination = "containers", subject = "stuff to store things in")
+
+    containers.map { c =>
+      sender.sendT[Container](c) shouldBe Success(())
+    }
+
+    containers.zip(sender.messages).map { case (container, message) =>
+      fromJson[Container](message.body).get shouldBe container
+    }
+  }
+
 }
