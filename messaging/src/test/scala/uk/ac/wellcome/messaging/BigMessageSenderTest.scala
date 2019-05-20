@@ -20,7 +20,7 @@ class BigMessageSenderTest extends FunSpec with Matchers {
       maxSize = 10000000
     )
 
-    sender.sendT(redSquare) shouldBe Success(())
+    sender.sendT(redSquare) shouldBe a[Success[_]]
 
     sender.messages should have size 1
     val notification = fromJson[MessageNotification](sender.messages.head.body).get
@@ -34,7 +34,7 @@ class BigMessageSenderTest extends FunSpec with Matchers {
       maxSize = 1
     )
 
-    sender.sendT(redSquare) shouldBe Success(())
+    sender.sendT(redSquare) shouldBe a[Success[_]]
 
     sender.messages should have size 1
     val notification = fromJson[MessageNotification](sender.messages.head.body).get
@@ -49,9 +49,9 @@ class BigMessageSenderTest extends FunSpec with Matchers {
       maxSize = 1
     )
 
-    sender.sendT(redSquare) shouldBe Success(())
+    sender.sendT(redSquare) shouldBe a[Success[_]]
     Thread.sleep(2000)
-    sender.sendT(redSquare) shouldBe Success(())
+    sender.sendT(redSquare) shouldBe a[Success[_]]
 
     sender.messages should have size 2
 
@@ -69,7 +69,7 @@ class BigMessageSenderTest extends FunSpec with Matchers {
       storeNamespace = "squares"
     )
 
-    sender.sendT(redSquare) shouldBe Success(())
+    sender.sendT(redSquare) shouldBe a[Success[_]]
 
     sender.messages should have size 1
     val notification = fromJson[MessageNotification](sender.messages.head.body).get
@@ -85,7 +85,7 @@ class BigMessageSenderTest extends FunSpec with Matchers {
       destination = "squares"
     )
 
-    sender.sendT(redSquare) shouldBe Success(())
+    sender.sendT(redSquare) shouldBe a[Success[_]]
 
     sender.messages should have size 1
     val notification = fromJson[MessageNotification](sender.messages.head.body).get
