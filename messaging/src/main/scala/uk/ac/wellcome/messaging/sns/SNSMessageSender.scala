@@ -30,5 +30,5 @@ class SNSMessageSender(
       snsClient = snsClient
     )
 
-  override protected val destination: SNSConfig = snsConfig
+  override val destination: SNSConfig = snsConfig
 }
