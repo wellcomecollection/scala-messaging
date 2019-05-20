@@ -44,6 +44,25 @@ class BigMessageSenderTest extends FunSpec with Matchers {
     sender.objectStore.get(location) shouldBe Success(redSquare)
   }
 
+  it("gives distinct keys when sending the same message twice") {
+    val sender = new MemoryBigMessageSender[Shape](
+      maxSize = 1
+    )
+
+    sender.sendT(redSquare) shouldBe Success(())
+    Thread.sleep(2000)
+    sender.sendT(redSquare) shouldBe Success(())
+
+    sender.messages should have size 2
+
+    val locations =
+      sender.messages
+        .map { msg => fromJson[MessageNotification](msg.body).get }
+        .map { _.asInstanceOf[RemoteNotification].location }
+
+    locations.distinct should have size 2
+  }
+
   it("uses the namespace when storing messages in the store") {
     val sender = new MemoryBigMessageSender[Shape](
       maxSize = 1,
@@ -94,6 +113,7 @@ class BigMessageSenderTest extends FunSpec with Matchers {
     err shouldBe a[Throwable]
     err.getMessage shouldBe "BOOM!"
 
+    sender.messages shouldBe empty
   }
 
   it("fails if it cannot put a remote object in the store") {
@@ -111,5 +131,7 @@ class BigMessageSenderTest extends FunSpec with Matchers {
     val err = result.failed.get
     err shouldBe a[Throwable]
     err.getMessage shouldBe "BOOM!"
+
+    sender.messages shouldBe empty
   }
 }
