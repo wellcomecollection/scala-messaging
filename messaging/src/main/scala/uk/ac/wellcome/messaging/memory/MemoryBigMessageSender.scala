@@ -1,5 +1,6 @@
 package uk.ac.wellcome.messaging.memory
 
+import io.circe.Encoder
 import uk.ac.wellcome.messaging.BigMessageSender
 import uk.ac.wellcome.storage.{ObjectStore, SerialisationStrategy}
 import uk.ac.wellcome.storage.memory.MemoryObjectStore
@@ -9,7 +10,9 @@ class MemoryBigMessageSender[T](
   storeNamespace: String = "MemoryBigMessageSender",
   destination: String = "MemoryBigMessageSender"
 )(
-  implicit serialisationStrategy: SerialisationStrategy[T]
+  implicit
+  val encoder: Encoder[T],
+  serialisationStrategy: SerialisationStrategy[T]
 ) extends BigMessageSender[String, T] {
   override val messageSender: MemoryMessageSender = new MemoryMessageSender(
     destination = destination,

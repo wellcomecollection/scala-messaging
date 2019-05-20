@@ -15,6 +15,8 @@ import uk.ac.wellcome.json.JsonUtil._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
+
+
 class MessageStream[T](sqsClient: AmazonSQSAsync,
                        sqsConfig: SQSConfig,
                        metricsSender: MetricsSender)(

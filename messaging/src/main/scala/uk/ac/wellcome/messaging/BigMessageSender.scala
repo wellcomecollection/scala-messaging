@@ -17,6 +17,8 @@ trait BigMessageSender[Destination, T] extends Logging {
 
   val namespace: String
 
+  implicit val encoder: Encoder[T]
+
   val maxMessageSize: Int
 
   private val dateFormat = new SimpleDateFormat("YYYY/MM/dd")
@@ -26,7 +28,7 @@ trait BigMessageSender[Destination, T] extends Logging {
     s"${messageSender.destination}/${dateFormat.format(currentTime)}/${currentTime.getTime.toString}"
   }
 
-  def sendT(t: T)(implicit encoder: Encoder[T]): Try[Unit] =
+  def sendT(t: T): Try[MessageNotification] =
     for {
       jsonString <- toJson(t)
       inlineNotification = InlineNotification(jsonString)
@@ -42,7 +44,7 @@ trait BigMessageSender[Destination, T] extends Logging {
       }
 
       _ <- messageSender.sendT[MessageNotification](notification)
-    } yield ()
+    } yield notification
 
   private def createRemoteNotification(t: T): Try[RemoteNotification] =
     for {

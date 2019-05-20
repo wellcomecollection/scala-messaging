@@ -33,9 +33,6 @@ object SNSBuilder extends AWSClientConfigBuilder {
       snsClient = buildSNSClient(config)
     )
 
-  def buildSNSMessageWriter(config: Config): SNSMessageWriter =
-    new SNSMessageWriter(snsClient = buildSNSClient(config))
-
   def buildSNSMessageSender(config: Config, namespace: String = "", subject: String): SNSMessageSender =
     new SNSMessageSender(
       snsClient = buildSNSClient(config),
