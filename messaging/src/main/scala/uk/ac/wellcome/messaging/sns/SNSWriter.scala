@@ -2,10 +2,8 @@ package uk.ac.wellcome.messaging.sns
 
 import grizzled.slf4j.Logging
 import io.circe.Encoder
-import uk.ac.wellcome.json.JsonUtil._
 
 import scala.concurrent.Future
-import scala.util.Try
 
 /** Writes messages to SNS.  This class is configured with a single topic in
   * `snsConfig`, and writes to the same topic on every request.

@@ -2,19 +2,19 @@ package uk.ac.wellcome.messaging.memory
 
 import uk.ac.wellcome.messaging.{IndividualMessageSender, MessageSender}
 
-import scala.util.{Success, Try}
+import scala.util.Try
 
 class MemoryIndividualMessageSender extends IndividualMessageSender[String] {
   case class MemoryMessage(
-    message: String,
+    body: String,
     subject: String,
     destination: String
   )
 
   var messages: List[MemoryMessage] = List.empty
 
-  override def send(message: String)(subject: String, destination: String): Try[Unit] = Try {
-    messages = messages :+ MemoryMessage(message, subject, destination)
+  override def send(body: String)(subject: String, destination: String): Try[Unit] = Try {
+    messages = messages :+ MemoryMessage(body, subject, destination)
   }
 }
 
