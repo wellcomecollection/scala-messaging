@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v5.0.0 - 2019-05-21
+
+Bump the version of scala-storage to 5.0.0.
+
 ## v4.4.0 - 2019-05-15
 
 Bump the version of scala-storage to 4.6.0.
