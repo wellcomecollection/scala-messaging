@@ -35,5 +35,6 @@ class MemoryMessageSender(
 
   def messages: List[underlying.MemoryMessage] = underlying.messages
 
-  def getMessages[T]()(implicit decoder: Decoder[T]): Seq[T] = underlying.getMessages[T]()
+  def getMessages[T]()(implicit decoder: Decoder[T]): Seq[T] =
+    underlying.getMessages[T]()
 }
