@@ -48,7 +48,7 @@ class MessagingIntegrationTest
         val receivedMessages = new ConcurrentLinkedDeque[ExampleObject]()
 
         messages.map { msg =>
-          messageWriter.write(message = msg, subject = subject)
+          messageWriter.write(msg)
         }
 
         messageStream.foreach(

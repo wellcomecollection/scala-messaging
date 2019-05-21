@@ -1,7 +1,6 @@
 package uk.ac.wellcome.messaging.fixtures
 
 import akka.actor.ActorSystem
-import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.sqs._
 import com.amazonaws.services.sqs.model._
 import grizzled.slf4j.Logging
@@ -13,10 +12,6 @@ import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.sqs._
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
-import uk.ac.wellcome.storage.ObjectLocation
-import uk.ac.wellcome.storage.fixtures.S3
-import uk.ac.wellcome.storage.fixtures.S3.Bucket
-import uk.ac.wellcome.storage.vhs.HybridRecord
 
 import scala.collection.JavaConverters._
 import scala.util.Random
@@ -31,7 +26,7 @@ object SQS {
 
 }
 
-trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
+trait SQS extends Matchers with Logging with MetricsSenderFixture {
 
   import SQS._
 
@@ -113,8 +108,8 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
   val localStackSqsClient: AmazonSQS = SQSClientFactory.createSyncClient(
     region = "localhost",
     endpoint = "http://localhost:4576",
-    accessKey = accessKey,
-    secretKey = secretKey
+    accessKey = sqsAccessKey,
+    secretKey = sqsSecretKey
   )
 
   def withLocalStackSqsQueue[R](testWith: TestWith[Queue, R]): R =
@@ -149,40 +144,6 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture with S3 {
   def createNotificationMessageWith[T](message: T)(
     implicit encoder: Encoder[T]): NotificationMessage =
     createNotificationMessageWith(body = toJson(message).get)
-
-  def createHybridRecordWith[T](
-    t: T,
-    version: Int = 1,
-    s3Client: AmazonS3 = s3Client,
-    bucket: Bucket)(implicit encoder: Encoder[T]): HybridRecord = {
-    val s3key = Random.alphanumeric take 10 mkString
-    val content = toJson(t).get
-    s3Client.putObject(bucket.name, s3key, content)
-
-    HybridRecord(
-      id = Random.alphanumeric take 10 mkString,
-      version = version,
-      location = ObjectLocation(namespace = bucket.name, key = s3key)
-    )
-  }
-
-  /** Store an object in S3 and create the HybridRecordNotification that should be sent to SNS. */
-  def createHybridRecordNotificationWith[T](
-    t: T,
-    version: Int = 1,
-    s3Client: AmazonS3 = s3Client,
-    bucket: Bucket)(implicit encoder: Encoder[T]): NotificationMessage = {
-    val hybridRecord = createHybridRecordWith[T](
-      t,
-      version = version,
-      s3Client = s3Client,
-      bucket = bucket
-    )
-
-    createNotificationMessageWith(
-      message = hybridRecord
-    )
-  }
 
   def sendNotificationToSQS(queue: Queue, body: String): SendMessageResult = {
     val message = createNotificationMessageWith(body = body)

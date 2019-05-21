@@ -3,14 +3,15 @@ package uk.ac.wellcome.messaging.typesafe
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
+import io.circe.{Decoder, Encoder}
 import uk.ac.wellcome.messaging.message.{
   MessageStream,
   MessageWriter,
   MessageWriterConfig
 }
 import uk.ac.wellcome.monitoring.typesafe.MetricsBuilder
+import uk.ac.wellcome.storage.SerialisationStrategy
 import uk.ac.wellcome.storage.s3.S3StorageBackend
-import uk.ac.wellcome.storage.type_classes.SerialisationStrategy
 import uk.ac.wellcome.storage.typesafe.S3Builder
 import uk.ac.wellcome.typesafe.config.builders.AkkaBuilder
 
@@ -19,6 +20,7 @@ import scala.concurrent.ExecutionContext
 object MessagingBuilder {
   def buildMessageStream[T](config: Config)(
     implicit actorSystem: ActorSystem,
+    decoderT: Decoder[T],
     materializer: ActorMaterializer,
     serialisationStrategy: SerialisationStrategy[T]): MessageStream[T] = {
     implicit val executionContext: ExecutionContext =
@@ -44,11 +46,9 @@ object MessagingBuilder {
     )
 
   def buildMessageWriter[T](config: Config)(
-    implicit serialisationStrategy: SerialisationStrategy[T])
-    : MessageWriter[T] = {
-    implicit val executionContext: ExecutionContext =
-      AkkaBuilder.buildExecutionContext()
-
+    implicit
+    encoderT: Encoder[T],
+    serialisationStrategy: SerialisationStrategy[T]): MessageWriter[T] = {
     implicit val storageBackend: S3StorageBackend = new S3StorageBackend(
       s3Client = S3Builder.buildS3Client(config)
     )

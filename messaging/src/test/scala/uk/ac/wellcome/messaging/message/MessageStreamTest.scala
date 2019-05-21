@@ -15,7 +15,6 @@ import uk.ac.wellcome.storage.ObjectLocation
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.storage.fixtures.S3.Bucket
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Random
 

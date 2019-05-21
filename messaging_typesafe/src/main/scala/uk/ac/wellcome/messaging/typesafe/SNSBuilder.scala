@@ -3,16 +3,8 @@ package uk.ac.wellcome.messaging.typesafe
 import com.amazonaws.services.sns.AmazonSNS
 import com.typesafe.config.Config
 import uk.ac.wellcome.config.models.AWSClientConfig
-import uk.ac.wellcome.messaging.sns.{
-  SNSClientFactory,
-  SNSConfig,
-  SNSMessageWriter,
-  SNSWriter
-}
-import uk.ac.wellcome.typesafe.config.builders.{
-  AWSClientConfigBuilder,
-  AkkaBuilder
-}
+import uk.ac.wellcome.messaging.sns._
+import uk.ac.wellcome.typesafe.config.builders.AWSClientConfigBuilder
 import uk.ac.wellcome.typesafe.config.builders.EnrichConfig._
 
 object SNSBuilder extends AWSClientConfigBuilder {
@@ -36,13 +28,18 @@ object SNSBuilder extends AWSClientConfigBuilder {
       awsClientConfig = buildAWSClientConfig(config, namespace = "sns")
     )
 
-  def buildSNSMessageWriter(config: Config): SNSMessageWriter =
-    new SNSMessageWriter(snsClient = buildSNSClient(config))(
-      ec = AkkaBuilder.buildExecutionContext())
+  def buildSNSIndividualMessageSender(
+    config: Config): SNSIndividualMessageSender =
+    new SNSIndividualMessageSender(
+      snsClient = buildSNSClient(config)
+    )
 
-  def buildSNSWriter(config: Config, namespace: String = ""): SNSWriter =
-    new SNSWriter(
-      snsMessageWriter = buildSNSMessageWriter(config),
-      snsConfig = buildSNSConfig(config, namespace = namespace)
+  def buildSNSMessageSender(config: Config,
+                            namespace: String = "",
+                            subject: String): SNSMessageSender =
+    new SNSMessageSender(
+      snsClient = buildSNSClient(config),
+      snsConfig = buildSNSConfig(config, namespace = namespace),
+      subject = subject
     )
 }

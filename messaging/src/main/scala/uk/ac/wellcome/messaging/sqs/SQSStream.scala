@@ -14,7 +14,6 @@ import io.circe.Decoder
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.json.exceptions.JsonDecodingError
 import uk.ac.wellcome.monitoring.MetricsSender
-import uk.ac.wellcome.storage.dynamo.DynamoNonFatalError
 
 import scala.concurrent.Future
 
@@ -106,8 +105,6 @@ class SQSStream[T](
     exception match {
       case exception: RecognisedFailure =>
         logger.warn(s"Recognised failure: ${exception.getMessage}")
-      case exception: DynamoNonFatalError =>
-        logger.warn(s"Non-fatal DynamoDB error: ${exception.getMessage}")
       case exception: JsonDecodingError =>
         logger.warn(s"JSON decoding error: ${exception.getMessage}")
       case exception: Exception =>
