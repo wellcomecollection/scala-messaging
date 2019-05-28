@@ -5,16 +5,15 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import akka.stream.scaladsl.Flow
 import org.mockito.Matchers.{endsWith, eq => equalTo}
 import org.mockito.Mockito.{never, times, verify}
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.{Assertion, FunSpec, Matchers}
-import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
-import uk.ac.wellcome.storage.ObjectLocation
-import uk.ac.wellcome.storage.fixtures.S3.Bucket
+import uk.ac.wellcome.storage.memory.MemoryObjectStore
 import uk.ac.wellcome.storage.streaming.CodecInstances._
+import uk.ac.wellcome.storage.{ObjectLocation, ObjectStore}
 
 import scala.concurrent.Future
 import scala.util.Random
@@ -23,10 +22,10 @@ class MessageStreamTest
     extends FunSpec
     with Matchers
     with Messaging
-    with Akka
     with ScalaFutures
     with IntegrationPatience
-    with MetricsSenderFixture {
+    with MetricsSenderFixture
+    with Eventually {
 
   def process(list: ConcurrentLinkedQueue[ExampleObject])(o: ExampleObject) = {
     list.add(o)
@@ -35,6 +34,7 @@ class MessageStreamTest
 
   describe("small messages (<256KB)") {
     it("reads messages off a queue, processes them and deletes them") {
+      implicit val store: ObjectStore[ExampleObject] = new MemoryObjectStore[ExampleObject]()
       withMessageStreamFixtures[ExampleObject, Assertion] {
         case (messageStream, QueuePair(queue, dlq), _) =>
           val messages = createMessages(count = 3)
@@ -63,27 +63,26 @@ class MessageStreamTest
 
   describe("large messages (>256KB)") {
     it("reads messages off a queue, processes them and deletes them") {
+      implicit val store: ObjectStore[ExampleObject] = new MemoryObjectStore[ExampleObject]()
       withMessageStreamFixtures[ExampleObject, Assertion] {
         case (messageStream, QueuePair(queue, dlq), _) =>
-          withLocalS3Bucket { bucket =>
-            val messages = createMessages(count = 3)
+          val messages = createMessages(count = 3)
 
-            messages.foreach { exampleObject =>
-              sendRemoteNotification(bucket, queue, exampleObject)
-            }
+          messages.foreach { exampleObject =>
+            sendRemoteNotification(queue, exampleObject)
+          }
 
-            val received = new ConcurrentLinkedQueue[ExampleObject]()
+          val received = new ConcurrentLinkedQueue[ExampleObject]()
 
-            messageStream.foreach(
-              streamName = "test-stream",
-              process = process(received))
+          messageStream.foreach(
+            streamName = "test-stream",
+            process = process(received))
 
-            eventually {
-              received should contain theSameElementsAs messages
+          eventually {
+            received should contain theSameElementsAs messages
 
-              assertQueueEmpty(queue)
-              assertQueueEmpty(dlq)
-            }
+            assertQueueEmpty(queue)
+            assertQueueEmpty(dlq)
           }
       }
     }
@@ -96,19 +95,10 @@ class MessageStreamTest
       message = InlineNotification(toJson(exampleObject).get)
     )
 
-  private def sendRemoteNotification(bucket: Bucket,
-                                     queue: Queue,
-                                     exampleObject: ExampleObject): Unit = {
-    val s3key = Random.alphanumeric take 10 mkString
-    val location = ObjectLocation(namespace = bucket.name, key = s3key)
+  private def sendRemoteNotification[T](queue: Queue, t: T)(implicit store: ObjectStore[T]): Unit = {
+    val namespace = Random.alphanumeric take 10 mkString
 
-    val serialisedObj = toJson[ExampleObject](exampleObject).get
-
-    s3Client.putObject(
-      location.namespace,
-      location.key,
-      serialisedObj
-    )
+    val location = store.put(namespace = namespace)(t).right.get
 
     sendNotificationToSQS[MessageNotification](
       queue = queue,
@@ -122,6 +112,7 @@ class MessageStreamTest
     }.toList
 
   it("increments *_ProcessMessage metric when successful") {
+    implicit val store: ObjectStore[ExampleObject] = new MemoryObjectStore[ExampleObject]()
     withMessageStreamFixtures[ExampleObject, Future[Unit]] {
       case (messageStream, QueuePair(queue, _), metricsSender) =>
         val exampleObject = ExampleObject("some value")
@@ -140,6 +131,7 @@ class MessageStreamTest
   }
 
   it("fails gracefully when NotificationMessage cannot be deserialised") {
+    implicit val store: ObjectStore[ExampleObject] = new MemoryObjectStore[ExampleObject]()
     withMessageStreamFixtures[ExampleObject, Assertion] {
       case (messageStream, QueuePair(queue, dlq), metricsSender) =>
         sendInvalidJSONto(queue)
@@ -161,12 +153,13 @@ class MessageStreamTest
     }
   }
 
-  it("does not fail gracefully when the s3 object cannot be retrieved") {
+  it("does not fail gracefully when the object cannot be retrieved") {
+    implicit val store: ObjectStore[ExampleObject] = new MemoryObjectStore[ExampleObject]()
     withMessageStreamFixtures[ExampleObject, Assertion] {
       case (messageStream, QueuePair(queue, dlq), metricsSender) =>
         val streamName = "test-stream"
 
-        // Do NOT put S3 object here
+        // Do NOT put an object here
         val objectLocation = ObjectLocation(
           namespace = "bukkit",
           key = "key.json"
@@ -196,6 +189,7 @@ class MessageStreamTest
   }
 
   it("continues reading if processing of some messages fails ") {
+    implicit val store: ObjectStore[ExampleObject] = new MemoryObjectStore[ExampleObject]()
     withMessageStreamFixtures[ExampleObject, Assertion] {
       case (messageStream, QueuePair(queue, dlq), _) =>
         val exampleObject1 = ExampleObject("some value 1")
@@ -225,6 +219,7 @@ class MessageStreamTest
 
   describe("runStream") {
     it("processes messages off a queue") {
+      implicit val store: ObjectStore[ExampleObject] = new MemoryObjectStore[ExampleObject]()
       withMessageStreamFixtures[ExampleObject, Future[Unit]] {
         case (messageStream, QueuePair(queue, dlq), metricsSender) =>
           val exampleObject1 = ExampleObject("some value 1")
@@ -257,6 +252,7 @@ class MessageStreamTest
     }
 
     it("does not delete failed messages and sends a failure metric") {
+      implicit val store: ObjectStore[ExampleObject] = new MemoryObjectStore[ExampleObject]()
       withMessageStreamFixtures[ExampleObject, Future[Unit]] {
         case (messageStream, QueuePair(queue, dlq), metricsSender) =>
           val exampleObject = ExampleObject("some value")
@@ -279,6 +275,7 @@ class MessageStreamTest
     }
 
     it("continues reading if processing of some messages fails") {
+      implicit val store: ObjectStore[ExampleObject] = new MemoryObjectStore[ExampleObject]()
       withMessageStreamFixtures[ExampleObject, Assertion] {
         case (messageStream, QueuePair(queue, dlq), _) =>
           val exampleObject1 = ExampleObject("some value 1")

@@ -8,6 +8,8 @@ import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.Messaging
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
+import uk.ac.wellcome.storage.ObjectStore
+import uk.ac.wellcome.storage.memory.MemoryObjectStore
 import uk.ac.wellcome.storage.streaming.CodecInstances._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -43,7 +45,8 @@ class MessagingIntegrationTest
   }
 
   private def assertMessagesCanBeSentAndReceived(
-    messages: List[ExampleObject]) =
+    messages: List[ExampleObject]) = {
+    implicit val store: ObjectStore[ExampleObject] = new MemoryObjectStore[ExampleObject]()
     withLocalStackMessageWriterMessageStream {
       case (messageStream, messageWriter) =>
         val receivedMessages = new ConcurrentLinkedDeque[ExampleObject]()
@@ -54,27 +57,30 @@ class MessagingIntegrationTest
 
         messageStream.foreach(
           "integration-test-stream",
-          obj => Future { receivedMessages.push(obj) })
+          obj => Future {
+            receivedMessages.push(obj)
+          })
         eventually {
           receivedMessages should contain theSameElementsAs messages
         }
     }
+  }
 
   private def withLocalStackMessageWriterMessageStream[R](
     testWith: TestWith[(MessageStream[ExampleObject],
                         MessageWriter[ExampleObject]),
-                       R]): R = {
+                       R])(
+    implicit store: ObjectStore[ExampleObject]): R = {
     withLocalStackMessageStreamFixtures[R] {
       case (queue, messageStream) =>
-        withLocalS3Bucket { bucket =>
-          withLocalStackSnsTopic { topic =>
-            withLocalStackSubscription(queue, topic) { _ =>
-              withExampleObjectMessageWriter(
-                bucket,
-                topic,
-                localStackSnsClient) { messageWriter =>
+        withLocalStackSnsTopic { topic =>
+          withLocalStackSubscription(queue, topic) { _ =>
+            withMessageWriter[ExampleObject, R](
+              topic = topic,
+              writerSnsClient = localStackSnsClient
+            ) {
+              messageWriter =>
                 testWith((messageStream, messageWriter))
-              }
             }
           }
         }
@@ -82,7 +88,8 @@ class MessagingIntegrationTest
   }
 
   def withLocalStackMessageStreamFixtures[R](
-    testWith: TestWith[(Queue, MessageStream[ExampleObject]), R]): R =
+    testWith: TestWith[(Queue, MessageStream[ExampleObject]), R])(
+    implicit store: ObjectStore[ExampleObject]): R =
     withActorSystem { implicit actorSystem =>
       withMetricsSender() { metricsSender =>
         withLocalStackSqsQueue { queue =>

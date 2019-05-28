@@ -2,28 +2,22 @@ package uk.ac.wellcome.messaging.fixtures
 
 import akka.actor.ActorSystem
 import com.amazonaws.services.sns.AmazonSNS
-import com.amazonaws.services.sns.model.{
-  SubscribeRequest,
-  SubscribeResult,
-  UnsubscribeRequest
-}
+import com.amazonaws.services.sns.model.{SubscribeRequest, SubscribeResult, UnsubscribeRequest}
 import com.amazonaws.services.sqs.model.SendMessageResult
 import io.circe.{Decoder, Encoder}
 import org.scalatest.Matchers
 import uk.ac.wellcome.akka.fixtures.Akka
-import uk.ac.wellcome.fixtures.{fixture, Fixture, TestWith}
+import uk.ac.wellcome.fixtures.{Fixture, TestWith, fixture}
 import uk.ac.wellcome.messaging.message._
 import uk.ac.wellcome.messaging.fixtures.SNS.Topic
 import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 import uk.ac.wellcome.storage.ObjectStore
-import uk.ac.wellcome.storage.fixtures.S3
-import uk.ac.wellcome.storage.fixtures.S3.Bucket
-import uk.ac.wellcome.storage.streaming.CodecInstances._
 
-import scala.util.Success
+import scala.util.{Random, Success}
 import uk.ac.wellcome.json.JsonUtil._
+import uk.ac.wellcome.storage.memory.MemoryObjectStore
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -32,7 +26,6 @@ trait Messaging
     with MetricsSenderFixture
     with SQS
     with SNS
-    with S3
     with Matchers {
 
   case class ExampleObject(name: String)
@@ -54,23 +47,12 @@ trait Messaging
       }
     )
 
-  def withExampleObjectMessageWriter[R](
-    bucket: Bucket,
-    topic: Topic,
-    writerSnsClient: AmazonSNS = snsClient)(
-    testWith: TestWith[MessageWriter[ExampleObject], R]): R =
-    withMessageWriter[ExampleObject, R](bucket, topic, writerSnsClient) {
-      messageWriter =>
-        testWith(messageWriter)
-    }
-
-  def withMessageWriter[T, R](bucket: Bucket,
-                              topic: Topic,
+  def withMessageWriter[T, R](topic: Topic,
                               writerSnsClient: AmazonSNS = snsClient)(
     testWith: TestWith[MessageWriter[T], R])(
     implicit store: ObjectStore[T], encoder: Encoder[T]): R = {
     val messageConfig = MessageWriterConfig(
-      namespace = bucket.name,
+      namespace = Random.alphanumeric.take(10) mkString,
       snsConfig = createSNSConfigWith(topic)
     )
 
@@ -115,11 +97,11 @@ trait Messaging
   /** Given a topic ARN which has received notifications containing pointers
     * to objects in S3, return the unpacked objects.
     */
-  def getMessages[T](topic: Topic)(implicit decoder: Decoder[T]): List[T] =
+  def getMessages[T](store: MemoryObjectStore[T], topic: Topic)(implicit decoder: Decoder[T]): List[T] =
     listMessagesReceivedFromSNS(topic).map { messageInfo =>
       fromJson[MessageNotification](messageInfo.message) match {
         case Success(RemoteNotification(location)) =>
-          getObjectFromS3[T](location)
+          store.get(location).right.get
         case Success(InlineNotification(jsonString)) =>
           fromJson[T](jsonString).get
         case _ =>
