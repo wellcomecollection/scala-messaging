@@ -6,6 +6,7 @@ import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.memory.MemoryBigMessageSender
 import uk.ac.wellcome.messaging.message.{InlineNotification, RemoteNotification}
 import uk.ac.wellcome.storage.ObjectStore
+import uk.ac.wellcome.storage.streaming.CodecInstances._
 
 import scala.util.Success
 

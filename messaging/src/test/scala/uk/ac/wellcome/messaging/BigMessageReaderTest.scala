@@ -1,16 +1,17 @@
 package uk.ac.wellcome.messaging
 
 import io.circe.Decoder
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.{EitherValues, FunSpec, Matchers}
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.json.exceptions.JsonDecodingError
 import uk.ac.wellcome.messaging.message.{InlineNotification, RemoteNotification}
 import uk.ac.wellcome.storage.{ObjectLocation, ObjectStore}
 import uk.ac.wellcome.storage.memory.MemoryObjectStore
+import uk.ac.wellcome.storage.streaming.CodecInstances._
 
 import scala.util.{Failure, Success}
 
-class BigMessageReaderTest extends FunSpec with Matchers {
+class BigMessageReaderTest extends FunSpec with Matchers with EitherValues {
   case class Shape(colour: String, sides: Int)
 
   val blueTriangle = Shape(colour = "blue", sides = 3)
@@ -26,7 +27,7 @@ class BigMessageReaderTest extends FunSpec with Matchers {
 
     val reader = createReader(store)
 
-    val location = store.put(namespace = "shapes")(blueTriangle).get
+    val location = store.put(namespace = "shapes")(blueTriangle).right.get
     val notification = RemoteNotification(location)
 
     reader.read(notification) shouldBe Success(blueTriangle)
