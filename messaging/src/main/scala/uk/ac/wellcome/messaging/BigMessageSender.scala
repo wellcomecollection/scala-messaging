@@ -6,7 +6,11 @@ import java.util.Date
 import grizzled.slf4j.Logging
 import io.circe.Encoder
 import uk.ac.wellcome.json.JsonUtil._
-import uk.ac.wellcome.messaging.message.{InlineNotification, MessageNotification, RemoteNotification}
+import uk.ac.wellcome.messaging.message.{
+  InlineNotification,
+  MessageNotification,
+  RemoteNotification
+}
 import uk.ac.wellcome.storage.{KeyPrefix, ObjectStore}
 
 import scala.util.{Failure, Success, Try}
@@ -46,8 +50,8 @@ trait BigMessageSender[Destination, T] extends Logging {
       _ <- messageSender.sendT[MessageNotification](notification)
     } yield notification
 
-  private def createRemoteNotification(t: T): Try[RemoteNotification] = (
-    for {
+  private def createRemoteNotification(t: T): Try[RemoteNotification] =
+    (for {
       location <- objectStore.put(namespace)(
         t,
         keyPrefix = KeyPrefix(getKeyPrefix)
@@ -55,9 +59,9 @@ trait BigMessageSender[Destination, T] extends Logging {
       _ = info(s"Successfully stored message in location: $location")
       notification = RemoteNotification(location = location)
     } yield notification) match {
-    case Right(value) =>
-      Success(value)
-    case Left(writeError) =>
-      Failure(writeError.e)
-  }
+      case Right(value) =>
+        Success(value)
+      case Left(writeError) =>
+        Failure(writeError.e)
+    }
 }
