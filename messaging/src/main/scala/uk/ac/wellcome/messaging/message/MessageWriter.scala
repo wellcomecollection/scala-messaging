@@ -6,13 +6,12 @@ import io.circe.Encoder
 import uk.ac.wellcome.messaging.sns.{SNSConfig, SNSMessageSender}
 import uk.ac.wellcome.messaging.{BigMessageSender, MessageSender}
 import uk.ac.wellcome.storage.ObjectStore
-import uk.ac.wellcome.storage.s3.S3Config
 
 import scala.concurrent.Future
 
 case class MessageWriterConfig(
   snsConfig: SNSConfig,
-  s3Config: S3Config
+  namespace: String
 )
 
 class MessageWriter[T](
@@ -29,7 +28,7 @@ class MessageWriter[T](
     )
 
     override val objectStore: ObjectStore[T] = objectStoreT
-    override val namespace: String = messageConfig.s3Config.bucketName
+    override val namespace: String = messageConfig.namespace
 
     implicit val encoder: Encoder[T] = encoderT
 

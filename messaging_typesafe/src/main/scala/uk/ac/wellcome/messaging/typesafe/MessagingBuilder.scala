@@ -42,7 +42,7 @@ object MessagingBuilder {
     MessageWriterConfig(
       snsConfig =
         SNSBuilder.buildSNSConfig(config, namespace = "message.writer"),
-      s3Config = S3Builder.buildS3Config(config, namespace = "message.writer")
+      namespace = S3Builder.buildS3Config(config, namespace = "message.writer").bucketName
     )
 
   def buildMessageWriter[T](config: Config)(

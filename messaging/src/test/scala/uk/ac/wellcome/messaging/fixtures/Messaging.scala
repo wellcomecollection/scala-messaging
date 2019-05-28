@@ -70,7 +70,7 @@ trait Messaging
     testWith: TestWith[MessageWriter[T], R])(
     implicit store: ObjectStore[T], encoder: Encoder[T]): R = {
     val messageConfig = MessageWriterConfig(
-      s3Config = createS3ConfigWith(bucket),
+      namespace = bucket.name,
       snsConfig = createSNSConfigWith(topic)
     )
 
