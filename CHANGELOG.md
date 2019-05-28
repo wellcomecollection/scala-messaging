@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v5.1.1 - 2019-05-28
+
+Bump the version of scala-storage to 6.0.1
+
 ## v5.1.0 - 2019-05-21
 
 This release adds a helper method to `MemoryMessageSender` to make it easier to see the messages it's received.
