@@ -5,10 +5,11 @@ import org.scalatest.{FunSpec, Matchers}
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.memory.{MemoryBigMessageSender, MemoryMessageSender}
 import uk.ac.wellcome.messaging.message.{InlineNotification, MessageNotification, RemoteNotification}
-import uk.ac.wellcome.storage.{KeyPrefix, KeySuffix, ObjectLocation, ObjectStore}
+import uk.ac.wellcome.storage._
 import uk.ac.wellcome.storage.memory.MemoryObjectStore
+import uk.ac.wellcome.storage.streaming.CodecInstances._
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 class BigMessageSenderTest extends FunSpec with Matchers {
   case class Shape(colour: String, sides: Int)
@@ -41,7 +42,7 @@ class BigMessageSenderTest extends FunSpec with Matchers {
     notification shouldBe a[RemoteNotification]
     val location = notification.asInstanceOf[RemoteNotification].location
 
-    sender.objectStore.get(location) shouldBe Success(redSquare)
+    sender.objectStore.get(location) shouldBe Right(redSquare)
   }
 
   it("gives distinct keys when sending the same message twice") {
@@ -121,7 +122,7 @@ class BigMessageSenderTest extends FunSpec with Matchers {
       maxSize = 1
     ) {
       override val objectStore: ObjectStore[Shape] = new MemoryObjectStore[Shape]() {
-        override def put(namespace: String)(input: Shape, keyPrefix: KeyPrefix, keySuffix: KeySuffix, userMetadata: Map[String, String]): Try[ObjectLocation] = Failure(new Throwable("BOOM!"))
+        override def put(namespace: String)(input: Shape, keyPrefix: KeyPrefix, keySuffix: KeySuffix, userMetadata: Map[String, String]): Either[BackendWriteError, ObjectLocation] = Left(BackendWriteError(new Throwable("BOOM!")))
       }
     }
 

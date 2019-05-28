@@ -10,7 +10,7 @@ import uk.ac.wellcome.messaging.message.{
 }
 import uk.ac.wellcome.storage.ObjectStore
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 trait BigMessageReader[T] extends Logging {
   val objectStore: ObjectStore[T]
@@ -22,6 +22,11 @@ trait BigMessageReader[T] extends Logging {
       case inlineNotification: InlineNotification =>
         fromJson[T](inlineNotification.jsonString)
       case remoteNotification: RemoteNotification =>
-        objectStore.get(remoteNotification.location)
+        objectStore.get(remoteNotification.location) match {
+          case Right(value) =>
+            Success(value)
+          case Left(readError) =>
+            Failure(readError.e)
+        }
     }
 }

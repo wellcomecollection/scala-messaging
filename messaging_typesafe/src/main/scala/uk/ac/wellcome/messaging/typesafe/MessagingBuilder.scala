@@ -10,8 +10,8 @@ import uk.ac.wellcome.messaging.message.{
   MessageWriterConfig
 }
 import uk.ac.wellcome.monitoring.typesafe.MetricsBuilder
-import uk.ac.wellcome.storage.SerialisationStrategy
 import uk.ac.wellcome.storage.s3.S3StorageBackend
+import uk.ac.wellcome.storage.streaming.Codec
 import uk.ac.wellcome.storage.typesafe.S3Builder
 import uk.ac.wellcome.typesafe.config.builders.AkkaBuilder
 
@@ -22,7 +22,7 @@ object MessagingBuilder {
     implicit actorSystem: ActorSystem,
     decoderT: Decoder[T],
     materializer: ActorMaterializer,
-    serialisationStrategy: SerialisationStrategy[T]): MessageStream[T] = {
+    codecT: Codec[T]): MessageStream[T] = {
     implicit val executionContext: ExecutionContext =
       AkkaBuilder.buildExecutionContext()
 
@@ -48,7 +48,7 @@ object MessagingBuilder {
   def buildMessageWriter[T](config: Config)(
     implicit
     encoderT: Encoder[T],
-    serialisationStrategy: SerialisationStrategy[T]): MessageWriter[T] = {
+    codecT: Codec[T]): MessageWriter[T] = {
     implicit val storageBackend: S3StorageBackend = new S3StorageBackend(
       s3Client = S3Builder.buildS3Client(config)
     )

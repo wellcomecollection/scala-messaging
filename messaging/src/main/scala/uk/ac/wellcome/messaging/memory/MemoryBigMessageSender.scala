@@ -2,8 +2,9 @@ package uk.ac.wellcome.messaging.memory
 
 import io.circe.Encoder
 import uk.ac.wellcome.messaging.BigMessageSender
-import uk.ac.wellcome.storage.{ObjectStore, SerialisationStrategy}
+import uk.ac.wellcome.storage.ObjectStore
 import uk.ac.wellcome.storage.memory.MemoryObjectStore
+import uk.ac.wellcome.storage.streaming.Codec
 
 class MemoryBigMessageSender[T](
   maxSize: Int = 100,
@@ -12,8 +13,9 @@ class MemoryBigMessageSender[T](
 )(
   implicit
   val encoder: Encoder[T],
-  serialisationStrategy: SerialisationStrategy[T]
+  codecT: Codec[T]
 ) extends BigMessageSender[String, T] {
+
   override val messageSender: MemoryMessageSender = new MemoryMessageSender(
     destination = destination,
     subject = "Sent from MemoryBigMessageSender"

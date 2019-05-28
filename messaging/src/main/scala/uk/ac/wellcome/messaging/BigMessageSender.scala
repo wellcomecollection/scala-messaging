@@ -13,7 +13,7 @@ import uk.ac.wellcome.messaging.message.{
 }
 import uk.ac.wellcome.storage.{KeyPrefix, ObjectStore}
 
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 trait BigMessageSender[Destination, T] extends Logging {
   val messageSender: MessageSender[Destination]
@@ -51,12 +51,17 @@ trait BigMessageSender[Destination, T] extends Logging {
     } yield notification
 
   private def createRemoteNotification(t: T): Try[RemoteNotification] =
-    for {
+    (for {
       location <- objectStore.put(namespace)(
         t,
         keyPrefix = KeyPrefix(getKeyPrefix)
       )
       _ = info(s"Successfully stored message in location: $location")
       notification = RemoteNotification(location = location)
-    } yield notification
+    } yield notification) match {
+      case Right(value) =>
+        Success(value)
+      case Left(writeError) =>
+        Failure(writeError.e)
+    }
 }
