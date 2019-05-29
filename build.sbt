@@ -49,6 +49,7 @@ lazy val lib_typesafe =
     .settings(libraryDependencies ++= Dependencies.typesafeDependencies)
 
 lazy val root = (project in file("."))
+  .withId("scala-messaging")
   .aggregate(lib, lib_typesafe)
   .settings(
     Seq(
