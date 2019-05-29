@@ -83,7 +83,7 @@ class BigMessageSenderTest extends FunSpec with Matchers {
   it("uses the destination as a key prefix") {
     val sender = new MemoryBigMessageSender[Shape](
       maxSize = 1,
-      destination = "squares"
+      messageDestination = "squares"
     )
 
     sender.sendT(redSquare) shouldBe a[Success[_]]
