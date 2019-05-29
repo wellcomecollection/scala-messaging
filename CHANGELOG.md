@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v5.2.0 - 2019-05-29
+
+Bump the version of scala-storage, simplify the constructor of `MemoryMessageSender`, and simplify the `SNS` fixture.
+
 ## v5.1.1 - 2019-05-28
 
 Bump the version of scala-storage to 6.0.1
