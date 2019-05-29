@@ -4,7 +4,7 @@ import io.circe.Decoder
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.{IndividualMessageSender, MessageSender}
 
-import scala.util.Try
+import scala.util.{Random, Try}
 
 class MemoryIndividualMessageSender extends IndividualMessageSender[String] {
   case class MemoryMessage(
@@ -26,10 +26,10 @@ class MemoryIndividualMessageSender extends IndividualMessageSender[String] {
       .map { fromJson[T](_).get }
 }
 
-class MemoryMessageSender(
-  val destination: String,
-  val subject: String
-) extends MessageSender[String] {
+class MemoryMessageSender extends MessageSender[String] {
+  val destination: String = Random.alphanumeric.take(10) mkString
+  val subject: String = Random.alphanumeric.take(10) mkString
+
   override val underlying: MemoryIndividualMessageSender =
     new MemoryIndividualMessageSender()
 

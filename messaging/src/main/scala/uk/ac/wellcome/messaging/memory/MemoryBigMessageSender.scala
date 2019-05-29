@@ -16,10 +16,7 @@ class MemoryBigMessageSender[T](
   codecT: Codec[T]
 ) extends BigMessageSender[String, T] {
 
-  override val messageSender: MemoryMessageSender = new MemoryMessageSender(
-    destination = destination,
-    subject = "Sent from MemoryBigMessageSender"
-  )
+  override val messageSender: MemoryMessageSender = new MemoryMessageSender()
 
   override val objectStore: ObjectStore[T] = new MemoryObjectStore[T]()
   override val namespace: String = storeNamespace

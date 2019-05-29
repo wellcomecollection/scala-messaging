@@ -62,10 +62,10 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
   }
 
   it("sends messages to a default destination/subject") {
-    val sender = new MemoryMessageSender(
-      destination = "colours",
-      subject = "ideas for my design"
-    )
+    val sender = new MemoryMessageSender() {
+      override val destination = "colours"
+      override val subject = "ideas for my design"
+    }
 
     sender.send("red") shouldBe Success(())
     sender.send("yellow") shouldBe Success(())
@@ -77,10 +77,10 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
   }
 
   it("sends case classes to a default destination/subject") {
-    val sender = new MemoryMessageSender(
-      destination = "trees",
-      subject = "ideas for my garden"
-    )
+    val sender = new MemoryMessageSender() {
+      override val destination = "trees"
+      override val subject = "ideas for my garden"
+    }
 
     case class Tree(name: String)
 
@@ -93,7 +93,7 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
   }
 
   it("sends type-parameter encoded case classes to a default destination/subject") {
-    val sender = new MemoryMessageSender(destination = "containers", subject = "stuff to store things in")
+    val sender = new MemoryMessageSender()
 
     containers.map { c =>
       sender.sendT[Container](c) shouldBe Success(())
