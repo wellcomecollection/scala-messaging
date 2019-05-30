@@ -5,7 +5,6 @@ object WellcomeDependencies {
     val fixtures = "1.0.0"
     val json = "1.1.1"
     val monitoring = "2.2.0"
-    val storage = "6.1.0"
     val typesafe = "1.0.0"
   }
 
@@ -27,16 +26,6 @@ object WellcomeDependencies {
   val monitoringTypesafeLibrary: Seq[ModuleID] = Seq(
     "uk.ac.wellcome" %% "monitoring_typesafe" % versions.monitoring,
     "uk.ac.wellcome" %% "monitoring_typesafe" % versions.monitoring % "test" classifier "tests"
-  )
-
-  val storageLibrary: Seq[ModuleID] = Seq(
-    "uk.ac.wellcome" %% "storage" % versions.storage,
-    "uk.ac.wellcome" %% "storage" % versions.storage % "test" classifier "tests"
-  )
-
-  val storageTypesafeLibrary: Seq[ModuleID] = Seq[ModuleID](
-    "uk.ac.wellcome" % "storage_typesafe_2.12" % versions.storage,
-    "uk.ac.wellcome" % "storage_typesafe_2.12" % versions.storage % "test" classifier "tests"
   )
 
   val typesafeLibrary: Seq[ModuleID] = Seq[ModuleID](
@@ -83,7 +72,6 @@ object Dependencies {
     "io.circe" %% "circe-yaml" % versions.circeYaml
   ) ++ WellcomeDependencies.jsonLibrary ++
     WellcomeDependencies.monitoringLibrary ++
-    WellcomeDependencies.storageLibrary ++
     WellcomeDependencies.fixturesLibrary ++
     WellcomeDependencies.typesafeLibrary ++
     akkaDependencies ++
@@ -91,7 +79,6 @@ object Dependencies {
     testDependencies ++
     logbackDependencies
 
-  val typesafeDependencies =
-    WellcomeDependencies.monitoringTypesafeLibrary ++
-      WellcomeDependencies.storageTypesafeLibrary
+  val typesafeDependencies: Seq[ModuleID] =
+    WellcomeDependencies.monitoringTypesafeLibrary
 }

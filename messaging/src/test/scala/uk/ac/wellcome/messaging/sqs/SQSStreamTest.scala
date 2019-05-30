@@ -4,12 +4,11 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 import akka.stream.scaladsl.Flow
 import org.mockito.Mockito.{atLeastOnce, never, times, verify}
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.{FunSpec, Matchers}
-import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
-import uk.ac.wellcome.messaging.fixtures.Messaging
+import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
 import uk.ac.wellcome.monitoring.MetricsSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
@@ -19,13 +18,15 @@ import scala.concurrent.Future
 class SQSStreamTest
     extends FunSpec
     with Matchers
-    with Messaging
-    with Akka
     with ScalaFutures
     with IntegrationPatience
-    with MetricsSenderFixture {
+    with MetricsSenderFixture
+    with Eventually
+    with SQS {
 
-  def process(list: ConcurrentLinkedQueue[ExampleObject])(o: ExampleObject) = {
+  case class NamedObject(name: String)
+  
+  def process(list: ConcurrentLinkedQueue[NamedObject])(o: NamedObject): Future[Unit] = {
     list.add(o)
     Future.successful(())
   }
@@ -33,16 +34,16 @@ class SQSStreamTest
   it("reads messages off a queue, processes them and deletes them") {
     withSQSStreamFixtures {
       case (messageStream, QueuePair(queue, dlq), _) =>
-        sendExampleObjects(queue = queue, count = 3)
+        sendNamedObjects(queue = queue, count = 3)
 
-        val received = new ConcurrentLinkedQueue[ExampleObject]()
+        val received = new ConcurrentLinkedQueue[NamedObject]()
 
         messageStream.foreach(
           streamName = "test-stream",
           process = process(received))
 
         eventually {
-          received should contain theSameElementsAs createExampleObjects(
+          received should contain theSameElementsAs createNamedObjects(
             count = 3)
 
           assertQueueEmpty(queue)
@@ -55,9 +56,9 @@ class SQSStreamTest
   it("increments *_ProcessMessage metric when successful") {
     withSQSStreamFixtures {
       case (messageStream, QueuePair(queue, _), metricsSender) =>
-        sendExampleObjects(queue = queue)
+        sendNamedObjects(queue = queue)
 
-        val received = new ConcurrentLinkedQueue[ExampleObject]()
+        val received = new ConcurrentLinkedQueue[NamedObject]()
         messageStream.foreach(
           streamName = "test-stream",
           process = process(received))
@@ -74,7 +75,7 @@ class SQSStreamTest
       case (messageStream, QueuePair(queue, dlq), metricsSender) =>
         sendInvalidJSONto(queue)
 
-        val received = new ConcurrentLinkedQueue[ExampleObject]()
+        val received = new ConcurrentLinkedQueue[NamedObject]()
 
         messageStream.foreach(
           streamName = "test-stream",
@@ -97,11 +98,11 @@ class SQSStreamTest
     "sends a failure metric if it doesn't fail gracefully when processing a message") {
     withSQSStreamFixtures {
       case (messageStream, QueuePair(queue, dlq), metricsSender) =>
-        val exampleObject = ExampleObject("some value 1")
+        val exampleObject = NamedObject("some value 1")
 
         sendSqsMessage(queue, exampleObject)
 
-        def processFailing(o: ExampleObject) = {
+        def processFailing(o: NamedObject) = {
           Future.failed(new RuntimeException("BOOOOM!"))
         }
 
@@ -121,19 +122,19 @@ class SQSStreamTest
   it("continues reading if processing of some messages fails") {
     withSQSStreamFixtures {
       case (messageStream, QueuePair(queue, dlq), _) =>
-        sendExampleObjects(queue = queue, start = 1)
+        sendNamedObjects(queue = queue, start = 1)
         sendInvalidJSONto(queue)
 
-        sendExampleObjects(queue = queue, start = 2)
+        sendNamedObjects(queue = queue, start = 2)
         sendInvalidJSONto(queue)
 
-        val received = new ConcurrentLinkedQueue[ExampleObject]()
+        val received = new ConcurrentLinkedQueue[NamedObject]()
         messageStream.foreach(
           streamName = "test-stream",
           process = process(received))
 
         eventually {
-          received should contain theSameElementsAs createExampleObjects(
+          received should contain theSameElementsAs createNamedObjects(
             count = 2)
 
           assertQueueEmpty(queue)
@@ -146,9 +147,9 @@ class SQSStreamTest
     it("processes messages off a queue ") {
       withSQSStreamFixtures {
         case (messageStream, QueuePair(queue, dlq), metricsSender) =>
-          sendExampleObjects(queue = queue, start = 1, count = 2)
+          sendNamedObjects(queue = queue, start = 1, count = 2)
 
-          val received = new ConcurrentLinkedQueue[ExampleObject]()
+          val received = new ConcurrentLinkedQueue[NamedObject]()
 
           messageStream.runStream(
             "test-stream",
@@ -160,7 +161,7 @@ class SQSStreamTest
               }))
 
           eventually {
-            received should contain theSameElementsAs createExampleObjects(
+            received should contain theSameElementsAs createNamedObjects(
               count = 2)
 
             assertQueueEmpty(queue)
@@ -175,7 +176,7 @@ class SQSStreamTest
     it("does not delete failed messages and sends a failure metric") {
       withSQSStreamFixtures {
         case (messageStream, QueuePair(queue, dlq), metricsSender) =>
-          sendExampleObjects(queue = queue)
+          sendNamedObjects(queue = queue)
 
           messageStream.runStream(
             "test-stream",
@@ -196,13 +197,13 @@ class SQSStreamTest
     it("continues reading if processing of some messages fails") {
       withSQSStreamFixtures {
         case (messageStream, QueuePair(queue, dlq), _) =>
-          sendExampleObjects(queue = queue, start = 1)
+          sendNamedObjects(queue = queue, start = 1)
           sendInvalidJSONto(queue)
 
-          sendExampleObjects(queue = queue, start = 2)
+          sendNamedObjects(queue = queue, start = 2)
           sendInvalidJSONto(queue)
 
-          val received = new ConcurrentLinkedQueue[ExampleObject]()
+          val received = new ConcurrentLinkedQueue[NamedObject]()
           messageStream.runStream(
             "test-stream",
             source =>
@@ -213,7 +214,7 @@ class SQSStreamTest
               }))
 
           eventually {
-            received should contain theSameElementsAs createExampleObjects(
+            received should contain theSameElementsAs createNamedObjects(
               count = 2)
 
             assertQueueEmpty(queue)
@@ -223,27 +224,27 @@ class SQSStreamTest
     }
   }
 
-  private def createExampleObjects(start: Int = 1,
-                                   count: Int): List[ExampleObject] =
+  private def createNamedObjects(start: Int = 1,
+                                   count: Int): List[NamedObject] =
     (start until start + count).map { i =>
-      ExampleObject(s"Example value $i")
+      NamedObject(s"Example value $i")
     }.toList
 
-  private def sendExampleObjects(queue: Queue,
+  private def sendNamedObjects(queue: Queue,
                                  start: Int = 1,
                                  count: Int = 1) =
-    createExampleObjects(start = start, count = count).map { exampleObject =>
+    createNamedObjects(start = start, count = count).map { exampleObject =>
       sendSqsMessage(queue = queue, obj = exampleObject)
     }
 
   def withSQSStreamFixtures[R](
-    testWith: TestWith[(SQSStream[ExampleObject], QueuePair, MetricsSender),
+    testWith: TestWith[(SQSStream[NamedObject], QueuePair, MetricsSender),
                        R]): R =
     withActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>
           withMockMetricsSender { metricsSender =>
-            withSQSStream[ExampleObject, R](queue, metricsSender) { stream =>
+            withSQSStream[NamedObject, R](queue, metricsSender) { stream =>
               testWith((stream, queuePair, metricsSender))
             }
           }
