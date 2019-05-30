@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v5.3.0 - 2019-05-30
+
+Remove all the hybrid S3/SNS messaging code from this repo, and move it to the catalogue repo.
+
+This breaks the dependency between scala-messaging and scala-storage.
+
 ## v5.2.0 - 2019-05-29
 
 Bump the version of scala-storage, simplify the constructor of `MemoryMessageSender`, and simplify the `SNS` fixture.
