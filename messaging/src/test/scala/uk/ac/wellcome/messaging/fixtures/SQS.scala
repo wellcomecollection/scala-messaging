@@ -1,6 +1,7 @@
 package uk.ac.wellcome.messaging.fixtures
 
 import akka.actor.ActorSystem
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.amazonaws.services.sqs._
 import com.amazonaws.services.sqs.model._
 import grizzled.slf4j.Logging
@@ -10,23 +11,22 @@ import uk.ac.wellcome.fixtures._
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.sqs._
-import uk.ac.wellcome.monitoring.MetricsSender
-import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
+import uk.ac.wellcome.monitoring.Metrics
+import uk.ac.wellcome.monitoring.memory.MemoryMetrics
 
 import scala.collection.JavaConverters._
+import scala.concurrent.Future
 import scala.util.Random
 
 object SQS {
-
   case class Queue(url: String, arn: String) {
     override def toString = s"SQS.Queue(url = $url, name = $name)"
     def name = url.split("/").toList.last
   }
   case class QueuePair(queue: Queue, dlq: Queue)
-
 }
 
-trait SQS extends Matchers with Logging with MetricsSenderFixture {
+trait SQS extends Matchers with Logging {
 
   import SQS._
 
@@ -117,7 +117,7 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture {
       testWith(queue)
     }
 
-  def withSQSStream[T, R](queue: Queue, metricsSender: MetricsSender)(
+  def withSQSStream[T, R](queue: Queue, metrics: Metrics[Future, StandardUnit])(
     testWith: TestWith[SQSStream[T], R])(
     implicit actorSystem: ActorSystem): R = {
     val sqsConfig = createSQSConfigWith(queue)
@@ -125,18 +125,19 @@ trait SQS extends Matchers with Logging with MetricsSenderFixture {
     val stream = new SQSStream[T](
       sqsClient = asyncSqsClient,
       sqsConfig = sqsConfig,
-      metricsSender = metricsSender)
+      metricsSender = metrics
+    )
 
     testWith(stream)
   }
 
   def withSQSStream[T, R](queue: Queue)(testWith: TestWith[SQSStream[T], R])(
-    implicit actorSystem: ActorSystem): R =
-    withMetricsSender() { metricsSender =>
-      withSQSStream[T, R](queue, metricsSender) { sqsStream =>
-        testWith(sqsStream)
-      }
+    implicit actorSystem: ActorSystem): R = {
+    val metrics = new MemoryMetrics[StandardUnit]()
+    withSQSStream[T, R](queue, metrics) { sqsStream =>
+      testWith(sqsStream)
     }
+  }
 
   def createNotificationMessageWith(body: String): NotificationMessage =
     NotificationMessage(body = body)
