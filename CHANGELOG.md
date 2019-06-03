@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v5.3.1 - 2019-06-03
+
+Remove Mockito from the SQS trait and use MemoryMetrics everywhere, and bump the version of scala-monitoring.
+
 ## v5.3.0 - 2019-05-30
 
 Remove all the hybrid S3/SNS messaging code from this repo, and move it to the catalogue repo.
