@@ -4,7 +4,7 @@ object WellcomeDependencies {
   private lazy val versions = new {
     val fixtures = "1.0.0"
     val json = "1.1.1"
-    val monitoring = "2.2.0"
+    val monitoring = "2.3.0"
     val typesafe = "1.0.0"
   }
 
@@ -41,7 +41,6 @@ object Dependencies {
     val akkaStreamAlpakka = "0.20"
     val circe = "0.9.0"
     val circeYaml = "0.8.0"
-    val mockito = "1.9.5"
     val scalatest = "3.0.1"
     val logback = "1.2.3"
   }
@@ -61,8 +60,7 @@ object Dependencies {
   )
 
   val testDependencies = Seq(
-    "org.scalatest" %% "scalatest" % versions.scalatest % Test,
-    "org.mockito" % "mockito-core" % versions.mockito % Test
+    "org.scalatest" %% "scalatest" % versions.scalatest % Test
   )
 
   val libraryDependencies: Seq[ModuleID] = Seq(

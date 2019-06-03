@@ -3,15 +3,15 @@ package uk.ac.wellcome.messaging.sqs
 import java.util.concurrent.ConcurrentLinkedQueue
 
 import akka.stream.scaladsl.Flow
-import org.mockito.Mockito.{atLeastOnce, never, times, verify}
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.{FunSpec, Matchers}
+import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
-import uk.ac.wellcome.monitoring.MetricsSender
-import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
+import uk.ac.wellcome.monitoring.memory.MemoryMetrics
 
 import scala.concurrent.Future
 
@@ -20,9 +20,9 @@ class SQSStreamTest
     with Matchers
     with ScalaFutures
     with IntegrationPatience
-    with MetricsSenderFixture
     with Eventually
-    with SQS {
+    with SQS
+    with Akka {
 
   case class NamedObject(name: String)
   
@@ -64,8 +64,7 @@ class SQSStreamTest
           process = process(received))
 
         eventually {
-          verify(metricsSender, atLeastOnce)
-            .incrementCount("test-stream_ProcessMessage_success")
+          metricsSender.incrementedCounts shouldBe Seq("test-stream_ProcessMessage_success")
         }
     }
   }
@@ -82,10 +81,11 @@ class SQSStreamTest
           process = process(received))
 
         eventually {
-          verify(metricsSender, never())
-            .incrementCount("test-stream_ProcessMessage_failure")
-          verify(metricsSender, times(3))
-            .incrementCount("test-stream_ProcessMessage_recognisedFailure")
+          metricsSender.incrementedCounts shouldBe Seq(
+            "test-stream_ProcessMessage_recognisedFailure",
+            "test-stream_ProcessMessage_recognisedFailure",
+            "test-stream_ProcessMessage_recognisedFailure"
+          )
           received shouldBe empty
 
           assertQueueEmpty(queue)
@@ -111,8 +111,11 @@ class SQSStreamTest
           process = processFailing)
 
         eventually {
-          verify(metricsSender, times(3))
-            .incrementCount(metricName = "test-stream_ProcessMessage_failure")
+          metricsSender.incrementedCounts shouldBe Seq(
+            "test-stream_ProcessMessage_failure",
+            "test-stream_ProcessMessage_failure",
+            "test-stream_ProcessMessage_failure"
+          )
           assertQueueEmpty(queue)
           assertQueueHasSize(dlq, size = 1)
         }
@@ -167,8 +170,10 @@ class SQSStreamTest
             assertQueueEmpty(queue)
             assertQueueEmpty(dlq)
 
-            verify(metricsSender, times(2))
-              .incrementCount("test-stream_ProcessMessage_success")
+            metricsSender.incrementedCounts shouldBe Seq(
+              "test-stream_ProcessMessage_success",
+              "test-stream_ProcessMessage_success"
+            )
           }
       }
     }
@@ -188,8 +193,11 @@ class SQSStreamTest
             assertQueueEmpty(queue)
             assertQueueHasSize(dlq, 1)
 
-            verify(metricsSender, times(3))
-              .incrementCount("test-stream_ProcessMessage_failure")
+            metricsSender.incrementedCounts shouldBe Seq(
+              "test-stream_ProcessMessage_failure",
+              "test-stream_ProcessMessage_failure",
+              "test-stream_ProcessMessage_failure"
+            )
           }
       }
     }
@@ -238,15 +246,14 @@ class SQSStreamTest
     }
 
   def withSQSStreamFixtures[R](
-    testWith: TestWith[(SQSStream[NamedObject], QueuePair, MetricsSender),
+    testWith: TestWith[(SQSStream[NamedObject], QueuePair, MemoryMetrics[StandardUnit]),
                        R]): R =
     withActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>
-          withMockMetricsSender { metricsSender =>
-            withSQSStream[NamedObject, R](queue, metricsSender) { stream =>
-              testWith((stream, queuePair, metricsSender))
-            }
+          val metrics = new MemoryMetrics[StandardUnit]()
+          withSQSStream[NamedObject, R](queue, metrics) { stream =>
+            testWith((stream, queuePair, metrics))
           }
       }
     }

@@ -1,19 +1,20 @@
 package uk.ac.wellcome.messaging.sqs
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
 import akka.stream.alpakka.sqs.MessageAction
 import akka.stream.alpakka.sqs.MessageAction.Delete
 import akka.stream.alpakka.sqs.scaladsl.{SqsAckSink, SqsSource}
 import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
 import akka.{Done, NotUsed}
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.Message
 import grizzled.slf4j.Logging
 import io.circe.Decoder
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.json.exceptions.JsonDecodingError
-import uk.ac.wellcome.monitoring.MetricsSender
+import uk.ac.wellcome.monitoring.Metrics
 
 import scala.concurrent.Future
 
@@ -32,10 +33,10 @@ import scala.concurrent.Future
 //        process = processMessage
 //      )
 //
-class SQSStream[T](
-  sqsClient: AmazonSQSAsync,
-  sqsConfig: SQSConfig,
-  metricsSender: MetricsSender)(implicit val actorSystem: ActorSystem)
+class SQSStream[T](sqsClient: AmazonSQSAsync,
+                   sqsConfig: SQSConfig,
+                   metricsSender: Metrics[Future, StandardUnit])(
+  implicit val actorSystem: ActorSystem)
     extends Logging {
 
   implicit val dispatcher = actorSystem.dispatcher

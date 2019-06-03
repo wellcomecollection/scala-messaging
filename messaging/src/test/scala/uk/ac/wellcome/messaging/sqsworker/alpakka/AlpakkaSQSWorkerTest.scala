@@ -3,6 +3,7 @@ package uk.ac.wellcome.messaging.sqsworker.alpakka
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{FunSpec, Matchers}
+import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS.QueuePair
 import uk.ac.wellcome.messaging.fixtures.worker.AlpakkaSQSWorkerFixtures
@@ -15,7 +16,8 @@ class AlpakkaSQSWorkerTest
     with AlpakkaSQSWorkerFixtures
     with ScalaFutures
     with IntegrationPatience
-    with Eventually {
+    with Eventually
+    with Akka {
 
   val namespace = "AlpakkaSQSWorkerTest"
 
