@@ -1,5 +1,7 @@
 package uk.ac.wellcome.messaging.fixtures.worker
 
+import java.time.Instant
+
 import akka.actor.ActorSystem
 import org.scalatest.Matchers
 import uk.ac.wellcome.fixtures.TestWith
@@ -7,7 +9,7 @@ import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
-import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringClient
 import uk.ac.wellcome.monitoring.MetricsConfig
 
 import scala.concurrent.duration._
@@ -32,15 +34,15 @@ trait AlpakkaSQSWorkerFixtures
     queue: Queue,
     process: TestInnerProcess,
     namespace: String = Random.alphanumeric take 10 mkString
-  )(testWith: TestWith[(AlpakkaSQSWorker[MyWork, MySummary, MonitoringClient],
+  )(testWith: TestWith[(AlpakkaSQSWorker[MyWork, Instant, MySummary, MetricsMonitoringClient],
                         AlpakkaSQSWorkerConfig,
-                        FakeMonitoringClient,
+                        FakeMetricsMonitoringClient,
                         CallCounter),
                        R])(
     implicit
     as: ActorSystem,
     ec: ExecutionContext): R = {
-    implicit val mc: FakeMonitoringClient = new FakeMonitoringClient()
+    implicit val mc: FakeMetricsMonitoringClient = new FakeMetricsMonitoringClient()
 
     val config = createAlpakkaSQSWorkerConfig(queue, namespace)
 
@@ -49,7 +51,7 @@ trait AlpakkaSQSWorkerFixtures
         createResult(process, callCounter)(ec)(o)
 
     val worker =
-      new AlpakkaSQSWorker[MyWork, MySummary, MonitoringClient](config)(testProcess)
+      new AlpakkaSQSWorker[MyWork, Instant, MySummary, MetricsMonitoringClient](config)(testProcess)
 
     testWith((worker, config, mc, callCounter))
   }

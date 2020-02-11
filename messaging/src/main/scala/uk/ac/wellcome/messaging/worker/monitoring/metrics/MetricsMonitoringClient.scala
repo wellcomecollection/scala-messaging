@@ -1,8 +1,8 @@
-package uk.ac.wellcome.messaging.worker.monitoring
+package uk.ac.wellcome.messaging.worker.monitoring.metrics
 
 import scala.concurrent.Future
 
-trait MonitoringClient {
+trait MetricsMonitoringClient {
   def incrementCount(metricName: String): Future[Unit]
   def recordValue(metricName: String, value: Double): Future[Unit]
 }

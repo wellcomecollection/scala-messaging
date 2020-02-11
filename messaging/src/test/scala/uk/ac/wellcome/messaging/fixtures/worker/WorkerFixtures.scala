@@ -6,8 +6,8 @@ import grizzled.slf4j.Logging
 import org.scalatest.{Assertion, Matchers}
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
-import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
-import uk.ac.wellcome.messaging.worker.steps.{MessageProcessor, MonitoringProcessor}
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.{MetricsMonitoringClient, MetricsMonitoringProcessor}
+import uk.ac.wellcome.messaging.worker.steps.MessageProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -25,8 +25,8 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       new MyWork(message.s)
   }
 
-  class MyMonitoringClient(shouldFail: Boolean = false)(implicit ec: ExecutionContext)
-      extends MonitoringClient
+  class MyMetricsMonitoringClient(shouldFail: Boolean = false)(implicit ec: ExecutionContext)
+      extends MetricsMonitoringClient
       with Logging {
 
     var incrementCountCalls: Map[String, Int] = Map.empty
@@ -106,8 +106,8 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
 
     val callCounter = new CallCounter()
 
-    implicit val mc: FakeMonitoringClient =
-      new FakeMonitoringClient(monitoringClientShouldFail)
+    implicit val mc: FakeMetricsMonitoringClient =
+      new FakeMetricsMonitoringClient(monitoringClientShouldFail)
 
     override val retryAction: MessageAction =
         (_, MyExternalMessageAction(new Retry {}))
@@ -154,12 +154,12 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   class MyMonitoringProcessor(
     toActionShouldFail: Boolean = false,
     monitoringClientShouldFail: Boolean = false
-  )(implicit ec: ExecutionContext) extends MonitoringProcessor {
+  )(implicit ec: ExecutionContext) extends MetricsMonitoringProcessor {
 
     implicit val mc =
-      new FakeMonitoringClient(monitoringClientShouldFail)
+      new FakeMetricsMonitoringClient(monitoringClientShouldFail)
 
-    def record[ProcessMonitoringClient <: MonitoringClient](
+    def record[ProcessMonitoringClient <: MetricsMonitoringClient](
       result: Result[_]
     )(implicit
         ec: ExecutionContext

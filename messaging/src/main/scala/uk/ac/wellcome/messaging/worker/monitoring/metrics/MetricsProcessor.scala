@@ -1,4 +1,4 @@
-package uk.ac.wellcome.messaging.worker.monitoring
+package uk.ac.wellcome.messaging.worker.monitoring.metrics
 
 import java.time.{Duration, Instant}
 
@@ -6,13 +6,13 @@ import uk.ac.wellcome.messaging.worker.models._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait Monitoring {
+trait MetricsProcessor {
 
   val namespace: String
 
   private def metricName(name: String) = s"$namespace/$name"
 
-  def metric[ProcessMonitoringClient <: MonitoringClient](
+  final def metric[ProcessMonitoringClient <: MetricsMonitoringClient](
     result: Result[_],
     startTime: Instant
   )(

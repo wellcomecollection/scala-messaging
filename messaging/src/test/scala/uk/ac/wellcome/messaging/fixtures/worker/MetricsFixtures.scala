@@ -3,15 +3,15 @@ package uk.ac.wellcome.messaging.fixtures.worker
 import grizzled.slf4j.Logging
 import org.scalatest.{Assertion, Matchers}
 import uk.ac.wellcome.fixtures.TestWith
-import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MetricsFixtures extends Matchers {
 
-  class FakeMonitoringClient(shouldFail: Boolean = false)(
+  class FakeMetricsMonitoringClient(shouldFail: Boolean = false)(
     implicit ec: ExecutionContext)
-    extends MonitoringClient
+    extends MetricsMonitoringClient
       with Logging {
     var incrementCountCalls: Map[String, Int] = Map.empty
     var recordValueCalls: Map[String, List[Double]] = Map.empty
@@ -36,13 +36,13 @@ trait MetricsFixtures extends Matchers {
     }
   }
 
-  def withFakeMonitoringClient[R](shouldFail: Boolean = false)(testWith: TestWith[FakeMonitoringClient, R])(
+  def withFakeMonitoringClient[R](shouldFail: Boolean = false)(testWith: TestWith[FakeMetricsMonitoringClient, R])(
     implicit ec: ExecutionContext): R = {
-    val fakeMonitoringClient = new FakeMonitoringClient(shouldFail)
+    val fakeMonitoringClient = new FakeMetricsMonitoringClient(shouldFail)
     testWith(fakeMonitoringClient)
   }
 
-  protected def assertMetricCount(metrics: FakeMonitoringClient,
+  protected def assertMetricCount(metrics: FakeMetricsMonitoringClient,
                                   metricName: String,
                                   expectedCount: Int,
                                   isEmpty: Boolean = false): Assertion =
@@ -54,7 +54,7 @@ trait MetricsFixtures extends Matchers {
       )
     }
 
-  protected def assertMetricDurations(metrics: FakeMonitoringClient,
+  protected def assertMetricDurations(metrics: FakeMetricsMonitoringClient,
                                       metricName: String,
                                       expectedNumberDurations: Int,
                                       isEmpty: Boolean = false) = {
