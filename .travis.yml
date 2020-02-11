@@ -1,8 +1,8 @@
 language: scala
 
 before_script:
-  - openssl aes-256-cbc -K $encrypted_29d7b6eda40d_key -iv $encrypted_29d7b6eda40d_iv -in secrets.zip.enc -out secrets.zip -d
-  - git remote add ssh-origin "git@github.com:wellcometrust/scala-messaging.git"
+  - openssl aes-256-cbc -K $encrypted_0ed9b3e7612f_key -iv $encrypted_0ed9b3e7612f_iv -in secrets.zip.enc -out secrets.zip -d
+  - git remote add ssh-origin "git@github.com:wellcomecollection/scala-messaging.git"
 
 cache:
   directories:

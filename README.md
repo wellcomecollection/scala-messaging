@@ -1,6 +1,6 @@
 # scala-messaging
 
-[![Build Status](https://travis-ci.org/wellcometrust/scala-messaging.svg?branch=master)](https://travis-ci.org/wellcometrust/scala-messaging)
+[![Build Status](https://travis-ci.org/wellcomecollection/scala-messaging.svg?branch=master)](https://travis-ci.org/wellcomecollection/scala-messaging)
 
 Messaging libraries in use at Wellcome including:
 
@@ -10,7 +10,7 @@ Messaging libraries in use at Wellcome including:
 
 These libraries are used as part of the [Wellcome Digital Platform][platform].
 
-[platform]: https://github.com/wellcometrust/platform
+[platform]: https://github.com/wellcomecollection/platform
 
 
 ## Installation
