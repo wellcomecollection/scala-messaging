@@ -38,8 +38,8 @@ class MetricsMonitoringProcessorTest
         whenReady(recorded) { action =>
           shouldBeSuccessful(action)
 
-          assertMetricCount2(metrics = monitoringClient, metricName = successMetric, expectedCount = 1)
-          assertMetricDurations2(
+          assertMetricCount(metrics = monitoringClient, metricName = successMetric, expectedCount = 1)
+          assertMetricDurations(
             metrics = monitoringClient,
             metricName = "namespace/Duration",
             expectedNumberDurations = 1)
@@ -81,8 +81,8 @@ class MetricsMonitoringProcessorTest
     whenReady(recorded) { action =>
       shouldBeSuccessful(action)
 
-      assertMetricCount2(metrics = monitoringClient, metricName = deterministicFailMetric, expectedCount = 1)
-      assertMetricDurations2(
+      assertMetricCount(metrics = monitoringClient, metricName = deterministicFailMetric, expectedCount = 1)
+      assertMetricDurations(
         metrics = monitoringClient,
         metricName = "namespace/Duration",
         expectedNumberDurations = 1)
@@ -104,8 +104,8 @@ class MetricsMonitoringProcessorTest
     whenReady(recorded) { action =>
       shouldBeSuccessful(action)
 
-      assertMetricCount2(metrics = monitoringClient, metricName = nonDeterministicFailMetric, expectedCount = 1)
-      assertMetricDurations2(
+      assertMetricCount(metrics = monitoringClient, metricName = nonDeterministicFailMetric, expectedCount = 1)
+      assertMetricDurations(
         metrics = monitoringClient,
         metricName = "namespace/Duration",
         expectedNumberDurations = 1)

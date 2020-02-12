@@ -10,7 +10,7 @@ trait MessageProcessor[Message, Work, Summary] {
   val transform: Message => Future[Work]
   val doWork: Work => ResultSummary
 
-  protected def process(message: Message)(
+  final def process(message: Message)(
     implicit ec: ExecutionContext): ResultSummary = {
 
     val working = for {

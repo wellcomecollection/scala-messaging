@@ -44,44 +44,15 @@ trait MetricsFixtures extends Matchers {
 
   protected def assertMetricCount(metrics: FakeMetricsMonitoringClient,
                                   metricName: String,
-                                  expectedCount: Int,
-                                  isEmpty: Boolean = false): Assertion =
-    if (isEmpty) {
-      metrics.incrementCountCalls shouldBe Map.empty
-    } else {
-      metrics.incrementCountCalls shouldBe Map(
-        metricName -> expectedCount
-      )
-    }
-
-  protected def assertMetricCount2(metrics: FakeMetricsMonitoringClient,
-                                  metricName: String,
                                   expectedCount: Int): Assertion =
 
       metrics.incrementCountCalls shouldBe Map(
         metricName -> expectedCount
       )
 
-
   protected def assertMetricDurations(metrics: FakeMetricsMonitoringClient,
                                       metricName: String,
-                                      expectedNumberDurations: Int,
-                                      isEmpty: Boolean = false) = {
-    val durationMetric = metrics.recordValueCalls.get(
-      metricName
-    )
-
-    if (isEmpty) {
-      durationMetric shouldNot be(defined)
-    } else {
-      durationMetric shouldBe defined
-      durationMetric.get should have length expectedNumberDurations
-      durationMetric.get.foreach(_ should be >= 0.0)
-    }
-  }
-  protected def assertMetricDurations2(metrics: FakeMetricsMonitoringClient,
-                                      metricName: String,
-                                      expectedNumberDurations: Int) = {
+                                      expectedNumberDurations: Int): Unit = {
     val durationMetric = metrics.recordValueCalls.get(
       metricName
     )

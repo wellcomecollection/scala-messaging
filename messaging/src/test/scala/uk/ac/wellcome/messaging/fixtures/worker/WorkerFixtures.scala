@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait WorkerFixtures extends Matchers with MetricsFixtures {
   type MySummary = String
-  type MyContext = String
+  type MyContext = Instant
   type TestResult = Result[MySummary]
   type TestInnerProcess = MyWork => TestResult
   type TestProcess = MyWork => Future[TestResult]
@@ -98,17 +98,13 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
 
   class MyWorker(
     testProcess: TestInnerProcess,
-    messageToWorkShouldFail: Boolean = false,
-    monitoringClientShouldFail: Boolean = false
+    messageToWorkShouldFail: Boolean = false
   )(implicit val ec: ExecutionContext)
       extends Worker[
         MyMessage, MyWork, MyContext, MySummary, MyExternalMessageAction
       ] {
 
     val callCounter = new CallCounter()
-
-    implicit val mc: FakeMetricsMonitoringClient =
-      new FakeMetricsMonitoringClient(monitoringClientShouldFail)
 
     override val retryAction: MessageAction =
         (_, MyExternalMessageAction(new Retry {}))
@@ -137,31 +133,11 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
 
     type Transform = MyMessage => Future[MyWork]
 
-    override def process(message: MyMessage)(implicit ec: ExecutionContext): ResultSummary = super.process(message)
-
     override val transform: Transform =
       messageToWork(messageToWorkShouldFail)(_)
 
     override val doWork: TestProcess =
       testProcess
-  }
-
-  class MyMetricsMonitoringProcessor(
-    toActionShouldFail: Boolean = false,
-    monitoringClientShouldFail: Boolean = false
-  )(implicit ec: ExecutionContext) extends MetricsMonitoringProcessor {
-
-    implicit val mc =
-      new FakeMetricsMonitoringClient(monitoringClientShouldFail)
-
-    def record[ProcessMonitoringClient <: MetricsMonitoringClient](
-      result: Result[_]
-    )(implicit
-        ec: ExecutionContext
-    ): Future[Result[_]] =
-      super.record(Instant.now, result)(mc, ec)
-
-    override val namespace: String = "namespace"
   }
 
   val message = MyMessage("some_content")

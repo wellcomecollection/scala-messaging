@@ -18,7 +18,7 @@ trait Worker[Message, Work, MonitoringContext, Summary, Action]
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction
 
-  final protected def processMessage(message: Message)(implicit monitoringProcessor: MonitoringProcessor[Message, MonitoringContext]): Processed =
+  final def processMessage(message: Message)(implicit monitoringProcessor: MonitoringProcessor[Message, MonitoringContext]): Processed =
     work(message).map(completion)
 
   private def work(message: Message)(implicit monitoringProcessor: MonitoringProcessor[Message, MonitoringContext]): Future[Completion] = {
