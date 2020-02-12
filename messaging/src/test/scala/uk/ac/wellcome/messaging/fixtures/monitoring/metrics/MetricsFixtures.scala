@@ -1,9 +1,9 @@
-package uk.ac.wellcome.messaging.fixtures.worker
+package uk.ac.wellcome.messaging.fixtures.monitoring.metrics
 
 import grizzled.slf4j.Logging
 import org.scalatest.{Assertion, Matchers}
 import uk.ac.wellcome.fixtures.TestWith
-import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringClient
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.{MetricsMonitoringClient, MetricsMonitoringProcessor}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,6 +40,13 @@ trait MetricsFixtures extends Matchers {
     implicit ec: ExecutionContext): R = {
     val fakeMonitoringClient = new FakeMetricsMonitoringClient(shouldFail)
     testWith(fakeMonitoringClient)
+  }
+
+  def withMetricsMonitoringProcessor[Message, R](namespace: String,shouldFail: Boolean = false)(testWith: TestWith[(FakeMetricsMonitoringClient, MetricsMonitoringProcessor[Message, FakeMetricsMonitoringClient]), R])(implicit ec: ExecutionContext): R = {
+    withFakeMonitoringClient(shouldFail) { client: FakeMetricsMonitoringClient =>
+      val metricsProcessor = new MetricsMonitoringProcessor[Message, FakeMetricsMonitoringClient](namespace)(client)
+      testWith((client, metricsProcessor))
+    }
   }
 
   protected def assertMetricCount(metrics: FakeMetricsMonitoringClient,

@@ -105,7 +105,7 @@ class AlpakkaSQSWorkerTest
                 sendNotificationToSQS(queue, myWork)
 
                 eventually {
-                  callCounter.calledCount shouldBe 1
+                  callCounter.calledCount shouldBe 3
 
                   assertMetricCount(
                     metrics = metrics,

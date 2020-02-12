@@ -2,11 +2,10 @@ package uk.ac.wellcome.messaging.fixtures.worker
 
 import java.time.Instant
 
-import grizzled.slf4j.Logging
 import org.scalatest.{Assertion, Matchers}
+import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
-import uk.ac.wellcome.messaging.worker.monitoring.metrics.{MetricsMonitoringClient, MetricsMonitoringProcessor}
 import uk.ac.wellcome.messaging.worker.steps.MessageProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,54 +23,6 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   object MyWork {
     def apply(message: MyMessage): MyWork =
       new MyWork(message.s)
-  }
-
-  class MyMetricsMonitoringClient(shouldFail: Boolean = false)(implicit ec: ExecutionContext)
-      extends MetricsMonitoringClient
-      with Logging {
-
-    var incrementCountCalls: Map[String, Int] = Map.empty
-    var recordValueCalls: Map[String, List[Double]] = Map.empty
-
-    override def incrementCount(metricName: String): Future[Unit] = Future {
-
-      info(s"MyMonitoringClient incrementing $metricName")
-
-      if (shouldFail) {
-        throw new RuntimeException(
-          "FakeMonitoringClient incrementCount Error!")
-      }
-
-      incrementCountCalls =
-        incrementCountCalls + (
-          metricName -> (
-            incrementCountCalls
-              .getOrElse(metricName, 0) + 1
-            )
-          )
-    }
-
-    override def recordValue(metricName: String, value: Double): Future[Unit] = Future {
-
-      info(
-        s"MyMonitoringClient recordValue $metricName: $value"
-      )
-
-      if (shouldFail) {
-        throw new RuntimeException(
-          "FakeMonitoringClient recordValue Error!"
-        )
-      }
-
-      recordValueCalls =
-        recordValueCalls + (
-          metricName -> (
-            recordValueCalls.getOrElse(
-              metricName,
-              List.empty
-            ) :+ value)
-          )
-    }
   }
 
   def messageToWork(shouldFail: Boolean = false)(message: MyMessage)(

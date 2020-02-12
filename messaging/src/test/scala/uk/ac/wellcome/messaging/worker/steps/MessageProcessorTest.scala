@@ -40,14 +40,6 @@ class MessageProcessorTest
           whenReady(futureResult)(shouldBeDeterministicFailure)
     }
 
-    it("returns deterministic failure if process function fails with deterministic failure") {
-          val processor =
-            new MyMessageProcessor(createResult(deterministicFailure, new CallCounter), messageToWorkShouldFail = false)
-          val futureResult = processor.process(message)
-
-          whenReady(futureResult)(shouldBeDeterministicFailure)
-    }
-
     it("returns non deterministic failure if process function fails with non deterministic failure") {
           val processor =
             new MyMessageProcessor(createResult(nonDeterministicFailure, new CallCounter), messageToWorkShouldFail = false)
