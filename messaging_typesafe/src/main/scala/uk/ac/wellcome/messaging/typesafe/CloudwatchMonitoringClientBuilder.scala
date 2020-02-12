@@ -12,5 +12,6 @@ object CloudwatchMonitoringClientBuilder {
     implicit
     materializer: ActorMaterializer,
     ec: ExecutionContext): CloudwatchMetricsMonitoringClient =
-    new CloudwatchMetricsMonitoringClient(MetricsBuilder.buildMetricsSender(config))
+    new CloudwatchMetricsMonitoringClient(
+      MetricsBuilder.buildMetricsSender(config))
 }
