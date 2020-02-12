@@ -2,17 +2,17 @@ package uk.ac.wellcome.messaging.fixtures.worker
 
 import java.time.Instant
 
-import grizzled.slf4j.Logging
 import org.scalatest.{Assertion, Matchers}
+import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
-import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
-import uk.ac.wellcome.messaging.worker.steps.{MessageProcessor, MonitoringProcessor}
+import uk.ac.wellcome.messaging.worker.steps.MessageProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait WorkerFixtures extends Matchers with MetricsFixtures {
   type MySummary = String
+  type MyContext = Instant
   type TestResult = Result[MySummary]
   type TestInnerProcess = MyWork => TestResult
   type TestProcess = MyWork => Future[TestResult]
@@ -23,54 +23,6 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   object MyWork {
     def apply(message: MyMessage): MyWork =
       new MyWork(message.s)
-  }
-
-  class MyMonitoringClient(shouldFail: Boolean = false)(implicit ec: ExecutionContext)
-      extends MonitoringClient
-      with Logging {
-
-    var incrementCountCalls: Map[String, Int] = Map.empty
-    var recordValueCalls: Map[String, List[Double]] = Map.empty
-
-    override def incrementCount(metricName: String): Future[Unit] = Future {
-
-      info(s"MyMonitoringClient incrementing $metricName")
-
-      if (shouldFail) {
-        throw new RuntimeException(
-          "FakeMonitoringClient incrementCount Error!")
-      }
-
-      incrementCountCalls =
-        incrementCountCalls + (
-          metricName -> (
-            incrementCountCalls
-              .getOrElse(metricName, 0) + 1
-            )
-          )
-    }
-
-    override def recordValue(metricName: String, value: Double): Future[Unit] = Future {
-
-      info(
-        s"MyMonitoringClient recordValue $metricName: $value"
-      )
-
-      if (shouldFail) {
-        throw new RuntimeException(
-          "FakeMonitoringClient recordValue Error!"
-        )
-      }
-
-      recordValueCalls =
-        recordValueCalls + (
-          metricName -> (
-            recordValueCalls.getOrElse(
-              metricName,
-              List.empty
-            ) :+ value)
-          )
-    }
   }
 
   def messageToWork(shouldFail: Boolean = false)(message: MyMessage)(
@@ -97,17 +49,13 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
 
   class MyWorker(
     testProcess: TestInnerProcess,
-    messageToWorkShouldFail: Boolean = false,
-    monitoringClientShouldFail: Boolean = false
+    messageToWorkShouldFail: Boolean = false
   )(implicit val ec: ExecutionContext)
       extends Worker[
-        MyMessage, MyWork, MySummary, MyExternalMessageAction
+        MyMessage, MyWork, MyContext, MySummary, MyExternalMessageAction
       ] {
 
     val callCounter = new CallCounter()
-
-    implicit val mc: FakeMonitoringClient =
-      new FakeMonitoringClient(monitoringClientShouldFail)
 
     override val retryAction: MessageAction =
         (_, MyExternalMessageAction(new Retry {}))
@@ -124,13 +72,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     override val doWork =
       (work: MyWork) => createResult(testProcess, callCounter)(ec)(work)
 
-
-    override def processMessage(message: MyMessage): Processed =
-      super.processMessage(message)
-
     override type Completion = WorkCompletion[MyMessage, MySummary]
-
-    override val namespace: String = "namespace"
   }
 
   class MyMessageProcessor(
@@ -142,31 +84,11 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
 
     type Transform = MyMessage => Future[MyWork]
 
-    override def process(message: MyMessage)(implicit ec: ExecutionContext): ResultSummary = super.process(message)
-
     override val transform: Transform =
       messageToWork(messageToWorkShouldFail)(_)
 
     override val doWork: TestProcess =
       testProcess
-  }
-
-  class MyMonitoringProcessor(
-    toActionShouldFail: Boolean = false,
-    monitoringClientShouldFail: Boolean = false
-  )(implicit ec: ExecutionContext) extends MonitoringProcessor {
-
-    implicit val mc =
-      new FakeMonitoringClient(monitoringClientShouldFail)
-
-    def record[ProcessMonitoringClient <: MonitoringClient](
-      result: Result[_]
-    )(implicit
-        ec: ExecutionContext
-    ): Future[Result[_]] =
-      super.record(Instant.now, result)(mc, ec)
-
-    override val namespace: String = "namespace"
   }
 
   val message = MyMessage("some_content")

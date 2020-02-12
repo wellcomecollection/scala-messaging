@@ -1,7 +1,6 @@
 package uk.ac.wellcome.messaging.sqsworker.alpakka
 
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
-import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{FunSpec, Matchers}
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
@@ -23,50 +22,104 @@ class AlpakkaSQSWorkerTest
 
   describe("When a message is processed") {
     it(
-      "increments metrics, consumes the message, and for a x3 retried nonDeterministicFailure places the message on the DLQ") {
+      "consumes a message and increments success metrics") {
+          withLocalSqsQueueAndDlq {
+            case QueuePair(queue, dlq) =>
+              withActorSystem { implicit actorSystem =>
+                withAlpakkaSQSWorker(queue, successful, namespace) {
+                  case (worker, _, metrics, callCounter) =>
+                    worker.start
 
-      val processResults = Table(
-        ("testProcess", "metricName", "metricCount", "dlqSize"),
-        (successful, s"$namespace/Successful", 1, 0),
-        (deterministicFailure, s"$namespace/DeterministicFailure", 1, 0),
-        (nonDeterministicFailure, s"$namespace/NonDeterministicFailure", 3, 1)
-      )
+                    val myWork = MyWork("my-new-work")
 
-      forAll(processResults) {
-        (testProcess: TestInnerProcess,
-         metricName: String,
-         expectedMetricCount: Int,
-         expectedDlqSize: Int) =>
-          {
-            withLocalSqsQueueAndDlq {
-              case QueuePair(queue, dlq) =>
-                withActorSystem { implicit actorSystem =>
-                  withAlpakkaSQSWorker(queue, testProcess, namespace) {
-                    case (worker, _, metrics, callCounter) =>
-                      worker.start
+                    sendNotificationToSQS(queue, myWork)
 
-                      val myWork = MyWork("my-new-work")
+                    eventually {
+                      callCounter.calledCount shouldBe 1
 
-                      sendNotificationToSQS(queue, myWork)
+                      assertMetricCount(
+                        metrics = metrics,
+                        metricName = s"$namespace/Successful",
+                        expectedCount = 1
+                      )
+                      assertMetricDurations(
+                        metrics = metrics,
+                        metricName = s"$namespace/Duration",
+                        expectedNumberDurations = 1
+                      )
 
-                      eventually {
-                        callCounter.calledCount shouldBe expectedMetricCount
+                      assertQueueEmpty(queue)
+                      assertQueueHasSize(dlq, 0)
+                    }
+                }
+              }
+          }
+        }
 
-                        assertMetricCount(
-                          metrics = metrics,
-                          metricName = metricName,
-                          expectedCount = expectedMetricCount
-                        )
-                        assertMetricDurations(
-                          metrics = metrics,
-                          metricName = s"$namespace/Duration",
-                          expectedNumberDurations = expectedMetricCount
-                        )
+    it(
+      "consumes a message and increments non deterministic failure metrics metrics") {
+      withLocalSqsQueueAndDlq {
+        case QueuePair(queue, dlq) =>
+          withActorSystem { implicit actorSystem =>
+            withAlpakkaSQSWorker(queue, deterministicFailure, namespace) {
+              case (worker, _, metrics, callCounter) =>
+                worker.start
 
-                        assertQueueEmpty(queue)
-                        assertQueueHasSize(dlq, expectedDlqSize)
-                      }
-                  }
+                val myWork = MyWork("my-new-work")
+
+                sendNotificationToSQS(queue, myWork)
+
+                eventually {
+                  callCounter.calledCount shouldBe 1
+
+                  assertMetricCount(
+                    metrics = metrics,
+                    metricName = s"$namespace/DeterministicFailure",
+                    expectedCount = 1
+                  )
+                  assertMetricDurations(
+                    metrics = metrics,
+                    metricName = s"$namespace/Duration",
+                    expectedNumberDurations = 1
+                  )
+
+                  assertQueueEmpty(queue)
+                  assertQueueHasSize(dlq, 0)
+                }
+            }
+          }
+      }
+    }
+
+    it(
+      "retries nonDeterministicFailure 3 times and places the message in the dlq") {
+      withLocalSqsQueueAndDlq {
+        case QueuePair(queue, dlq) =>
+          withActorSystem { implicit actorSystem =>
+            withAlpakkaSQSWorker(queue, nonDeterministicFailure, namespace) {
+              case (worker, _, metrics, callCounter) =>
+                worker.start
+
+                val myWork = MyWork("my-new-work")
+
+                sendNotificationToSQS(queue, myWork)
+
+                eventually {
+                  callCounter.calledCount shouldBe 3
+
+                  assertMetricCount(
+                    metrics = metrics,
+                    metricName = s"$namespace/NonDeterministicFailure",
+                    expectedCount = 3
+                  )
+                  assertMetricDurations(
+                    metrics = metrics,
+                    metricName = s"$namespace/Duration",
+                    expectedNumberDurations = 3
+                  )
+
+                  assertQueueEmpty(queue)
+                  assertQueueHasSize(dlq, 1)
                 }
             }
           }
@@ -76,13 +129,7 @@ class AlpakkaSQSWorkerTest
 
   describe("When a message cannot be parsed") {
     it(
-      "does not call process, but consumes the message and increments metrics") {
-      val messages = Table(
-        "testProcess",
-        "not json",
-        """{"json" : "but not a work"}"""
-      )
-      forAll(messages) { message =>
+      "consumes the message increments failure metrics if the message is not json") {
         withLocalSqsQueueAndDlq {
           case QueuePair(queue, dlq) =>
             withActorSystem { implicit actorSystem =>
@@ -90,7 +137,7 @@ class AlpakkaSQSWorkerTest
                 case (worker, _, metrics, _) =>
                   worker.start
 
-                  sendNotificationToSQS(queue, message)
+                  sendNotificationToSQS(queue, "not json")
 
                   eventually {
                     //process.called shouldBe false
@@ -109,7 +156,41 @@ class AlpakkaSQSWorkerTest
                     assertQueueEmpty(queue)
                     assertQueueEmpty(dlq)
                   }
-              }
+
+            }
+        }
+      }
+    }
+
+    it(
+      "consumes the message increments failure metrics if the message is json but not a work") {
+        withLocalSqsQueueAndDlq {
+          case QueuePair(queue, dlq) =>
+            withActorSystem { implicit actorSystem =>
+              withAlpakkaSQSWorker(queue, successful, namespace) {
+                case (worker, _, metrics, _) =>
+                  worker.start
+
+                  sendNotificationToSQS(queue, """{"json" : "but not a work"}""")
+
+                  eventually {
+                    //process.called shouldBe false
+
+                    assertMetricCount(
+                      metrics = metrics,
+                      metricName = s"$namespace/DeterministicFailure",
+                      expectedCount = 1
+                    )
+                    assertMetricDurations(
+                      metrics = metrics,
+                      metricName = s"$namespace/Duration",
+                      expectedNumberDurations = 1
+                    )
+
+                    assertQueueEmpty(queue)
+                    assertQueueEmpty(dlq)
+                  }
+
             }
         }
       }

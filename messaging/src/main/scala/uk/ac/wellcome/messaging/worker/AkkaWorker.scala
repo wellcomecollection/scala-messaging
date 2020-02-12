@@ -4,11 +4,12 @@ import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.stream.scaladsl.{Keep, Sink, Source}
+import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.Future
 
-trait AkkaWorker[Message, Work, Summary, Action]
-    extends Worker[Message, Work, Summary, Action] {
+trait AkkaWorker[Message, Work, MonitoringContext, Summary, Action]
+    extends Worker[Message, Work, MonitoringContext, Summary, Action] {
 
   implicit val as: ActorSystem
   implicit val am: ActorMaterializer =
@@ -16,6 +17,8 @@ trait AkkaWorker[Message, Work, Summary, Action]
       ActorMaterializerSettings(as)
     )
   implicit val ec = as.dispatcher
+  implicit val monitoringProcessor: MonitoringProcessor[Message,
+                                                        MonitoringContext]
 
   type MessageSource = Source[Message, NotUsed]
   type MessageSink = Sink[(Message, Action), Future[Done]]

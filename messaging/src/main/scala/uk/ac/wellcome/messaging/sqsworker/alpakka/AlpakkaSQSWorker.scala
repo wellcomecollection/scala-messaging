@@ -10,20 +10,30 @@ import grizzled.slf4j.Logging
 import io.circe.Decoder
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
-import uk.ac.wellcome.messaging.worker.monitoring.MonitoringClient
+import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.Future
 
-class AlpakkaSQSWorker[Work, Summary, MonitoringClientImpl <: MonitoringClient](
+class AlpakkaSQSWorker[Work,
+                       MonitoringContext,
+                       Summary,
+                       MonitoringProcessorImpl <: MonitoringProcessor[
+                         SQSMessage,
+                         MonitoringContext]](
   config: AlpakkaSQSWorkerConfig
 )(
   val doWork: Work => Future[Result[Summary]]
 )(implicit
-  val mc: MonitoringClientImpl,
+  val monitoringProcessor: MonitoringProcessorImpl,
   val as: ActorSystem,
   val wd: Decoder[Work],
   sc: AmazonSQSAsync,
-) extends AkkaWorker[SQSMessage, Work, Summary, MessageAction]
+) extends AkkaWorker[
+      SQSMessage,
+      Work,
+      MonitoringContext,
+      Summary,
+      MessageAction]
     with SnsSqsTransform[Work]
     with Logging {
 
@@ -41,19 +51,21 @@ class AlpakkaSQSWorker[Work, Summary, MonitoringClientImpl <: MonitoringClient](
 
   val completedAction: SQSAction = (message: SQSMessage) =>
     (message, MessageAction.delete)
-
-  override val namespace: String = config.metricsConfig.namespace
 }
 
 object AlpakkaSQSWorker {
-  def apply[Work, Summary](config: AlpakkaSQSWorkerConfig)(
+  def apply[Work, MonitoringContext, Summary](config: AlpakkaSQSWorkerConfig)(
     process: Work => Future[Result[Summary]]
   )(implicit
-    mc: MonitoringClient,
+    mp: MonitoringProcessor[SQSMessage, MonitoringContext],
     sc: AmazonSQSAsync,
     as: ActorSystem,
     wd: Decoder[Work]) =
-    new AlpakkaSQSWorker[Work, Summary, MonitoringClient](
+    new AlpakkaSQSWorker[
+      Work,
+      MonitoringContext,
+      Summary,
+      MonitoringProcessor[SQSMessage, MonitoringContext]](
       config
     )(process)
 }

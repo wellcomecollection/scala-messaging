@@ -1,12 +1,13 @@
-package uk.ac.wellcome.messaging.worker.monitoring
+package uk.ac.wellcome.messaging.worker.monitoring.metrics.cloudwatch
 
 import grizzled.slf4j.Logging
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringClient
 import uk.ac.wellcome.monitoring.MetricsSender
 
 import scala.concurrent.Future
 
-class CloudwatchMonitoringClient(metricsSender: MetricsSender)
-    extends MonitoringClient
+class CloudwatchMetricsMonitoringClient(metricsSender: MetricsSender)
+    extends MetricsMonitoringClient
     with Logging {
 
   override def incrementCount(metricName: String): Future[Unit] =
