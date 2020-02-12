@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v6.0.0 - 2020-02-12
+
+Refactor `Worker` interface to allow for more flexibile monitoring
+
 ## v5.3.1 - 2019-06-03
 
 Remove Mockito from the SQS trait and use MemoryMetrics everywhere, and bump the version of scala-monitoring.
