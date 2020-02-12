@@ -13,6 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait WorkerFixtures extends Matchers with MetricsFixtures {
   type MySummary = String
+  type MyContext = String
   type TestResult = Result[MySummary]
   type TestInnerProcess = MyWork => TestResult
   type TestProcess = MyWork => Future[TestResult]
@@ -101,7 +102,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     monitoringClientShouldFail: Boolean = false
   )(implicit val ec: ExecutionContext)
       extends Worker[
-        MyMessage, MyWork, MySummary, MyExternalMessageAction
+        MyMessage, MyWork, MyContext, MySummary, MyExternalMessageAction
       ] {
 
     val callCounter = new CallCounter()
@@ -124,13 +125,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     override val doWork =
       (work: MyWork) => createResult(testProcess, callCounter)(ec)(work)
 
-
-    override def processMessage(message: MyMessage): Processed =
-      super.processMessage(message)
-
     override type Completion = WorkCompletion[MyMessage, MySummary]
-
-    override val namespace: String = "namespace"
   }
 
   class MyMessageProcessor(
@@ -151,7 +146,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       testProcess
   }
 
-  class MyMonitoringProcessor(
+  class MyMetricsMonitoringProcessor(
     toActionShouldFail: Boolean = false,
     monitoringClientShouldFail: Boolean = false
   )(implicit ec: ExecutionContext) extends MetricsMonitoringProcessor {

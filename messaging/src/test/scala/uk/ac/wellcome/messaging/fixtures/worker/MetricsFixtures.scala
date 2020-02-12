@@ -54,6 +54,15 @@ trait MetricsFixtures extends Matchers {
       )
     }
 
+  protected def assertMetricCount2(metrics: FakeMetricsMonitoringClient,
+                                  metricName: String,
+                                  expectedCount: Int): Assertion =
+
+      metrics.incrementCountCalls shouldBe Map(
+        metricName -> expectedCount
+      )
+
+
   protected def assertMetricDurations(metrics: FakeMetricsMonitoringClient,
                                       metricName: String,
                                       expectedNumberDurations: Int,
@@ -69,5 +78,18 @@ trait MetricsFixtures extends Matchers {
       durationMetric.get should have length expectedNumberDurations
       durationMetric.get.foreach(_ should be >= 0.0)
     }
+  }
+  protected def assertMetricDurations2(metrics: FakeMetricsMonitoringClient,
+                                      metricName: String,
+                                      expectedNumberDurations: Int) = {
+    val durationMetric = metrics.recordValueCalls.get(
+      metricName
+    )
+
+
+      durationMetric shouldBe defined
+      durationMetric.get should have length expectedNumberDurations
+      durationMetric.get.foreach(_ should be >= 0.0)
+
   }
 }
