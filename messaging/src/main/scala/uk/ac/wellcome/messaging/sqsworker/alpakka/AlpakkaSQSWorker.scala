@@ -16,15 +16,12 @@ import scala.concurrent.Future
 
 class AlpakkaSQSWorker[Work,
                        MonitoringContext,
-                       Summary,
-                       MonitoringProcessorImpl <: MonitoringProcessor[
-                         Work,
-                         MonitoringContext]](
+                       Summary](
   config: AlpakkaSQSWorkerConfig
 )(
   val doWork: Work => Future[Result[Summary]]
 )(implicit
-  val monitoringProcessor: MonitoringProcessorImpl,
+  val monitoringProcessor: MonitoringProcessor[Work, MonitoringContext],
   val as: ActorSystem,
   val wd: Decoder[Work],
   sc: AmazonSQSAsync,
@@ -64,8 +61,7 @@ object AlpakkaSQSWorker {
     new AlpakkaSQSWorker[
       Work,
       MonitoringContext,
-      Summary,
-      MonitoringProcessor[Work, MonitoringContext]](
+      Summary](
       config
     )(process)
 }

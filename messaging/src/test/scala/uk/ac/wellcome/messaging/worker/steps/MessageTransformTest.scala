@@ -7,13 +7,14 @@ import uk.ac.wellcome.messaging.fixtures.worker.WorkerFixtures
 
 class MessageTransformTest extends FunSpec with WorkerFixtures {
   it("calls transform function and returns result") {
+    val now = Instant.now
     val messageTransform = new MessageTransform[MyMessage, MyWork, MyContext] {
       override val transform: MyMessage => Transformed = _ => {
-        (Right(work), Right(Some(Instant.now)))
+        (Right(work), Right(Some(now)))
       }
     }
 
-    messageTransform.callTransform(message) shouldBe ((Right(work), Right(Some(Instant.now))))
+    messageTransform.callTransform(message) shouldBe ((Right(work), Right(Some(now))))
   }
 
   it("returns Left if transform function throws an exception") {
