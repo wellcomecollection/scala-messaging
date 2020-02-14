@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v7.0.0 - 2020-02-14
+
+Refactor `Worker` and `MonitoringProcessor` interfaces to allow for monitoring context to be carried across different services in messages.
+
 ## v6.0.0 - 2020-02-12
 
 Refactor `Worker` interface to allow for more flexibile monitoring
