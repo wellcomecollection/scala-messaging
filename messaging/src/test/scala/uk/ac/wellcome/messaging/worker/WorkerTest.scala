@@ -27,7 +27,7 @@ class WorkerTest
     val worker = new MyWorker(
       monitoringProcessor,
       successful,
-      messageToWorkShouldFail = false
+      messageToWork(shouldFail = false)
     )
 
         val process = worker.processMessage(message)
@@ -45,7 +45,7 @@ class WorkerTest
     }
   }
 
-  it("increments deterministic failure metric if transformation fails") {
+  it("increments deterministic failure metric if transformation returns a Left") {
     withMetricsMonitoringProcessor[MyWork, Unit](
       namespace = "namespace",
       shouldFail = false) {
@@ -53,7 +53,35 @@ class WorkerTest
     val worker = new MyWorker(
       monitoringProcessor,
       successful,
-      messageToWorkShouldFail = true
+      messageToWork(shouldFail = true)
+    )
+
+        val process = worker.processMessage(message)
+        whenReady(process) { _ =>
+          worker.callCounter.calledCount shouldBe 0
+
+          assertMetricCount(
+            monitoringClient,
+            "namespace/DeterministicFailure",
+            1,
+          )
+
+          assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+        }
+    }
+  }
+
+  it("increments deterministic failure metric if transformation fails unexpectedly") {
+    def transform(message: MyMessage) = throw new RuntimeException
+
+    withMetricsMonitoringProcessor[MyWork, Unit](
+      namespace = "namespace",
+      shouldFail = false) {
+      case (monitoringClient, monitoringProcessor) =>
+    val worker = new MyWorker(
+      monitoringProcessor,
+      successful,
+      transform
     )
 
         val process = worker.processMessage(message)
@@ -79,7 +107,7 @@ class WorkerTest
     val worker = new MyWorker(
       monitoringProcessor,
       successful,
-      messageToWorkShouldFail = false
+      messageToWork(shouldFail = false)
     )
 
         val process = worker.processMessage(message)
@@ -103,7 +131,7 @@ class WorkerTest
     val worker = new MyWorker(
       monitoringProcessor,
       deterministicFailure,
-      messageToWorkShouldFail = false
+      messageToWork(shouldFail = false)
     )
 
         val process = worker.processMessage(message)
@@ -130,7 +158,7 @@ class WorkerTest
     val worker = new MyWorker(
       monitoringProcessor,
       nonDeterministicFailure,
-      messageToWorkShouldFail = false
+      messageToWork(shouldFail = false)
     )
 
         val process = worker.processMessage(message)

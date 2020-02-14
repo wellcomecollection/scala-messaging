@@ -26,14 +26,12 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       new MyWork(message.s)
   }
 
-  def messageToWork(shouldFail: Boolean = false)(message: MyMessage)(
-    implicit ec: ExecutionContext):Future[(Either[Throwable,MyWork], Either[Throwable, Option[MyContext]])] = Future {
+  def messageToWork(shouldFail: Boolean = false)(message: MyMessage):(Either[Throwable,MyWork], Either[Throwable, Option[MyContext]]) =
     if (shouldFail) {
       (Left(new RuntimeException("BOOM")),Right(None))
     } else {
       (Right(MyWork(message)),Right(None))
     }
-  }
 
   def actionToAction(toActionShouldFail: Boolean)(result: Result[MySummary])(
     implicit ec: ExecutionContext): Future[MyExternalMessageAction] = Future {
@@ -51,7 +49,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   class MyWorker(
     val monitoringProcessor: MetricsMonitoringProcessor[MyWork, FakeMetricsMonitoringClient],
     testProcess: TestInnerProcess,
-    messageToWorkShouldFail: Boolean = false
+    val transform: MyMessage => (Either[Throwable,MyWork], Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)
       extends Worker[
         MyMessage, MyWork, MyContext, MySummary, MyExternalMessageAction
@@ -64,12 +62,6 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
 
     override val completedAction: MessageAction =
       (_, MyExternalMessageAction(new Completed {}))
-
-    override val transform: MyMessage => Future[(Either[Throwable,MyWork], Either[Throwable, Option[MyContext]])] = {
-      message =>
-
-      messageToWork(messageToWorkShouldFail)(message)
-    }
 
     override val doWork =
       (work: MyWork) => createResult(testProcess, callCounter)(ec)(work)
