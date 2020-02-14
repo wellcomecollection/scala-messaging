@@ -13,21 +13,21 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 import scala.concurrent.{ExecutionContext, Future}
 
 final class MetricsMonitoringProcessor[
-  Message,
+  Work,
   ProcessMonitoringClient <: MetricsMonitoringClient](val namespace: String)(
   implicit val monitoringClient: ProcessMonitoringClient)
-    extends MonitoringProcessor[Message, Instant]
+    extends MonitoringProcessor[Work, Instant]
     with Logger
     with MetricsProcessor {
 
-  override def recordStart(message: Message)(
+  override def recordStart(work: Either[Throwable, Work], context: Either[Throwable, Option[Instant]])(
     implicit ec: ExecutionContext): Future[Instant] =
     Future.successful(Instant.now)
 
   override def recordEnd[Recorded](
-    message: Message,
-    context: Instant,
-    result: Result[Recorded]
+                                    work: Either[Throwable, Work],
+                                    context: Instant,
+                                    result: Result[Recorded]
   )(implicit ec: ExecutionContext): Future[Result[Unit]] = {
 
     val monitoring = for {

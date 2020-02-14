@@ -6,6 +6,7 @@ import org.scalatest.{Assertion, Matchers}
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
 import uk.ac.wellcome.messaging.worker.steps.MessageProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,11 +27,11 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   }
 
   def messageToWork(shouldFail: Boolean = false)(message: MyMessage)(
-    implicit ec: ExecutionContext) = Future {
+    implicit ec: ExecutionContext):Future[(Either[Throwable,MyWork], Either[Throwable, Option[MyContext]])] = Future {
     if (shouldFail) {
-      throw new RuntimeException("BOOM")
+      (Left(new RuntimeException("BOOM")),Right(None))
     } else {
-      MyWork(message)
+      (Right(MyWork(message)),Right(None))
     }
   }
 
@@ -48,6 +49,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   case class MyExternalMessageAction(action: Action)
 
   class MyWorker(
+    val monitoringProcessor: MetricsMonitoringProcessor[MyWork, FakeMetricsMonitoringClient],
     testProcess: TestInnerProcess,
     messageToWorkShouldFail: Boolean = false
   )(implicit val ec: ExecutionContext)
@@ -63,7 +65,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     override val completedAction: MessageAction =
       (_, MyExternalMessageAction(new Completed {}))
 
-    override val transform: MyMessage => Future[MyWork] = {
+    override val transform: MyMessage => Future[(Either[Throwable,MyWork], Either[Throwable, Option[MyContext]])] = {
       message =>
 
       messageToWork(messageToWorkShouldFail)(message)
@@ -76,18 +78,10 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   }
 
   class MyMessageProcessor(
-    testProcess: TestProcess,
-    messageToWorkShouldFail: Boolean = false
-  )(implicit
-    ec: ExecutionContext
-  ) extends MessageProcessor[MyMessage, MyWork, MySummary] {
+    testProcess: TestProcess
+  ) extends MessageProcessor[MyWork, MySummary] {
 
-    type Transform = MyMessage => Future[MyWork]
-
-    override val transform: Transform =
-      messageToWork(messageToWorkShouldFail)(_)
-
-    override val doWork: TestProcess =
+    override protected val doWork: TestProcess =
       testProcess
   }
 

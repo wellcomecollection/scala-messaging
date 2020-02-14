@@ -4,22 +4,23 @@ import uk.ac.wellcome.messaging.worker.models.{DeterministicFailure, Result}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MessageProcessor[Message, Work, Summary] {
+trait MessageProcessor[Work, Summary] {
   type ResultSummary = Future[Result[Summary]]
 
-  val transform: Message => Future[Work]
-  val doWork: Work => ResultSummary
+  protected val doWork:(Work)=> ResultSummary
 
-  final def process(message: Message)(
-    implicit ec: ExecutionContext): ResultSummary = {
+  final def process(workEither: Either[Throwable, Work])(
+    implicit ec: ExecutionContext):Future[Result[Summary]] = workEither.fold(
+    e => Future.successful(DeterministicFailure[Summary](e)),
+    w => {
 
-    val working = for {
-      work <- transform(message)
-      result <- doWork(work)
-    } yield result
+      val working  = for {
+        result <- doWork(w)
 
-    working recover {
-      case e => DeterministicFailure[Summary](e)
+      } yield result
+      working recover {
+        case e => DeterministicFailure[Summary](e)
+      }
     }
-  }
+  )
 }

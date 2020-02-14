@@ -7,22 +7,23 @@ import uk.ac.wellcome.messaging.sns.NotificationMessage
 
 import scala.concurrent.Future
 
-sealed trait MessageTransform[Message, Work] {
-  val transform: Message => Future[Work]
+sealed trait MessageTransform[Message, Work, MonitoringContext] {
+  val transform: Message => Future[(Either[Throwable,Work], Either[Throwable, Option[MonitoringContext]])]
 }
 
-trait SnsSqsTransform[Work] extends MessageTransform[SQSMessage, Work] {
+trait SnsSqsTransform[Work, MonitoringContext] extends MessageTransform[SQSMessage, Work, MonitoringContext] {
 
-  type SQSTransform = SQSMessage => Future[Work]
+  type SQSTransform = SQSMessage => Future[(Either[Throwable,Work], Either[Throwable, Option[MonitoringContext]])]
 
   implicit val nd = implicitly[Decoder[NotificationMessage]]
   implicit val wd: Decoder[Work]
 
-  val transform: SQSTransform = (message: SQSMessage) =>
-    Future.fromTry(
-      for {
+  val transform:SQSTransform = (message: SQSMessage) =>
+    Future.successful {
+      val f = for {
         notification <- fromJson[NotificationMessage](message.getBody)
         work <- fromJson[Work](notification.body)
       } yield work
-  )
+      (f.toEither, Right(None))
+    }
 }

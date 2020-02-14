@@ -18,7 +18,7 @@ class AlpakkaSQSWorker[Work,
                        MonitoringContext,
                        Summary,
                        MonitoringProcessorImpl <: MonitoringProcessor[
-                         SQSMessage,
+                         Work,
                          MonitoringContext]](
   config: AlpakkaSQSWorkerConfig
 )(
@@ -34,7 +34,7 @@ class AlpakkaSQSWorker[Work,
       MonitoringContext,
       Summary,
       MessageAction]
-    with SnsSqsTransform[Work]
+    with SnsSqsTransform[Work, MonitoringContext]
     with Logging {
 
   type SQSAction = SQSMessage => (SQSMessage, sqs.MessageAction)
@@ -57,7 +57,7 @@ object AlpakkaSQSWorker {
   def apply[Work, MonitoringContext, Summary](config: AlpakkaSQSWorkerConfig)(
     process: Work => Future[Result[Summary]]
   )(implicit
-    mp: MonitoringProcessor[SQSMessage, MonitoringContext],
+    mp: MonitoringProcessor[Work, MonitoringContext],
     sc: AmazonSQSAsync,
     as: ActorSystem,
     wd: Decoder[Work]) =
@@ -65,7 +65,7 @@ object AlpakkaSQSWorker {
       Work,
       MonitoringContext,
       Summary,
-      MonitoringProcessor[SQSMessage, MonitoringContext]](
+      MonitoringProcessor[Work, MonitoringContext]](
       config
     )(process)
 }

@@ -20,15 +20,17 @@ class WorkerTest
     with MetricsSenderFixture {
 
   it("successfully processes a work and increments success metrics") {
-    val worker = new MyWorker(
-      successful,
-      messageToWorkShouldFail = false
-    )
-    withMetricsMonitoringProcessor[MyMessage, Unit](
+    withMetricsMonitoringProcessor[MyWork, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-        val process = worker.processMessage(message)(monitoringProcessor)
+    val worker = new MyWorker(
+      monitoringProcessor,
+      successful,
+      messageToWorkShouldFail = false
+    )
+
+        val process = worker.processMessage(message)
         whenReady(process) { _ =>
           worker.callCounter.calledCount shouldBe 1
 
@@ -44,15 +46,17 @@ class WorkerTest
   }
 
   it("increments deterministic failure metric if transformation fails") {
-    val worker = new MyWorker(
-      successful,
-      messageToWorkShouldFail = true
-    )
-    withMetricsMonitoringProcessor[MyMessage, Unit](
+    withMetricsMonitoringProcessor[MyWork, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-        val process = worker.processMessage(message)(monitoringProcessor)
+    val worker = new MyWorker(
+      monitoringProcessor,
+      successful,
+      messageToWorkShouldFail = true
+    )
+
+        val process = worker.processMessage(message)
         whenReady(process) { _ =>
           worker.callCounter.calledCount shouldBe 0
 
@@ -68,15 +72,17 @@ class WorkerTest
   }
 
   it("doesn't increment metrics if monitoring fails") {
-    val worker = new MyWorker(
-      successful,
-      messageToWorkShouldFail = false
-    )
-    withMetricsMonitoringProcessor[MyMessage, Assertion](
+    withMetricsMonitoringProcessor[MyWork, Assertion](
       namespace = "namespace",
       shouldFail = true) {
       case (monitoringClient, monitoringProcessor) =>
-        val process = worker.processMessage(message)(monitoringProcessor)
+    val worker = new MyWorker(
+      monitoringProcessor,
+      successful,
+      messageToWorkShouldFail = false
+    )
+
+        val process = worker.processMessage(message)
 
         whenReady(process) { _ =>
           worker.callCounter.calledCount shouldBe 1
@@ -90,15 +96,17 @@ class WorkerTest
 
   it(
     "increments deterministic failure metric if processing fails with deterministic failure") {
-    val worker = new MyWorker(
-      deterministicFailure,
-      messageToWorkShouldFail = false
-    )
-    withMetricsMonitoringProcessor[MyMessage, Unit](
+    withMetricsMonitoringProcessor[MyWork, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-        val process = worker.processMessage(message)(monitoringProcessor)
+    val worker = new MyWorker(
+      monitoringProcessor,
+      deterministicFailure,
+      messageToWorkShouldFail = false
+    )
+
+        val process = worker.processMessage(message)
         whenReady(process) { _ =>
           worker.callCounter.calledCount shouldBe 1
 
@@ -115,15 +123,17 @@ class WorkerTest
 
   it(
     "increments non deterministic failure metric if processing fails with non deterministic failure") {
-    val worker = new MyWorker(
-      nonDeterministicFailure,
-      messageToWorkShouldFail = false
-    )
-    withMetricsMonitoringProcessor[MyMessage, Unit](
+    withMetricsMonitoringProcessor[MyWork, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-        val process = worker.processMessage(message)(monitoringProcessor)
+    val worker = new MyWorker(
+      monitoringProcessor,
+      nonDeterministicFailure,
+      messageToWorkShouldFail = false
+    )
+
+        val process = worker.processMessage(message)
         whenReady(process) { _ =>
           worker.callCounter.calledCount shouldBe 1
 
