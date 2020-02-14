@@ -14,17 +14,12 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.Future
 
-class AlpakkaSQSWorker[Work,
-                       MonitoringContext,
-                       Summary,
-                       MonitoringProcessorImpl <: MonitoringProcessor[
-                         SQSMessage,
-                         MonitoringContext]](
+class AlpakkaSQSWorker[Work, MonitoringContext, Summary](
   config: AlpakkaSQSWorkerConfig
 )(
   val doWork: Work => Future[Result[Summary]]
 )(implicit
-  val monitoringProcessor: MonitoringProcessorImpl,
+  val monitoringProcessor: MonitoringProcessor[Work, MonitoringContext],
   val as: ActorSystem,
   val wd: Decoder[Work],
   sc: AmazonSQSAsync,
@@ -34,7 +29,7 @@ class AlpakkaSQSWorker[Work,
       MonitoringContext,
       Summary,
       MessageAction]
-    with SnsSqsTransform[Work]
+    with SnsSqsTransform[Work, MonitoringContext]
     with Logging {
 
   type SQSAction = SQSMessage => (SQSMessage, sqs.MessageAction)
@@ -57,15 +52,11 @@ object AlpakkaSQSWorker {
   def apply[Work, MonitoringContext, Summary](config: AlpakkaSQSWorkerConfig)(
     process: Work => Future[Result[Summary]]
   )(implicit
-    mp: MonitoringProcessor[SQSMessage, MonitoringContext],
+    mp: MonitoringProcessor[Work, MonitoringContext],
     sc: AmazonSQSAsync,
     as: ActorSystem,
     wd: Decoder[Work]) =
-    new AlpakkaSQSWorker[
-      Work,
-      MonitoringContext,
-      Summary,
-      MonitoringProcessor[SQSMessage, MonitoringContext]](
+    new AlpakkaSQSWorker[Work, MonitoringContext, Summary](
       config
     )(process)
 }

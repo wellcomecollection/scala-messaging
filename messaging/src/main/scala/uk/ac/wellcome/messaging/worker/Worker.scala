@@ -3,13 +3,15 @@ package uk.ac.wellcome.messaging.worker
 import uk.ac.wellcome.messaging.worker.models.{Completed, Retry, WorkCompletion}
 import uk.ac.wellcome.messaging.worker.steps.{
   MessageProcessor,
+  MessageTransform,
   MonitoringProcessor
 }
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Worker[Message, Work, MonitoringContext, Summary, Action]
-    extends MessageProcessor[Message, Work, Summary] {
+    extends MessageProcessor[Work, Summary]
+    with MessageTransform[Message, Work, MonitoringContext] {
 
   type Processed = Future[(Message, Action)]
 
@@ -20,32 +22,27 @@ trait Worker[Message, Work, MonitoringContext, Summary, Action]
 
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction
+  val monitoringProcessor: MonitoringProcessor[Work, MonitoringContext]
 
-  final def processMessage(message: Message)(
-    implicit monitoringProcessor: MonitoringProcessor[Message,
-                                                      MonitoringContext])
-    : Processed =
+  final def processMessage(message: Message): Processed =
     work(message).map(completion)
 
-  private def work(message: Message)(
-    implicit monitoringProcessor: MonitoringProcessor[Message,
-                                                      MonitoringContext])
-    : Future[Completion] = {
+  private def work(message: Message): Future[Completion] = {
     for {
-      context <- monitoringProcessor.recordStart(message)
-      summary <- process(message)
-      monitor <- monitoringProcessor.recordEnd(message, context, summary)
+      (workEither, rootContext) <- Future.successful(callTransform(message))
+      localContext <- monitoringProcessor.recordStart(workEither, rootContext)
+      summary <- process(workEither)
+      _ <- monitoringProcessor.recordEnd(workEither, localContext, summary)
     } yield
       WorkCompletion(
         message,
-        summary,
-        monitor
+        summary
       )
   }
 
   private def completion(done: Completion) =
     done match {
-      case WorkCompletion(message, response, _) =>
+      case WorkCompletion(message, response) =>
         response.asInstanceOf[Action] match {
           case _: Retry     => retryAction(message)
           case _: Completed => completedAction(message)

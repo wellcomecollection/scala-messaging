@@ -4,12 +4,13 @@ import uk.ac.wellcome.messaging.worker.models._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MonitoringProcessor[Message, Context] {
+trait MonitoringProcessor[Work, Context] {
 
-  def recordStart(message: Message)(
+  def recordStart(work: Either[Throwable, Work],
+                  context: Either[Throwable, Option[Context]])(
     implicit ec: ExecutionContext): Future[Context]
 
-  def recordEnd[Recorded](message: Message,
+  def recordEnd[Recorded](work: Either[Throwable, Work],
                           context: Context,
                           result: Result[Recorded])(
     implicit ec: ExecutionContext): Future[Result[Unit]]
