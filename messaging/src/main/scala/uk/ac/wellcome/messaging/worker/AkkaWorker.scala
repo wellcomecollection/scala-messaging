@@ -17,8 +17,7 @@ trait AkkaWorker[Message, Work, MonitoringContext, Summary, Action]
       ActorMaterializerSettings(as)
     )
   implicit val ec = as.dispatcher
-  implicit val monitoringProcessor: MonitoringProcessor[Work,
-                                                        MonitoringContext]
+  implicit val monitoringProcessor: MonitoringProcessor[Work, MonitoringContext]
 
   type MessageSource = Source[Message, NotUsed]
   type MessageSink = Sink[(Message, Action), Future[Done]]

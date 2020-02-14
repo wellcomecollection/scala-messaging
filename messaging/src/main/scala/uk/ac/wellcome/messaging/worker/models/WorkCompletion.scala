@@ -1,5 +1,4 @@
 package uk.ac.wellcome.messaging.worker.models
 
-case class WorkCompletion[Message, Summary](
-  message: Message,
-  summary: Result[Summary])
+case class WorkCompletion[Message, Summary](message: Message,
+                                            summary: Result[Summary])

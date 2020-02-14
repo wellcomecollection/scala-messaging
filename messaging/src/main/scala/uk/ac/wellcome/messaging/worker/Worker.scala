@@ -1,12 +1,17 @@
 package uk.ac.wellcome.messaging.worker
 
 import uk.ac.wellcome.messaging.worker.models.{Completed, Retry, WorkCompletion}
-import uk.ac.wellcome.messaging.worker.steps.{MessageProcessor, MessageTransform, MonitoringProcessor}
+import uk.ac.wellcome.messaging.worker.steps.{
+  MessageProcessor,
+  MessageTransform,
+  MonitoringProcessor
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Worker[Message, Work, MonitoringContext, Summary, Action]
-    extends MessageProcessor[Work, Summary] with MessageTransform[Message, Work, MonitoringContext]{
+    extends MessageProcessor[Work, Summary]
+    with MessageTransform[Message, Work, MonitoringContext] {
 
   type Processed = Future[(Message, Action)]
 

@@ -4,7 +4,8 @@ import scala.util.Try
 
 trait MessageTransform[Message, Work, MonitoringContext] {
 
-  type Transformed = (Either[Throwable,Work], Either[Throwable, Option[MonitoringContext]])
+  type Transformed =
+    (Either[Throwable, Work], Either[Throwable, Option[MonitoringContext]])
 
   protected val transform: Message => Transformed
 

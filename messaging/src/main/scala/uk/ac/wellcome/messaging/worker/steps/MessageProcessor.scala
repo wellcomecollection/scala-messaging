@@ -7,14 +7,14 @@ import scala.concurrent.{ExecutionContext, Future}
 trait MessageProcessor[Work, Summary] {
   type ResultSummary = Future[Result[Summary]]
 
-  protected val doWork:(Work)=> ResultSummary
+  protected val doWork: (Work) => ResultSummary
 
   final def process(workEither: Either[Throwable, Work])(
-    implicit ec: ExecutionContext):Future[Result[Summary]] = workEither.fold(
+    implicit ec: ExecutionContext): Future[Result[Summary]] = workEither.fold(
     e => Future.successful(DeterministicFailure[Summary](e)),
     w => {
 
-      val working  = for {
+      val working = for {
         result <- doWork(w)
 
       } yield result
