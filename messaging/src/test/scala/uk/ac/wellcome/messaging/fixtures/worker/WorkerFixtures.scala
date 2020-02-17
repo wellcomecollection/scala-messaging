@@ -47,7 +47,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   case class MyExternalMessageAction(action: Action)
 
   class MyWorker(
-    val monitoringProcessor: MetricsMonitoringProcessor[MyWork, FakeMetricsMonitoringClient],
+    val monitoringProcessor: MetricsMonitoringProcessor[MyWork],
     testProcess: TestInnerProcess,
     val transform: MyMessage => (Either[Throwable,MyWork], Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)

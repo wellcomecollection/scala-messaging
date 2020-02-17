@@ -8,6 +8,7 @@ import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
 import uk.ac.wellcome.monitoring.MetricsConfig
 
 import scala.concurrent.ExecutionContext
@@ -41,8 +42,8 @@ trait AlpakkaSQSWorkerFixtures
     as: ActorSystem,
     ec: ExecutionContext): R =
 
-    withMetricsMonitoringProcessor[MyWork, R](namespace, false) { case (monitoringClient, monitoringProcessor) =>
-      implicit val mp = monitoringProcessor
+    withFakeMonitoringClient(false) { client: FakeMetricsMonitoringClient =>
+      val metricsProcessorBuilder:(ExecutionContext) => MetricsMonitoringProcessor[MyWork] = new MetricsMonitoringProcessor[MyWork](namespace)(client, _)
 
       val config = createAlpakkaSQSWorkerConfig(queue, namespace)
 
@@ -51,8 +52,8 @@ trait AlpakkaSQSWorkerFixtures
         createResult(process, callCounter)(ec)(o)
 
       val worker =
-        new AlpakkaSQSWorker[MyWork, MyContext, MySummary](config)(testProcess)
+        new AlpakkaSQSWorker[MyWork, MyContext, MySummary](config,metricsProcessorBuilder)(testProcess)
 
-      testWith((worker, config, monitoringClient, callCounter))
+      testWith((worker, config, client, callCounter))
     }
 }

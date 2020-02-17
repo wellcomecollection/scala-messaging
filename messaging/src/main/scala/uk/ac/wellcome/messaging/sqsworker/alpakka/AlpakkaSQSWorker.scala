@@ -12,14 +12,14 @@ import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class AlpakkaSQSWorker[Work, MonitoringContext, Summary](
-  config: AlpakkaSQSWorkerConfig
+  config: AlpakkaSQSWorkerConfig,
+  val monitoringProcessorBuilder: (ExecutionContext) => MonitoringProcessor[Work, MonitoringContext]
 )(
   val doWork: Work => Future[Result[Summary]]
 )(implicit
-  val monitoringProcessor: MonitoringProcessor[Work, MonitoringContext],
   val as: ActorSystem,
   val wd: Decoder[Work],
   sc: AmazonSQSAsync,
@@ -49,14 +49,13 @@ class AlpakkaSQSWorker[Work, MonitoringContext, Summary](
 }
 
 object AlpakkaSQSWorker {
-  def apply[Work, MonitoringContext, Summary](config: AlpakkaSQSWorkerConfig)(
+  def apply[Work, MonitoringContext, Summary](config: AlpakkaSQSWorkerConfig, monitoringProcessorBuilder: (ExecutionContext) => MonitoringProcessor[Work, MonitoringContext])(
     process: Work => Future[Result[Summary]]
   )(implicit
-    mp: MonitoringProcessor[Work, MonitoringContext],
     sc: AmazonSQSAsync,
     as: ActorSystem,
     wd: Decoder[Work]) =
     new AlpakkaSQSWorker[Work, MonitoringContext, Summary](
-      config
+      config, monitoringProcessorBuilder
     )(process)
 }

@@ -1,13 +1,9 @@
 package uk.ac.wellcome.messaging.worker
 
 import uk.ac.wellcome.messaging.worker.models.{Completed, Retry, WorkCompletion}
-import uk.ac.wellcome.messaging.worker.steps.{
-  MessageProcessor,
-  MessageTransform,
-  MonitoringProcessor
-}
+import uk.ac.wellcome.messaging.worker.steps.{MessageProcessor, MessageTransform, MonitoringProcessor}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait Worker[Message, Work, MonitoringContext, Summary, Action]
     extends MessageProcessor[Work, Summary]
@@ -15,19 +11,22 @@ trait Worker[Message, Work, MonitoringContext, Summary, Action]
 
   type Processed = Future[(Message, Action)]
 
-  implicit val ec: ExecutionContext
 
   type Completion = WorkCompletion[Message, Summary]
   type MessageAction = Message => (Message, Action)
 
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction
-  val monitoringProcessor: MonitoringProcessor[Work, MonitoringContext]
 
-  final def processMessage(message: Message): Processed =
+  protected val monitoringProcessor: MonitoringProcessor[Work, MonitoringContext]
+
+  final def processMessage(message: Message): Processed = {
+    implicit val e =(monitoringProcessor.ec)
     work(message).map(completion)
+  }
 
   private def work(message: Message): Future[Completion] = {
+    implicit val e =(monitoringProcessor.ec)
     for {
       (workEither, rootContext) <- Future.successful(callTransform(message))
       localContext <- monitoringProcessor.recordStart(workEither, rootContext)
