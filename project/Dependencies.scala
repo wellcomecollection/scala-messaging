@@ -47,8 +47,13 @@ object Dependencies {
 
   val openTracingDependencies = Seq(
     "io.opentracing.contrib" %% "opentracing-scala-concurrent" % "0.0.6",
-    "co.elastic.apm" % "apm-opentracing" % "1.12.0",
     "io.opentracing" % "opentracing-mock" % "0.33.0" % Test
+  )
+
+  val elasticApmBridgeDependencies = Seq (
+    "co.elastic.apm" % "apm-opentracing" % "1.12.0",
+    "co.elastic.apm" % "apm-agent-attach" % "1.12.0"
+//    "co.elastic.apm" % "apm-agent-api" % "1.12.0"
   )
 
   val logbackDependencies = Seq(
@@ -82,7 +87,8 @@ object Dependencies {
     circeDependencies ++
     testDependencies ++
     logbackDependencies ++
-    openTracingDependencies
+    openTracingDependencies ++
+    elasticApmBridgeDependencies
 
   val typesafeDependencies: Seq[ModuleID] =
     WellcomeDependencies.monitoringTypesafeLibrary
