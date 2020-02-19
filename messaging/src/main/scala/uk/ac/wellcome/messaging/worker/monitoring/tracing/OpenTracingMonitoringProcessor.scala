@@ -2,10 +2,10 @@ package uk.ac.wellcome.messaging.worker.monitoring.tracing
 
 import io.opentracing.contrib.concurrent.TracedExecutionContext
 import io.opentracing.{Span, SpanContext, Tracer}
-import uk.ac.wellcome.messaging.worker.models.{Result, Successful}
+import uk.ac.wellcome.messaging.worker.models.{DeterministicFailure, NonDeterministicFailure, Result, Successful}
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 trait ContextCarrier[T]{
@@ -51,8 +51,20 @@ trait OpenTracingMonitoringProcessor[Work]
     }
   }
 
-  override def recordEnd[Recorded](context: Span,
+  override def recordEnd[Recorded](span: Span,
                                    result: Result[Recorded]): Future[Result[Unit]] = Future{
-    context.finish()
+    result match {
+      case Successful(_) =>
+      case f@DeterministicFailure(failure, _) =>
+        span.setTag("error", true)
+        span.setTag("error.type", f.getClass.getSimpleName)
+        span.log(Map("event" -> "error", "error.object" -> failure).asJava)
+      case f@NonDeterministicFailure(failure, _) =>
+        span.setTag("error", true)
+        span.setTag("error.type", f.getClass.getSimpleName)
+        span.log(Map("event" -> "error", "error.object" -> failure).asJava)
+      case _ => ???
+    }
+    span.finish()
   }.map{_=> Successful(Some(()))}
 }

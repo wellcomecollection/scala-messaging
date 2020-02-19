@@ -29,6 +29,42 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
     }
   }
 
+  it("opens and finishes a span and records a deterministic error in process") {
+    withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier) { case (mockTracer, processor) =>
+
+      whenReady(processor.recordStart(Right(work), Right(None))) { c: Span =>
+        c shouldNot be(null)
+
+        val deterministicErrorResult = deterministicFailure(work)
+        whenReady(processor.recordEnd(c, deterministicErrorResult)) { _ =>
+          val f = mockTracer.finishedSpans().asScala
+          f should have size (1)
+          f.head.tags().asScala.toMap should contain only (("error" -> true),"error.type" -> "DeterministicFailure")
+          val logEntries = c.asInstanceOf[MockSpan].logEntries().asScala.map(_.fields().asScala.toMap)
+          logEntries should contain only (Map(("event" -> "error"), ("error.object" -> deterministicErrorResult.failure)))
+        }
+      }
+    }
+  }
+
+  it("opens and finishes a span and records a non deterministic error in process") {
+    withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier) { case (mockTracer, processor) =>
+
+      whenReady(processor.recordStart(Right(work), Right(None))) { c: Span =>
+        c shouldNot be(null)
+
+        val nonDeterministicErrorResult = nonDeterministicFailure(work)
+        whenReady(processor.recordEnd(c, nonDeterministicErrorResult)) { _ =>
+          val f = mockTracer.finishedSpans().asScala
+          f should have size (1)
+          f.head.tags().asScala.toMap should contain only (("error" -> true),"error.type" -> "NonDeterministicFailure")
+          val logEntries = c.asInstanceOf[MockSpan].logEntries().asScala.map(_.fields().asScala.toMap)
+          logEntries should contain only (Map(("event" -> "error"), ("error.object" -> nonDeterministicErrorResult.failure)))
+        }
+      }
+    }
+  }
+
   describe("recordStart") {
     it("records an error if it receives a left instead of a work") {
       withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier) { case (_, processor) =>
