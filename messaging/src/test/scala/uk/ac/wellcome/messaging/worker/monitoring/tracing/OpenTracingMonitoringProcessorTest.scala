@@ -1,7 +1,7 @@
 package uk.ac.wellcome.messaging.worker.monitoring.tracing
 
+import io.opentracing.Span
 import io.opentracing.mock.{MockSpan, MockTracer}
-import io.opentracing.{Span, SpanContext}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Assertion, FunSpec}
 import uk.ac.wellcome.messaging.fixtures.monitoring.tracing.TracingFixtures
@@ -10,14 +10,11 @@ import uk.ac.wellcome.messaging.worker.models.MonitoringProcessorFailure
 
 import scala.collection.JavaConverters._
 
-case class Bu(span: Span, rootSpanContext: Option[SpanContext])
-
-
 class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures with ScalaFutures with TracingFixtures{
 
   it("opens and finishes a span") {
     val mockTracer = new MockTracer()
-    withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier, mockTracer) { processor =>
+    withOpenTracingMetricsProcessor[MyWork, Assertion](MapContextCarrier, mockTracer) { processor =>
 
       whenReady(processor.recordStart(Right(work), Right(None))) { span: Either[Throwable, Span] =>
         span shouldBe a[Right[_,_]]
@@ -33,7 +30,7 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
 
   it("opens and finishes a span and records a deterministic error in process") {
     val mockTracer = new MockTracer()
-    withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier, mockTracer) { processor =>
+    withOpenTracingMetricsProcessor[MyWork, Assertion](MapContextCarrier, mockTracer) { processor =>
 
       whenReady(processor.recordStart(Right(work), Right(None))) { spanEither =>
         spanEither shouldBe a[Right[_,_]]
@@ -52,7 +49,7 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
 
   it("opens and finishes a span and records a non deterministic error in process") {
     val mockTracer = new MockTracer()
-    withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier, mockTracer) { processor =>
+    withOpenTracingMetricsProcessor[MyWork, Assertion](MapContextCarrier, mockTracer) { processor =>
 
       whenReady(processor.recordStart(Right(work), Right(None))) { spanEither =>
         spanEither shouldBe a[Right[_,_]]
@@ -71,7 +68,7 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
   describe("recordStart") {
     it("records an error if it receives a left instead of a work") {
       val mockTracer = new MockTracer()
-      withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier, mockTracer) { processor =>
+      withOpenTracingMetricsProcessor[MyWork, Assertion](MapContextCarrier, mockTracer) { processor =>
         val exception = new RuntimeException("BOOM!")
         whenReady(processor.recordStart(Left(exception), Right(None))) { spanEither =>
           spanEither shouldBe a[Right[_,_]]
@@ -86,12 +83,12 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
 
     it("opens a span as child of another passed as context") {
       val mockTracer = new MockTracer()
-      withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier, mockTracer) { processor =>
+      withOpenTracingMetricsProcessor[MyWork, Assertion](MapContextCarrier, mockTracer) { processor =>
 
         val parentSpan = mockTracer.buildSpan("parent").start()
         val parentTraceId = parentSpan.context().toTraceId
         val parentSpanId = parentSpan.context().toSpanId
-        val context = textMapCarrier.inject(mockTracer, parentSpan.context())
+        val context = MapContextCarrier.inject(mockTracer, parentSpan.context())
         parentSpan.finish()
 
         whenReady(processor.recordStart(Right(work), Right(Some(context)))) { spanEither =>
@@ -113,7 +110,7 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
 
     it("records an error if it receives a left instead of a parent span") {
       val mockTracer = new MockTracer()
-      withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier, mockTracer) { processor =>
+      withOpenTracingMetricsProcessor[MyWork, Assertion](MapContextCarrier, mockTracer) { processor =>
 
 
         val exception = new RuntimeException("AAAARGH!")
@@ -134,7 +131,7 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
       val failingTracer = new MockTracer{
         override def buildSpan(operationName: MySummary): MockTracer#SpanBuilder = throw exception
       }
-      withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier, failingTracer) { processor =>
+      withOpenTracingMetricsProcessor[MyWork, Assertion](MapContextCarrier, failingTracer) { processor =>
         whenReady(processor.recordStart(Right(work), Right(None))) { spanEither =>
           spanEither shouldBe a[Left[_,_]]
           spanEither.left.get shouldBe exception
@@ -147,7 +144,7 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
     it("returns a monitoring failure if it doesn't receive a span") {
       val exception = new RuntimeException("TADAAA")
       val mockTracer = new MockTracer()
-      withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier, mockTracer) { processor =>
+      withOpenTracingMetricsProcessor[MyWork, Assertion](MapContextCarrier, mockTracer) { processor =>
 
 
           val nonDeterministicErrorResult = nonDeterministicFailure(work)
@@ -165,7 +162,7 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
 
       val span = mockTracer.buildSpan("parent").start()
       span.finish()
-      withOpenTracingMetricsProcessor[MyWork, Assertion](textMapCarrier, mockTracer) { processor =>
+      withOpenTracingMetricsProcessor[MyWork, Assertion](MapContextCarrier, mockTracer) { processor =>
 
 
           val nonDeterministicErrorResult = nonDeterministicFailure(work)

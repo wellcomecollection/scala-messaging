@@ -1,26 +1,21 @@
 package uk.ac.wellcome.messaging.worker.monitoring.tracing
 
 import io.opentracing.contrib.concurrent.TracedExecutionContext
-import io.opentracing.{Span, SpanContext, Tracer}
+import io.opentracing.{Span, Tracer}
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
-trait ContextCarrier[T]{
-  def inject(tracer: Tracer, span: SpanContext): T
 
-  def extract(tracer: Tracer, t:T): SpanContext
-}
-
-class OpenTracingMonitoringProcessor[Work](namespace: String)(tracer: Tracer,wrappedEc:ExecutionContext,carrier: ContextCarrier[Map[String,String]])
-    extends MonitoringProcessor[Work, Map[String,String],Span] {
+class OpenTracingMonitoringProcessor[Work, S](namespace: String)(tracer: Tracer,wrappedEc:ExecutionContext,carrier: ContextCarrier[S])
+    extends MonitoringProcessor[Work, S,Span] {
 
   override implicit val ec: ExecutionContext = new TracedExecutionContext(wrappedEc, tracer)
 
   override def recordStart(work: Either[Throwable, Work],
-                           context: Either[Throwable, Option[Map[String,String]]]): Future[Either[Throwable, Span]] = {
+                           context: Either[Throwable, Option[S]]): Future[Either[Throwable, Span]] = {
     val f = Future {
       val spanBuilder = tracer.buildSpan(namespace)
       val span = context match {

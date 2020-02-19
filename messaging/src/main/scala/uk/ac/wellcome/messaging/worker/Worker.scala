@@ -1,5 +1,6 @@
 package uk.ac.wellcome.messaging.worker
 
+import uk.ac.wellcome.messaging.worker.logging.Logger
 import uk.ac.wellcome.messaging.worker.models.{Completed, Retry, WorkCompletion}
 import uk.ac.wellcome.messaging.worker.steps.{MessageProcessor, MessageTransform, MonitoringProcessor}
 
@@ -7,7 +8,7 @@ import scala.concurrent.Future
 
 trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Summary, Action]
     extends MessageProcessor[Work, Summary]
-    with MessageTransform[Message, Work, InfraServiceMonitoringContext] {
+    with MessageTransform[Message, Work, InfraServiceMonitoringContext] with Logger{
 
   type Processed = Future[(Message, Action)]
 
@@ -31,6 +32,7 @@ trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitorin
       (workEither, rootContext) <- Future.successful(callTransform(message))
       localContext <- monitoringProcessor.recordStart(workEither, rootContext)
       summary <- process(workEither)
+      _ <-log(summary)
       _ <- monitoringProcessor.recordEnd(localContext, summary)
     } yield
       WorkCompletion(

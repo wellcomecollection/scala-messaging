@@ -2,12 +2,7 @@ package uk.ac.wellcome.messaging.worker.monitoring.metrics
 
 import java.time.Instant
 
-import uk.ac.wellcome.messaging.worker.logging.Logger
-import uk.ac.wellcome.messaging.worker.models.{
-  MonitoringProcessorFailure,
-  Result,
-  Successful
-}
+import uk.ac.wellcome.messaging.worker.models.{MonitoringProcessorFailure, Result, Successful}
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,7 +11,6 @@ final class MetricsMonitoringProcessor[
   Work](val namespace: String)(
   implicit val monitoringClient: MetricsMonitoringClient, val ec: ExecutionContext)
     extends MonitoringProcessor[Work, Instant, Instant]
-    with Logger
     with MetricsProcessor {
 
   override def recordStart(work: Either[Throwable, Work],
@@ -29,7 +23,6 @@ final class MetricsMonitoringProcessor[
   ): Future[Result[Unit]] = {
 
     val monitoring = for {
-      _: Unit <- log(result)
       _: Unit <- metric(result, context.getOrElse(throw new Exception(s"context was Left: $context")))
     } yield Successful[Unit]()
 
