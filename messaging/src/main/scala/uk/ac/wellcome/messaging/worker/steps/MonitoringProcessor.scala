@@ -8,8 +8,8 @@ trait MonitoringProcessor[Work, InfraServiceMonitoringContext, InterServiceMonit
   implicit val ec: ExecutionContext
 
   def recordStart(work: Either[Throwable, Work],
-                  context: Either[Throwable, Option[InfraServiceMonitoringContext]]): Future[InterServiceMonitoringContext]
+                  context: Either[Throwable, Option[InfraServiceMonitoringContext]]): Future[Either[Throwable,InterServiceMonitoringContext]]
 
-  def recordEnd[Recorded](context: InterServiceMonitoringContext,
+  def recordEnd[Recorded](context: Either[Throwable,InterServiceMonitoringContext],
                           result: Result[Recorded]): Future[Result[Unit]]
 }

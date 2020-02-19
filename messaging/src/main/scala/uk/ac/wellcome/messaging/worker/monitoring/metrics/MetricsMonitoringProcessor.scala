@@ -20,17 +20,17 @@ final class MetricsMonitoringProcessor[
     with MetricsProcessor {
 
   override def recordStart(work: Either[Throwable, Work],
-                           context: Either[Throwable, Option[Instant]]): Future[Instant] =
-    Future.successful(Instant.now)
+                           context: Either[Throwable, Option[Instant]]): Future[Either[Throwable,Instant]] =
+    Future.successful(Right(Instant.now))
 
   override def recordEnd[Recorded](
-    context: Instant,
+    context: Either[Throwable,Instant],
     result: Result[Recorded]
   ): Future[Result[Unit]] = {
 
     val monitoring = for {
       _: Unit <- log(result)
-      _: Unit <- metric(result, context)
+      _: Unit <- metric(result, context.getOrElse(throw new Exception(s"context was Left: $context")))
     } yield Successful[Unit]()
 
     monitoring recover {
