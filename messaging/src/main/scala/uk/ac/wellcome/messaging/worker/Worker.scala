@@ -1,8 +1,7 @@
 package uk.ac.wellcome.messaging.worker
 
-import uk.ac.wellcome.messaging.worker.logging.Logger
 import uk.ac.wellcome.messaging.worker.models.{Completed, Retry, WorkCompletion}
-import uk.ac.wellcome.messaging.worker.steps.{MessageProcessor, MessageTransform, MonitoringProcessor}
+import uk.ac.wellcome.messaging.worker.steps.{Logger, MessageProcessor, MessageTransform, MonitoringProcessor}
 
 import scala.concurrent.Future
 
