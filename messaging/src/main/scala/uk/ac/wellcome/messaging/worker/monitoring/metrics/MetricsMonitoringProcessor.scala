@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 final class MetricsMonitoringProcessor[
   Work](val namespace: String)(
   implicit val monitoringClient: MetricsMonitoringClient, val ec: ExecutionContext)
-    extends MonitoringProcessor[Work, Instant]
+    extends MonitoringProcessor[Work, Instant, Instant]
     with Logger
     with MetricsProcessor {
 
@@ -24,7 +24,6 @@ final class MetricsMonitoringProcessor[
     Future.successful(Instant.now)
 
   override def recordEnd[Recorded](
-    work: Either[Throwable, Work],
     context: Instant,
     result: Result[Recorded]
   ): Future[Result[Unit]] = {

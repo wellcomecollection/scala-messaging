@@ -8,8 +8,8 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait AkkaWorker[Message, Work, MonitoringContext, Summary, Action]
-    extends Worker[Message, Work, MonitoringContext, Summary, Action] {
+trait AkkaWorker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Summary, Action]
+    extends Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Summary, Action] {
 
   implicit val as: ActorSystem
   implicit val am: ActorMaterializer =
@@ -17,7 +17,7 @@ trait AkkaWorker[Message, Work, MonitoringContext, Summary, Action]
       ActorMaterializerSettings(as)
     )
   private val ec = as.dispatcher
-  protected val monitoringProcessorBuilder: (ExecutionContext) => MonitoringProcessor[Work, MonitoringContext]
+  protected val monitoringProcessorBuilder: (ExecutionContext) => MonitoringProcessor[Work, InfraServiceMonitoringContext, InterServiceMonitoringContext]
 
   override final val monitoringProcessor = monitoringProcessorBuilder(ec)
   type MessageSource = Source[Message, NotUsed]

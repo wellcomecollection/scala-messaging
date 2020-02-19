@@ -45,6 +45,12 @@ object Dependencies {
     val logback = "1.2.3"
   }
 
+  val openTracingDependencies = Seq(
+    "io.opentracing.contrib" %% "opentracing-scala-concurrent" % "0.0.6",
+    "co.elastic.apm" % "apm-opentracing" % "1.12.0",
+    "io.opentracing" % "opentracing-mock" % "0.33.0" % Test
+  )
+
   val logbackDependencies = Seq(
     "ch.qos.logback" % "logback-classic" % versions.logback
   )
@@ -75,7 +81,8 @@ object Dependencies {
     akkaDependencies ++
     circeDependencies ++
     testDependencies ++
-    logbackDependencies
+    logbackDependencies ++
+    openTracingDependencies
 
   val typesafeDependencies: Seq[ModuleID] =
     WellcomeDependencies.monitoringTypesafeLibrary

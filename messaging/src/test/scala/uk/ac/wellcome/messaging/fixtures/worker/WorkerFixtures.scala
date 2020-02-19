@@ -52,7 +52,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     val transform: MyMessage => (Either[Throwable,MyWork], Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)
       extends Worker[
-        MyMessage, MyWork, MyContext, MySummary, MyExternalMessageAction
+        MyMessage, MyWork, MyContext, MyContext, MySummary, MyExternalMessageAction
       ] {
 
     val callCounter = new CallCounter()
