@@ -22,29 +22,23 @@ class OpenTracingMonitoringProcessor[Work](namespace: String)(tracer: Tracer,wra
   override def recordStart(work: Either[Throwable, Work],
                            context: Either[Throwable, Option[Map[String,String]]]): Future[Either[Throwable, Span]] = {
     val f = Future {
+      val spanBuilder = tracer.buildSpan(namespace)
       val span = context match {
         case Right(None) =>
-          val span = tracer.buildSpan(namespace).start()
-          span
+          spanBuilder.start()
         case Right(Some(c)) =>
           val rootContext = carrier.extract(tracer, c)
-          val span = tracer.buildSpan(namespace).asChildOf(rootContext).start()
-          span
-        case Left(ex) => val span = tracer.buildSpan(namespace).start()
-          span.setTag("error", true)
-          span.setTag("error.type", classOf[DeterministicFailure[_]].getSimpleName)
-          span.log(Map("event" -> "error", "error.object" -> ex).asJava)
-          span
+          spanBuilder.asChildOf(rootContext).start()
+        case Left(ex) =>
+          val span = spanBuilder.start()
+          tagError(span, ex, classOf[DeterministicFailure[_]].getSimpleName)
       }
       work match {
         case Right(_) =>
         case Left(ex) =>
-          span.setTag("error", true)
-          span.setTag("error.type", classOf[DeterministicFailure[_]].getSimpleName)
-          span.log(Map("event" -> "error", "error.object" -> ex).asJava)
+          tagError(span, ex, classOf[DeterministicFailure[_]].getSimpleName)
       }
       Right(span)
-
     }
     f recover { case e =>
       Left(e)
@@ -58,13 +52,9 @@ class OpenTracingMonitoringProcessor[Work](namespace: String)(tracer: Tracer,wra
         result match {
           case Successful(_) =>
           case f@DeterministicFailure(failure, _) =>
-            span.setTag("error", true)
-            span.setTag("error.type", f.getClass.getSimpleName)
-            span.log(Map("event" -> "error", "error.object" -> failure).asJava)
+            tagError(span, failure, f.getClass.getSimpleName)
           case f@NonDeterministicFailure(failure, _) =>
-            span.setTag("error", true)
-            span.setTag("error.type", f.getClass.getSimpleName)
-            span.log(Map("event" -> "error", "error.object" -> failure).asJava)
+            tagError(span, failure, f.getClass.getSimpleName)
           case _ =>
         }
         span.finish()
@@ -75,5 +65,11 @@ class OpenTracingMonitoringProcessor[Work](namespace: String)(tracer: Tracer,wra
     f recover { case e =>
       MonitoringProcessorFailure[Unit](e, None)
     }
+  }
+
+  private def tagError[Recorded](span: Span, failure: Throwable, errorType: String) = {
+    span.setTag("error", true)
+    span.setTag("error.type", errorType)
+    span.log(Map("event" -> "error", "error.object" -> failure).asJava)
   }
 }

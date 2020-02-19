@@ -2,15 +2,17 @@ package uk.ac.wellcome.messaging.fixtures.monitoring.tracing
 
 import java.util
 
+import io.opentracing.mock.MockSpan
 import io.opentracing.propagation.{Format, TextMapAdapter}
-import io.opentracing.{SpanContext, Tracer}
+import io.opentracing.{Span, SpanContext, Tracer}
+import org.scalatest.{Matchers, Suite}
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.messaging.worker.monitoring.tracing.{ContextCarrier, OpenTracingMonitoringProcessor}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 
-trait TracingFixtures {
+trait TracingFixtures extends Matchers{ this: Suite =>
 
   val textMapCarrier = new ContextCarrier[Map[String,String]] {
     override def inject(tracer: Tracer, span: SpanContext): Map[String, String] = {
@@ -26,4 +28,11 @@ trait TracingFixtures {
     val processor = new OpenTracingMonitoringProcessor[MyWork]("namespace")(tracer, ExecutionContext.Implicits.global, textMapCarrier)
     testWith(processor)
   }
+
+  def spanShouldBeTaggeddWith(span: Span, exception:Throwable, failureType: String) = {
+    span.asInstanceOf[MockSpan].tags().asScala.toMap should contain only(("error" -> true), "error.type" -> failureType)
+    val logEntries = span.asInstanceOf[MockSpan].logEntries().asScala.map(_.fields().asScala.toMap)
+    logEntries should contain only (Map(("event" -> "error"), ("error.object" -> exception)))
+  }
+
 }

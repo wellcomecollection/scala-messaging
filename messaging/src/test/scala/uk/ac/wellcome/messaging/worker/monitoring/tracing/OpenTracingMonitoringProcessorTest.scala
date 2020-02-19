@@ -23,9 +23,9 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
         span shouldBe a[Right[_,_]]
         span.right.get shouldNot be(null)
         whenReady(processor.recordEnd(span, successful(work))) { _ =>
-          val f = mockTracer.finishedSpans().asScala
-          f should have size (1)
-          f.head.tags() shouldBe empty
+          val finishedSpans = mockTracer.finishedSpans().asScala
+          finishedSpans should have size (1)
+          finishedSpans.head.tags() shouldBe empty
         }
       }
     }
@@ -42,11 +42,9 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
 
         val deterministicErrorResult = deterministicFailure(work)
         whenReady(processor.recordEnd(spanEither, deterministicErrorResult)) { _ =>
-          val f = mockTracer.finishedSpans().asScala
-          f should have size (1)
-          f.head.tags().asScala.toMap should contain only (("error" -> true),"error.type" -> "DeterministicFailure")
-          val logEntries = span.asInstanceOf[MockSpan].logEntries().asScala.map(_.fields().asScala.toMap)
-          logEntries should contain only (Map(("event" -> "error"), ("error.object" -> deterministicErrorResult.failure)))
+          mockTracer.finishedSpans().asScala should have size (1)
+
+          spanShouldBeTaggeddWith(span, deterministicErrorResult.failure, "DeterministicFailure")
         }
       }
     }
@@ -63,11 +61,8 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
 
         val nonDeterministicErrorResult = nonDeterministicFailure(work)
         whenReady(processor.recordEnd(spanEither, nonDeterministicErrorResult)) { _ =>
-          val f = mockTracer.finishedSpans().asScala
-          f should have size (1)
-          f.head.tags().asScala.toMap should contain only (("error" -> true),"error.type" -> "NonDeterministicFailure")
-          val logEntries = span.asInstanceOf[MockSpan].logEntries().asScala.map(_.fields().asScala.toMap)
-          logEntries should contain only (Map(("event" -> "error"), ("error.object" -> nonDeterministicErrorResult.failure)))
+          mockTracer.finishedSpans().asScala should have size (1)
+          spanShouldBeTaggeddWith(span, nonDeterministicErrorResult.failure, "NonDeterministicFailure")
         }
       }
     }
@@ -82,10 +77,8 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
           spanEither shouldBe a[Right[_,_]]
           val span = spanEither.right.get
           span shouldNot be (null)
-          val tags = span.asInstanceOf[MockSpan].tags().asScala.toMap
-          tags should contain only (("error" -> true),"error.type" -> "DeterministicFailure")
-          val logEntries = span.asInstanceOf[MockSpan].logEntries().asScala.map(_.fields().asScala.toMap)
-          logEntries should contain only (Map(("event" -> "error"), ("error.object" -> exception)))
+
+          spanShouldBeTaggeddWith(span, exception, "DeterministicFailure")
         }
 
       }
@@ -131,12 +124,8 @@ class OpenTracingMonitoringProcessorTest extends FunSpec with WorkerFixtures wit
           span shouldNot be (null)
           val references = span.asInstanceOf[MockSpan].references().asScala
           references shouldBe empty
-          val tags = span.asInstanceOf[MockSpan].tags().asScala.toMap
-          tags should contain only (("error" -> true),"error.type" -> "DeterministicFailure")
-          val logEntries = span.asInstanceOf[MockSpan].logEntries().asScala.map(_.fields().asScala.toMap)
-          logEntries should contain only (Map(("event" -> "error"), ("error.object" -> exception)))
 
-
+          spanShouldBeTaggeddWith(span, exception, "DeterministicFailure")
         }
       }
     }
