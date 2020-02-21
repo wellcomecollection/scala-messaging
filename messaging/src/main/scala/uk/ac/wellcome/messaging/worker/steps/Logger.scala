@@ -10,9 +10,9 @@ trait Logger extends Logging {
     Future {
       result match {
         case r @ Successful(_)                    => info(r.pretty)
-        case r @ NonDeterministicFailure(e, _)    => warn(r.pretty, e)
-        case r @ DeterministicFailure(e, _)       => error(r.toString, e)
-        case r @ MonitoringProcessorFailure(e, _) => error(r.toString, e)
+        case r @ NonDeterministicFailure(e)    => warn(r.pretty, e)
+        case r @ DeterministicFailure(e)       => error(r.toString, e)
+        case r @ MonitoringProcessorFailure(e) => error(r.toString, e)
       }
     }
 }

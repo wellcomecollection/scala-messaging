@@ -63,25 +63,22 @@ class OpenTracingMonitoringProcessor[Work, InfraServiceMonitoringContext](
     span: Either[Throwable, Span],
     result: Result[Recorded]): Future[Result[Unit]] = {
     val f: Future[Result[Unit]] = Future {
-      span.fold(
-        throwable => MonitoringProcessorFailure(throwable),
-        span => {
-          result match {
-            case Successful(_) =>
-            case f @ DeterministicFailure(failure, _) =>
-              tagError(span, failure, f.getClass.getSimpleName)
-            case f @ NonDeterministicFailure(failure, _) =>
-              tagError(span, failure, f.getClass.getSimpleName)
-            case _ =>
-          }
-          span.finish()
-          Successful[Unit](None)
+      span.fold(throwable => MonitoringProcessorFailure(throwable), span => {
+        result match {
+          case Successful(_) =>
+          case f@DeterministicFailure(failure) =>
+            tagError(span, failure, f.getClass.getSimpleName)
+          case f@NonDeterministicFailure(failure) =>
+            tagError(span, failure, f.getClass.getSimpleName)
+          case _ =>
         }
+        span.finish()
+        Successful[Unit](None)
+      }
       )
     }
-    f recover {
-      case e =>
-        MonitoringProcessorFailure[Unit](e, None)
+    f recover { case e =>
+      MonitoringProcessorFailure[Unit](e)
     }
   }
 

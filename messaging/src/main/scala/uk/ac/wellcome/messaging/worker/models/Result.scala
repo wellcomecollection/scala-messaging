@@ -1,30 +1,35 @@
 package uk.ac.wellcome.messaging.worker.models
 
-sealed trait Result[Summary] {
-  val summary: Option[Summary]
+sealed trait Result[Value]
+
+case class Successful[Value](
+                                value: Value
+                              ) extends Result[Value]
+  with Completed {
   def pretty =
-    s"${this.getClass.getSimpleName}: ${summary.getOrElse("<no-summary>")}"
+    s"${this.getClass.getSimpleName}: $value"
 }
 
-case class DeterministicFailure[Summary](
-  failure: Throwable,
-  summary: Option[Summary] = Option.empty[Summary]
-) extends Result[Summary]
+sealed trait FailedResult[Value] extends Result[Value] {
+  val failure: Throwable
+  def pretty =
+    s"${this.getClass.getSimpleName}"
+}
+
+
+case class DeterministicFailure[Value](
+                                        failure: Throwable
+) extends FailedResult[Value]
     with Completed
 
-case class NonDeterministicFailure[Summary](
-  failure: Throwable,
-  summary: Option[Summary] = Option.empty[Summary]
-) extends Result[Summary]
+case class NonDeterministicFailure[Value](
+                                           failure: Throwable
+) extends FailedResult[Value]
     with Retry
 
-case class Successful[Summary](
-  summary: Option[Summary] = Option.empty[Summary]
-) extends Result[Summary]
-    with Completed
 
-case class MonitoringProcessorFailure[Summary](
-  failure: Throwable,
-  summary: Option[Summary] = Option.empty[Summary]
-) extends Result[Summary]
+
+case class MonitoringProcessorFailure[Value](
+                                              failure: Throwable
+) extends FailedResult[Value]
     with Completed

@@ -102,32 +102,29 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
 
   val successful = (in: MyWork) => {
     Successful[MySummary](
-      Some("Summary Successful")
+      "Summary Successful"
     )
   }
 
   val nonDeterministicFailure = (in: MyWork) =>
     NonDeterministicFailure[MySummary](
-      new RuntimeException("NonDeterministicFailure"),
-      Some("Summary NonDeterministicFailure")
+      new RuntimeException("NonDeterministicFailure")
   )
 
   val deterministicFailure = (in: MyWork) =>
     DeterministicFailure[MySummary](
-      new RuntimeException("DeterministicFailure"),
-      Some("Summary DeterministicFailure")
+      new RuntimeException("DeterministicFailure")
   )
 
   val monitoringProcessorFailure = (in: MyWork) =>
     MonitoringProcessorFailure[MySummary](
-      new RuntimeException("MonitoringProcessorFailure"),
-      Some("Summary MonitoringProcessorFailure")
+      new RuntimeException("MonitoringProcessorFailure")
   )
 
   val exceptionState = (_: MyWork) => {
     throw new RuntimeException("BOOM")
 
-    Successful[MySummary](Some("exceptionState"))
+    Successful[MySummary]("exceptionState")
   }
 
   val shouldBeSuccessful: Result[_] => Assertion =
