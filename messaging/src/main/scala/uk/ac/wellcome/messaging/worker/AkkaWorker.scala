@@ -4,26 +4,16 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.{Done, NotUsed}
+import io.circe.Encoder
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Implementation of [[Worker]] based on akka streams
-  */
-trait AkkaWorker[Message,
-                 Work,
-                 InfraServiceMonitoringContext,
-                 InterServiceMonitoringContext,
-                 Summary,
-                 Action]
-    extends Worker[
-      Message,
-      Work,
-      InfraServiceMonitoringContext,
-      InterServiceMonitoringContext,
-      Summary,
-      Action] {
+ * Implementation of [[Worker]] based on akka streams
+ */
+trait AkkaWorker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, Destination, MessageAttributes]
+    extends Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, Destination, MessageAttributes] {
 
   implicit val as: ActorSystem
   implicit val am: ActorMaterializer =
@@ -50,10 +40,12 @@ trait AkkaWorker[Message,
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction
 
-  private def completionSource(parallelism: Int): ProcessedSource =
+  private def completionSource(parallelism: Int)(
+    implicit encoder: Encoder[Value]): ProcessedSource =
     source.mapAsyncUnordered(parallelism)(processMessage)
 
-  def start: Future[Done] =
+  def start(
+             implicit encoder: Encoder[Value]): Future[Done] =
     completionSource(parallelism)
       .toMat(sink)(Keep.right)
       .run()

@@ -6,6 +6,7 @@ import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS.QueuePair
 import uk.ac.wellcome.messaging.fixtures.worker.AlpakkaSQSWorkerFixtures
+import uk.ac.wellcome.messaging.memory.MemoryMessageSender
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -21,13 +22,14 @@ class AlpakkaSQSWorkerTest
   val namespace = "AlpakkaSQSWorkerTest"
 
   describe("When a message is processed") {
-    it("consumes a message and increments success metrics") {
-      withLocalSqsQueueAndDlq {
-        case QueuePair(queue, dlq) =>
-          withActorSystem { implicit actorSystem =>
-            withAlpakkaSQSWorker(queue, successful, namespace) {
-              case (worker, _, metrics, callCounter) =>
-                worker.start
+    it(
+      "consumes a message and increments success metrics") {
+          withLocalSqsQueueAndDlq {
+            case QueuePair(queue, dlq) =>
+              withActorSystem { implicit actorSystem =>
+                withAlpakkaSQSWorker(queue, successful, new MemoryMessageSender(), namespace) {
+                  case (worker, _, metrics, callCounter) =>
+                    worker.start
 
                 val myWork = MyWork("my-new-work")
 
@@ -60,7 +62,7 @@ class AlpakkaSQSWorkerTest
       withLocalSqsQueueAndDlq {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
-            withAlpakkaSQSWorker(queue, deterministicFailure, namespace) {
+            withAlpakkaSQSWorker(queue, deterministicFailure, new MemoryMessageSender(), namespace) {
               case (worker, _, metrics, callCounter) =>
                 worker.start
 
@@ -95,7 +97,7 @@ class AlpakkaSQSWorkerTest
       withLocalSqsQueueAndDlq {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
-            withAlpakkaSQSWorker(queue, nonDeterministicFailure, namespace) {
+            withAlpakkaSQSWorker(queue, nonDeterministicFailure, new MemoryMessageSender(), namespace) {
               case (worker, _, metrics, callCounter) =>
                 worker.start
 
@@ -129,12 +131,12 @@ class AlpakkaSQSWorkerTest
   describe("When a message cannot be parsed") {
     it(
       "consumes the message increments failure metrics if the message is not json") {
-      withLocalSqsQueueAndDlq {
-        case QueuePair(queue, dlq) =>
-          withActorSystem { implicit actorSystem =>
-            withAlpakkaSQSWorker(queue, successful, namespace) {
-              case (worker, _, metrics, _) =>
-                worker.start
+        withLocalSqsQueueAndDlq {
+          case QueuePair(queue, dlq) =>
+            withActorSystem { implicit actorSystem =>
+              withAlpakkaSQSWorker(queue, successful, new MemoryMessageSender(), namespace) {
+                case (worker, _, metrics, _) =>
+                  worker.start
 
                 sendNotificationToSQS(queue, "not json")
 
@@ -163,12 +165,12 @@ class AlpakkaSQSWorkerTest
 
     it(
       "consumes the message increments failure metrics if the message is json but not a work") {
-      withLocalSqsQueueAndDlq {
-        case QueuePair(queue, dlq) =>
-          withActorSystem { implicit actorSystem =>
-            withAlpakkaSQSWorker(queue, successful, namespace) {
-              case (worker, _, metrics, _) =>
-                worker.start
+        withLocalSqsQueueAndDlq {
+          case QueuePair(queue, dlq) =>
+            withActorSystem { implicit actorSystem =>
+              withAlpakkaSQSWorker(queue, successful, new MemoryMessageSender(), namespace) {
+                case (worker, _, metrics, _) =>
+                  worker.start
 
                 sendNotificationToSQS(queue, """{"json" : "but not a work"}""")
 

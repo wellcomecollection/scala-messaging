@@ -3,6 +3,7 @@ package uk.ac.wellcome.messaging.fixtures.worker
 import java.time.Instant
 
 import org.scalatest.{Assertion, Matchers}
+import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
@@ -17,6 +18,9 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   type TestResult = Result[MySummary]
   type TestInnerProcess = MyWork => TestResult
   type TestProcess = MyWork => Future[TestResult]
+  type MyDestination = String
+  type MyMessageAttributes = Map[String, String]
+
 
   case class MyMessage(s: String)
   case class MyWork(s: String)
@@ -47,17 +51,13 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
 
   class MyWorker(
     val monitoringProcessor: MetricsMonitoringProcessor[MyWork],
+    val messageSender: MessageSender[MyDestination, MyMessageAttributes],
     testProcess: TestInnerProcess,
     val transform: MyMessage => (Either[Throwable, MyWork],
                                  Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)
       extends Worker[
-        MyMessage,
-        MyWork,
-        MyContext,
-        MyContext,
-        MySummary,
-        MyExternalMessageAction
+        MyMessage, MyWork, MyContext, MyContext, MySummary, MyExternalMessageAction,MyDestination,MyMessageAttributes
       ] {
 
     val callCounter = new CallCounter()

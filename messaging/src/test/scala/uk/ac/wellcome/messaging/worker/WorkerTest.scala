@@ -5,6 +5,7 @@ import org.scalatest.{Assertion, FunSpec, Matchers}
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.fixtures.worker.WorkerFixtures
+import uk.ac.wellcome.messaging.memory.MemoryMessageSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -24,11 +25,12 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-        val worker = new MyWorker(
-          monitoringProcessor,
-          successful,
-          messageToWork(shouldFail = false)
-        )
+    val worker = new MyWorker(
+      monitoringProcessor,
+      new MemoryMessageSender(),
+      successful,
+      messageToWork(shouldFail = false)
+    )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -50,11 +52,12 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-        val worker = new MyWorker(
-          monitoringProcessor,
-          successful,
-          messageToWork(shouldFail = true)
-        )
+    val worker = new MyWorker(
+      monitoringProcessor,
+      new MemoryMessageSender(),
+      successful,
+      messageToWork(shouldFail = true)
+    )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -79,11 +82,12 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-        val worker = new MyWorker(
-          monitoringProcessor,
-          successful,
-          transform
-        )
+    val worker = new MyWorker(
+      monitoringProcessor,
+      new MemoryMessageSender(),
+      successful,
+      transform
+    )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -105,11 +109,12 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = true) {
       case (monitoringClient, monitoringProcessor) =>
-        val worker = new MyWorker(
-          monitoringProcessor,
-          successful,
-          messageToWork(shouldFail = false)
-        )
+    val worker = new MyWorker(
+      monitoringProcessor,
+      new MemoryMessageSender(),
+      successful,
+      messageToWork(shouldFail = false)
+    )
 
         val process = worker.processMessage(message)
 
@@ -129,11 +134,12 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-        val worker = new MyWorker(
-          monitoringProcessor,
-          deterministicFailure,
-          messageToWork(shouldFail = false)
-        )
+    val worker = new MyWorker(
+      monitoringProcessor,
+      new MemoryMessageSender(),
+      deterministicFailure,
+      messageToWork(shouldFail = false)
+    )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -156,11 +162,12 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-        val worker = new MyWorker(
-          monitoringProcessor,
-          nonDeterministicFailure,
-          messageToWork(shouldFail = false)
-        )
+    val worker = new MyWorker(
+      monitoringProcessor,
+      new MemoryMessageSender(),
+      nonDeterministicFailure,
+      messageToWork(shouldFail = false)
+    )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>

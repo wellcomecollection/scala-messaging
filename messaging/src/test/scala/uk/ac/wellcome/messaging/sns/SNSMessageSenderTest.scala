@@ -12,7 +12,7 @@ class SNSMessageSenderTest extends FunSpec with Matchers with SNS {
     withLocalSnsTopic { topic =>
       val sender = new SNSIndividualMessageSender(snsClient)
 
-      sender.send("hello world")(
+      sender.send("hello world", None)(
         subject = "Sent from SNSMessageSenderTest",
         destination = createSNSConfigWith(topic)
       ) shouldBe Success(())
@@ -25,7 +25,7 @@ class SNSMessageSenderTest extends FunSpec with Matchers with SNS {
   it("fails if it cannot send to SNS") {
     val sender = new SNSIndividualMessageSender(snsClient)
 
-    val result = sender.send("hello world")(
+    val result = sender.send("hello world", None)(
       subject = "Sent from SNSMessageSenderTest",
       destination = createSNSConfigWith(Topic("does not exist"))
     )

@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import org.scalatest.Matchers
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
+import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
@@ -36,15 +37,17 @@ trait AlpakkaSQSWorkerFixtures
   def withAlpakkaSQSWorker[R](
     queue: Queue,
     process: TestInnerProcess,
+    messageSender: MessageSender[MyDestination, MyMessageAttributes],
     namespace: String = Random.alphanumeric take 10 mkString
-  )(testWith: TestWith[
-      (AlpakkaSQSWorker[MyWork, MyContext, MyContext, MySummary],
-       AlpakkaSQSWorkerConfig,
-       FakeMetricsMonitoringClient,
-       CallCounter),
-      R])(implicit
-          as: ActorSystem,
-          ec: ExecutionContext): R =
+  )(testWith: TestWith[(AlpakkaSQSWorker[MyWork, MyContext, MyContext, MySummary, MyDestination, MyMessageAttributes],
+                        AlpakkaSQSWorkerConfig,
+                        FakeMetricsMonitoringClient,
+                        CallCounter),
+                       R])(
+    implicit
+    as: ActorSystem,
+    ec: ExecutionContext): R =
+
     withFakeMonitoringClient(false) { client: FakeMetricsMonitoringClient =>
       val metricsProcessorBuilder
         : (ExecutionContext) => MetricsMonitoringProcessor[MyWork] =
@@ -56,9 +59,7 @@ trait AlpakkaSQSWorkerFixtures
       val testProcess = (o: MyWork) => createResult(process, callCounter)(ec)(o)
 
       val worker =
-        new AlpakkaSQSWorker[MyWork, MyContext, MyContext, MySummary](
-          config,
-          metricsProcessorBuilder)(testProcess)
+        new AlpakkaSQSWorker[MyWork, MyContext, MyContext, MySummary, MyDestination, MyMessageAttributes](config,metricsProcessorBuilder, messageSender)(testProcess)
 
       testWith((worker, config, client, callCounter))
     }

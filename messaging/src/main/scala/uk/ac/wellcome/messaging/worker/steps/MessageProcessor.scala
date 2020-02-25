@@ -3,18 +3,17 @@ package uk.ac.wellcome.messaging.worker.steps
 import uk.ac.wellcome.messaging.worker.models.{DeterministicFailure, Result}
 
 import scala.concurrent.{ExecutionContext, Future}
-
 /***
-  * Executes some operation on a [[Work]] and returns a [[Result]] with a onptional descriptive [[Summary]]
-  */
-trait MessageProcessor[Work, Summary] {
-  type ResultSummary = Future[Result[Summary]]
+ * Executes some operation on a [[Work]] and returns a [[Result]] with a [[Value]]
+ */
+trait MessageProcessor[Work, Value] {
+  type ResultValue = Future[Result[Value]]
 
-  protected val doWork: (Work) => ResultSummary
+  protected val doWork: (Work) => ResultValue
 
   final def process(workEither: Either[Throwable, Work])(
-    implicit ec: ExecutionContext): Future[Result[Summary]] = workEither.fold(
-    e => Future.successful(DeterministicFailure[Summary](e)),
+    implicit ec: ExecutionContext): Future[Result[Value]] = workEither.fold(
+    e => Future.successful(DeterministicFailure[Value](e)),
     w => {
 
       val working = for {
@@ -22,7 +21,7 @@ trait MessageProcessor[Work, Summary] {
 
       } yield result
       working recover {
-        case e => DeterministicFailure[Summary](e)
+        case e => DeterministicFailure[Value](e)
       }
     }
   )
