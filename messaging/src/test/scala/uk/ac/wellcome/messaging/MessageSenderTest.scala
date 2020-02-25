@@ -3,7 +3,10 @@ package uk.ac.wellcome.messaging
 import org.scalatest.{FunSpec, Matchers}
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.json.utils.JsonAssertions
-import uk.ac.wellcome.messaging.memory.{MemoryIndividualMessageSender, MemoryMessageSender}
+import uk.ac.wellcome.messaging.memory.{
+  MemoryIndividualMessageSender,
+  MemoryMessageSender
+}
 
 import scala.util.Success
 
@@ -11,10 +14,16 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
   it("sends individual messages") {
     val sender = new MemoryIndividualMessageSender()
 
-    sender.send("hello world")(subject = "my first message", destination = "greetings") shouldBe Success(())
-    sender.send("guten tag")(subject = "auf deutsch", destination = "greetings") shouldBe Success(())
-    sender.send("你好")(subject = "中文", destination = "greetings") shouldBe Success(())
-    sender.send("chinese")(subject = "a non-alphabet language", destination = "languages") shouldBe Success(())
+    sender.send("hello world")(
+      subject = "my first message",
+      destination = "greetings") shouldBe Success(())
+    sender.send("guten tag")(subject = "auf deutsch", destination = "greetings") shouldBe Success(
+      ())
+    sender.send("你好")(subject = "中文", destination = "greetings") shouldBe Success(
+      ())
+    sender.send("chinese")(
+      subject = "a non-alphabet language",
+      destination = "languages") shouldBe Success(())
 
     sender.messages shouldBe List(
       sender.MemoryMessage("hello world", "my first message", "greetings"),
@@ -34,11 +43,13 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     val snake = Animal(name = "snake", legs = 0)
 
     Seq(dog, octopus, snake).map { animal =>
-      sender.sendT(animal)(subject = "animals", destination = "all creatures") shouldBe Success(())
+      sender.sendT(animal)(subject = "animals", destination = "all creatures") shouldBe Success(
+        ())
     }
 
-    Seq(dog, octopus, snake).zip(sender.messages).map { case (animal, message) =>
-      assertJsonStringsAreEqual(toJson(animal).get, message.body)
+    Seq(dog, octopus, snake).zip(sender.messages).map {
+      case (animal, message) =>
+        assertJsonStringsAreEqual(toJson(animal).get, message.body)
     }
   }
 
@@ -53,11 +64,14 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     val sender = new MemoryIndividualMessageSender()
 
     containers.map { c =>
-      sender.sendT[Container](c)(destination = "containers", subject = "stuff to store things in") shouldBe Success(())
+      sender.sendT[Container](c)(
+        destination = "containers",
+        subject = "stuff to store things in") shouldBe Success(())
     }
 
-    containers.zip(sender.messages).map { case (container, message) =>
-      fromJson[Container](message.body).get shouldBe container
+    containers.zip(sender.messages).map {
+      case (container, message) =>
+        fromJson[Container](message.body).get shouldBe container
     }
   }
 
@@ -72,8 +86,16 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     sender.send("green") shouldBe Success(())
     sender.send("blue") shouldBe Success(())
 
-    sender.messages.map { _.destination } shouldBe Seq("colours", "colours", "colours", "colours")
-    sender.messages.map { _.subject } shouldBe Seq("ideas for my design", "ideas for my design", "ideas for my design", "ideas for my design")
+    sender.messages.map { _.destination } shouldBe Seq(
+      "colours",
+      "colours",
+      "colours",
+      "colours")
+    sender.messages.map { _.subject } shouldBe Seq(
+      "ideas for my design",
+      "ideas for my design",
+      "ideas for my design",
+      "ideas for my design")
   }
 
   it("sends case classes to a default destination/subject") {
@@ -88,19 +110,27 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     sender.sendT(Tree("ash")) shouldBe Success(())
     sender.sendT(Tree("yew")) shouldBe Success(())
 
-    sender.messages.map { _.destination } shouldBe Seq("trees", "trees", "trees")
-    sender.messages.map { _.subject } shouldBe Seq("ideas for my garden", "ideas for my garden", "ideas for my garden")
+    sender.messages.map { _.destination } shouldBe Seq(
+      "trees",
+      "trees",
+      "trees")
+    sender.messages.map { _.subject } shouldBe Seq(
+      "ideas for my garden",
+      "ideas for my garden",
+      "ideas for my garden")
   }
 
-  it("sends type-parameter encoded case classes to a default destination/subject") {
+  it(
+    "sends type-parameter encoded case classes to a default destination/subject") {
     val sender = new MemoryMessageSender()
 
     containers.map { c =>
       sender.sendT[Container](c) shouldBe Success(())
     }
 
-    containers.zip(sender.messages).map { case (container, message) =>
-      fromJson[Container](message.body).get shouldBe container
+    containers.zip(sender.messages).map {
+      case (container, message) =>
+        fromJson[Container](message.body).get shouldBe container
     }
   }
 

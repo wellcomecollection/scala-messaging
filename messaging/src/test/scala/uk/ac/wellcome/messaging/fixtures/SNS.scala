@@ -2,7 +2,7 @@ package uk.ac.wellcome.messaging.fixtures
 
 import com.amazonaws.services.sns.AmazonSNS
 import grizzled.slf4j.Logging
-import io.circe.{Decoder, Json, ParsingFailure, yaml}
+import io.circe.{yaml, Decoder, Json, ParsingFailure}
 import org.scalatest.Matchers
 import uk.ac.wellcome.fixtures._
 import uk.ac.wellcome.json.JsonUtil._

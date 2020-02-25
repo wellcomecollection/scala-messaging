@@ -17,7 +17,8 @@ class SNSMessageSenderTest extends FunSpec with Matchers with SNS {
         destination = createSNSConfigWith(topic)
       ) shouldBe Success(())
 
-      listMessagesReceivedFromSNS(topic).map { _.message } shouldBe Seq("hello world")
+      listMessagesReceivedFromSNS(topic).map { _.message } shouldBe Seq(
+        "hello world")
     }
   }
 

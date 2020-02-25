@@ -25,8 +25,9 @@ class SQSStreamTest
     with Akka {
 
   case class NamedObject(name: String)
-  
-  def process(list: ConcurrentLinkedQueue[NamedObject])(o: NamedObject): Future[Unit] = {
+
+  def process(list: ConcurrentLinkedQueue[NamedObject])(
+    o: NamedObject): Future[Unit] = {
     list.add(o)
     Future.successful(())
   }
@@ -64,7 +65,8 @@ class SQSStreamTest
           process = process(received))
 
         eventually {
-          metricsSender.incrementedCounts shouldBe Seq("test-stream_ProcessMessage_success")
+          metricsSender.incrementedCounts shouldBe Seq(
+            "test-stream_ProcessMessage_success")
         }
     }
   }
@@ -233,20 +235,20 @@ class SQSStreamTest
   }
 
   private def createNamedObjects(start: Int = 1,
-                                   count: Int): List[NamedObject] =
+                                 count: Int): List[NamedObject] =
     (start until start + count).map { i =>
       NamedObject(s"Example value $i")
     }.toList
 
-  private def sendNamedObjects(queue: Queue,
-                                 start: Int = 1,
-                                 count: Int = 1) =
+  private def sendNamedObjects(queue: Queue, start: Int = 1, count: Int = 1) =
     createNamedObjects(start = start, count = count).map { exampleObject =>
       sendSqsMessage(queue = queue, obj = exampleObject)
     }
 
   def withSQSStreamFixtures[R](
-    testWith: TestWith[(SQSStream[NamedObject], QueuePair, MemoryMetrics[StandardUnit]),
+    testWith: TestWith[(SQSStream[NamedObject],
+                        QueuePair,
+                        MemoryMetrics[StandardUnit]),
                        R]): R =
     withActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
