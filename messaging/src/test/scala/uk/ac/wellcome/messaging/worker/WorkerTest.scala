@@ -25,9 +25,10 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-    val worker = new MyWorker(
+    val messageSender = new MemoryMessageSender()
+        val worker = new MyWorker(
       monitoringProcessor,
-      new MemoryMessageSender(),
+      messageSender,
       successful,
       messageToWork(shouldFail = false)
     )
@@ -43,6 +44,7 @@ class WorkerTest
           )
 
           assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+          messageSender.getMessages[String] shouldBe List("Summary Successful")
         }
     }
   }
@@ -52,9 +54,10 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
     val worker = new MyWorker(
       monitoringProcessor,
-      new MemoryMessageSender(),
+      messageSender,
       successful,
       messageToWork(shouldFail = true)
     )
@@ -70,6 +73,7 @@ class WorkerTest
           )
 
           assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+          messageSender.getMessages[String] shouldBe List()
         }
     }
   }
@@ -82,6 +86,7 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
     val worker = new MyWorker(
       monitoringProcessor,
       new MemoryMessageSender(),
@@ -100,6 +105,7 @@ class WorkerTest
           )
 
           assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+          messageSender.getMessages[String] shouldBe List()
         }
     }
   }
@@ -109,9 +115,10 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = true) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
     val worker = new MyWorker(
       monitoringProcessor,
-      new MemoryMessageSender(),
+      messageSender,
       successful,
       messageToWork(shouldFail = false)
     )
@@ -134,9 +141,10 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
     val worker = new MyWorker(
       monitoringProcessor,
-      new MemoryMessageSender(),
+      messageSender,
       deterministicFailure,
       messageToWork(shouldFail = false)
     )
@@ -152,6 +160,7 @@ class WorkerTest
           )
 
           assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+          messageSender.getMessages[String] shouldBe List()
         }
     }
   }
@@ -162,9 +171,10 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
     val worker = new MyWorker(
       monitoringProcessor,
-      new MemoryMessageSender(),
+      messageSender,
       nonDeterministicFailure,
       messageToWork(shouldFail = false)
     )
@@ -180,8 +190,10 @@ class WorkerTest
           )
 
           assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+          messageSender.getMessages[String] shouldBe List()
         }
     }
   }
+
 
 }

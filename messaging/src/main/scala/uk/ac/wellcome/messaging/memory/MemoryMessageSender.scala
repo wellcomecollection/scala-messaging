@@ -20,7 +20,7 @@ class MemoryIndividualMessageSender extends IndividualMessageSender[String,  Map
     messages = messages :+ MemoryMessage(body, subject, destination)
   }
 
-  def getMessages[T]()(implicit decoder: Decoder[T]): Seq[T] =
+  def getMessages[T](implicit decoder: Decoder[T]): Seq[T] =
     messages
       .map { _.body }
       .map { fromJson[T](_).get }
@@ -35,6 +35,6 @@ class MemoryMessageSender extends MessageSender[String, Map[String, String]] {
 
   def messages: List[underlying.MemoryMessage] = underlying.messages
 
-  def getMessages[T]()(implicit decoder: Decoder[T]): Seq[T] =
-    underlying.getMessages[T]()
+  def getMessages[T](implicit decoder: Decoder[T]): Seq[T] =
+    underlying.getMessages[T]
 }
