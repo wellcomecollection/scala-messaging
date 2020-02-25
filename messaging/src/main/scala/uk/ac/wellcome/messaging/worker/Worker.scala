@@ -1,16 +1,26 @@
 package uk.ac.wellcome.messaging.worker
 
 import uk.ac.wellcome.messaging.worker.models.{Completed, Retry, WorkCompletion}
-import uk.ac.wellcome.messaging.worker.steps.{Logger, MessageProcessor, MessageTransform, MonitoringProcessor}
+import uk.ac.wellcome.messaging.worker.steps.{
+  Logger,
+  MessageProcessor,
+  MessageTransform,
+  MonitoringProcessor
+}
 
 import scala.concurrent.Future
 
-trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Summary, Action]
+trait Worker[Message,
+             Work,
+             InfraServiceMonitoringContext,
+             InterServiceMonitoringContext,
+             Summary,
+             Action]
     extends MessageProcessor[Work, Summary]
-    with MessageTransform[Message, Work, InfraServiceMonitoringContext] with Logger{
+    with MessageTransform[Message, Work, InfraServiceMonitoringContext]
+    with Logger {
 
   type Processed = Future[(Message, Action)]
-
 
   type Completion = WorkCompletion[Message, Summary]
   type MessageAction = Message => (Message, Action)
@@ -18,20 +28,23 @@ trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitorin
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction
 
-  protected val monitoringProcessor: MonitoringProcessor[Work, InfraServiceMonitoringContext, InterServiceMonitoringContext]
+  protected val monitoringProcessor: MonitoringProcessor[
+    Work,
+    InfraServiceMonitoringContext,
+    InterServiceMonitoringContext]
 
   final def processMessage(message: Message): Processed = {
-    implicit val e =(monitoringProcessor.ec)
+    implicit val e = (monitoringProcessor.ec)
     work(message).map(completion)
   }
 
   private def work(message: Message): Future[Completion] = {
-    implicit val e =(monitoringProcessor.ec)
+    implicit val e = (monitoringProcessor.ec)
     for {
       (workEither, rootContext) <- Future.successful(callTransform(message))
       localContext <- monitoringProcessor.recordStart(workEither, rootContext)
       summary <- process(workEither)
-      _ <-log(summary)
+      _ <- log(summary)
       _ <- monitoringProcessor.recordEnd(localContext, summary)
     } yield
       WorkCompletion(

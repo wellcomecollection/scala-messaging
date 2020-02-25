@@ -6,12 +6,12 @@ import uk.ac.wellcome.typesafe.config.builders.EnrichConfig._
 
 import scala.collection.JavaConverters._
 
-object ApmOpenTracingTracerBuilder{
+object ApmOpenTracingTracerBuilder {
   def buildCloudwatchMonitoringClient(config: Config): ElasticApmTracer = {
     ElasticApmAttacher.attach(
       Map(
         "application_packages" -> "uk.ac.wellcome",
-        "service_name" ->  config.required[String](s"apm.tracing.service"),
+        "service_name" -> config.required[String](s"apm.tracing.service"),
         "server_urls" -> config.required[String](s"apm.tracing.url"),
         "secret_token" -> config.required[String](s"apm.tracing.secret_token")
       ).asJava)
