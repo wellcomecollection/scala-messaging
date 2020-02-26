@@ -6,16 +6,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Records the start and end of an operation to monitor.
-  * @tparam Work: the payload in the message
+  * @tparam Payload: the payload in the message
   * @tparam InfraServiceMonitoringContext: the monitoring context to be passed around between different services
   * @tparam InterServiceMonitoringContext: the monitoring context to be passed around within the current service
   */
 trait MonitoringProcessor[
-  Work, InfraServiceMonitoringContext, InterServiceMonitoringContext] {
+  Payload, InfraServiceMonitoringContext, InterServiceMonitoringContext] {
   implicit val ec: ExecutionContext
 
   def recordStart(
-    work: Either[Throwable, Work],
+    work: Either[Throwable, Payload],
     context: Either[Throwable, Option[InfraServiceMonitoringContext]])
     : Future[Either[Throwable, InterServiceMonitoringContext]]
 

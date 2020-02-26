@@ -3,12 +3,12 @@ package uk.ac.wellcome.messaging.worker.steps
 import scala.util.Try
 
 /**
-  * Deserialises a [[Message]] into a [[Work]] and an optional [[InfraServiceMonitoringContext]]
+  * Deserialises a [[Message]] into a [[Payload]] and an optional [[InfraServiceMonitoringContext]]
   */
-trait MessageDeserialiser[Message, Work, InfraServiceMonitoringContext] {
+trait MessageDeserialiser[Message, Payload, InfraServiceMonitoringContext] {
 
   type Transformed =
-    (Either[Throwable, Work],
+    (Either[Throwable, Payload],
      Either[Throwable, Option[InfraServiceMonitoringContext]])
 
   protected val deserialise: Message => Transformed

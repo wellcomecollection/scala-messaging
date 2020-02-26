@@ -20,14 +20,14 @@ import scala.concurrent.{ExecutionContext, Future}
   * Implementation of [[AkkaWorker]] that uses SQS as source and sink.
   * It receives messages from SQS and deletes messages from SQS on successful completion
   */
-class AlpakkaSQSWorker[Work,
+class AlpakkaSQSWorker[Payload,
                        InfraServiceMonitoringContext,
                        InterServiceMonitoringContext,
                        Summary,
                        MessageAttributes](
   config: AlpakkaSQSWorkerConfig,
   val monitoringProcessorBuilder: (
-    ExecutionContext) => MonitoringProcessor[Work,
+    ExecutionContext) => MonitoringProcessor[Payload,
                                              InfraServiceMonitoringContext,
                                              InterServiceMonitoringContext],
   val monitoringSerialiser: MonitoringContextSerializerDeserialiser[
@@ -35,20 +35,20 @@ class AlpakkaSQSWorker[Work,
     MessageAttributes],
   val messageSender: MessageSender[MessageAttributes]
 )(
-  val doWork: Work => Future[Result[Summary]]
+  val doWork: Payload => Future[Result[Summary]]
 )(implicit
   val as: ActorSystem,
-  val wd: Decoder[Work],
+  val wd: Decoder[Payload],
   sc: AmazonSQSAsync,
 ) extends AkkaWorker[
       SQSMessage,
-      Work,
+      Payload,
       InfraServiceMonitoringContext,
       InterServiceMonitoringContext,
       Summary,
       MessageAction,
       MessageAttributes]
-    with SnsSqsDeserialiser[Work, InfraServiceMonitoringContext]
+    with SnsSqsDeserialiser[Payload, InfraServiceMonitoringContext]
     with Logging {
 
   type SQSAction = SQSMessage => (SQSMessage, sqs.MessageAction)
@@ -68,27 +68,27 @@ class AlpakkaSQSWorker[Work,
 }
 
 object AlpakkaSQSWorker {
-  def apply[Work,
+  def apply[Payload,
             InfraServiceMonitoringContext,
             InterServiceMonitoringContext,
             Summary,
             MessageAttributes](
     config: AlpakkaSQSWorkerConfig,
     monitoringProcessorBuilder: (
-      ExecutionContext) => MonitoringProcessor[Work,
+      ExecutionContext) => MonitoringProcessor[Payload,
                                                InfraServiceMonitoringContext,
                                                InterServiceMonitoringContext],
     monitoringSerialiser: MonitoringContextSerializerDeserialiser[
       InterServiceMonitoringContext,
       MessageAttributes],
     messageSender: MessageSender[MessageAttributes])(
-    process: Work => Future[Result[Summary]]
+    process: Payload => Future[Result[Summary]]
   )(implicit
     sc: AmazonSQSAsync,
     as: ActorSystem,
-    wd: Decoder[Work]) =
+    wd: Decoder[Payload]) =
     new AlpakkaSQSWorker[
-      Work,
+      Payload,
       InfraServiceMonitoringContext,
       InterServiceMonitoringContext,
       Summary,

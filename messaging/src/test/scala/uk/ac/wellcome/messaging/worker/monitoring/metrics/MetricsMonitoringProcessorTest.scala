@@ -27,7 +27,7 @@ class MetricsMonitoringProcessorTest
 
   it("records a success metric") {
 
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, processor) =>
@@ -50,7 +50,7 @@ class MetricsMonitoringProcessorTest
   }
 
   it("reports monitoring failure if recording fails") {
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = true) {
       case (monitoringClient, processor) =>
@@ -66,7 +66,7 @@ class MetricsMonitoringProcessorTest
   }
 
   it("records a deterministic failure") {
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, processor) =>
@@ -90,7 +90,7 @@ class MetricsMonitoringProcessorTest
   }
 
   it("records a non deterministic failure") {
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, processor) =>

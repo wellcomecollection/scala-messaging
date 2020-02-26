@@ -11,10 +11,10 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Implements the [[MonitoringProcessor]] interface with Opentracing (https://opentracing.io/).
   */
-class OpenTracingMonitoringProcessor[Work](namespace: String)(
+class OpenTracingMonitoringProcessor[Payload](namespace: String)(
   tracer: Tracer,
   wrappedEc: ExecutionContext)
-    extends MonitoringProcessor[Work, SpanContext, Span] {
+    extends MonitoringProcessor[Payload, SpanContext, Span] {
 
   override implicit val ec: ExecutionContext =
     new TracedExecutionContext(wrappedEc, tracer)
@@ -24,7 +24,7 @@ class OpenTracingMonitoringProcessor[Work](namespace: String)(
     * If an optional [[context]] is passed, it uses a [[MonitoringContextSerializerDeserialiser]]
     * to deserialise it into a [[io.opentracing.SpanContext]] and link it to the new [[Span]]
     */
-  override def recordStart(work: Either[Throwable, Work],
+  override def recordStart(work: Either[Throwable, Payload],
                            context: Either[Throwable, Option[SpanContext]])
     : Future[Either[Throwable, Span]] = {
     val f = Future {

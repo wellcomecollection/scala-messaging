@@ -46,15 +46,15 @@ trait MetricsFixtures extends Matchers {
     testWith(fakeMonitoringClient)
   }
 
-  def withMetricsMonitoringProcessor[Work, R](namespace: String,
+  def withMetricsMonitoringProcessor[Payload, R](namespace: String,
                                               shouldFail: Boolean = false)(
     testWith: TestWith[(FakeMetricsMonitoringClient,
-                        MetricsMonitoringProcessor[Work]),
+                        MetricsMonitoringProcessor[Payload]),
                        R])(implicit ec: ExecutionContext): R = {
     withFakeMonitoringClient(shouldFail) {
       client: FakeMetricsMonitoringClient =>
         val metricsProcessor =
-          new MetricsMonitoringProcessor[Work](namespace)(client, ec)
+          new MetricsMonitoringProcessor[Payload](namespace)(client, ec)
         testWith((client, metricsProcessor))
     }
   }

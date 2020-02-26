@@ -34,9 +34,9 @@ class AlpakkaSQSWorkerTest
               case (worker, _, metrics, callCounter) =>
                 worker.start
 
-                val myWork = MyWork("my-new-work")
+                val myPayload = MyPayload("my-new-work")
 
-                sendNotificationToSQS(queue, myWork)
+                sendNotificationToSQS(queue, myPayload)
 
                 eventually {
                   callCounter.calledCount shouldBe 1
@@ -73,9 +73,9 @@ class AlpakkaSQSWorkerTest
               case (worker, _, metrics, callCounter) =>
                 worker.start
 
-                val myWork = MyWork("my-new-work")
+                val myPayload = MyPayload("my-new-work")
 
-                sendNotificationToSQS(queue, myWork)
+                sendNotificationToSQS(queue, myPayload)
 
                 eventually {
                   callCounter.calledCount shouldBe 1
@@ -112,9 +112,9 @@ class AlpakkaSQSWorkerTest
               case (worker, _, metrics, callCounter) =>
                 worker.start
 
-                val myWork = MyWork("my-new-work")
+                val myPayload = MyPayload("my-new-work")
 
-                sendNotificationToSQS(queue, myWork)
+                sendNotificationToSQS(queue, myPayload)
 
                 eventually {
                   callCounter.calledCount shouldBe 3

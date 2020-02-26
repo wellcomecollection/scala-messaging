@@ -17,24 +17,24 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   type MySummary = String
   type MyContext = Instant
   type TestResult = Result[MySummary]
-  type TestInnerProcess = MyWork => TestResult
-  type TestProcess = MyWork => Future[TestResult]
+  type TestInnerProcess = MyPayload => TestResult
+  type TestProcess = MyPayload => Future[TestResult]
   type MyMessageAttributes = Map[String, String]
 
   case class MyMessage(s: String)
-  case class MyWork(s: String)
+  case class MyPayload(s: String)
 
-  object MyWork {
-    def apply(message: MyMessage): MyWork =
-      new MyWork(message.s)
+  object MyPayload {
+    def apply(message: MyMessage): MyPayload =
+      new MyPayload(message.s)
   }
 
-  def messageToWork(shouldFail: Boolean = false)(message: MyMessage)
-    : (Either[Throwable, MyWork], Either[Throwable, Option[MyContext]]) =
+  def messageToPayload(shouldFail: Boolean = false)(message: MyMessage)
+    : (Either[Throwable, MyPayload], Either[Throwable, Option[MyContext]]) =
     if (shouldFail) {
       (Left(new RuntimeException("BOOM")), Right(None))
     } else {
-      (Right(MyWork(message)), Right(None))
+      (Right(MyPayload(message)), Right(None))
     }
 
   def actionToAction(toActionShouldFail: Boolean)(result: Result[MySummary])(
@@ -49,15 +49,15 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   case class MyExternalMessageAction(action: Action)
 
   class MyWorker(
-    val monitoringProcessor: MetricsMonitoringProcessor[MyWork],
+    val monitoringProcessor: MetricsMonitoringProcessor[MyPayload],
     val messageSender: MessageSender[MyMessageAttributes],
     testProcess: TestInnerProcess,
-    val deserialise: MyMessage => (Either[Throwable, MyWork],
+    val deserialise: MyMessage => (Either[Throwable, MyPayload],
                                    Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)
       extends Worker[
         MyMessage,
-        MyWork,
+        MyPayload,
         MyContext,
         MyContext,
         MySummary,
@@ -78,30 +78,30 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       (_, MyExternalMessageAction(new Completed {}))
 
     override val doWork =
-      (work: MyWork) => createResult(testProcess, callCounter)(ec)(work)
+      (work: MyPayload) => createResult(testProcess, callCounter)(ec)(work)
 
     override type Completion = WorkCompletion[MyMessage, MySummary]
   }
 
   class MyMessageProcessor(
     testProcess: TestProcess
-  ) extends MessageProcessor[MyWork, MySummary] {
+  ) extends MessageProcessor[MyPayload, MySummary] {
 
     override protected val doWork: TestProcess =
       testProcess
   }
 
   val message = MyMessage("some_content")
-  val work = MyWork("some_content")
+  val work = MyPayload("some_content")
 
   class CallCounter() {
     var calledCount = 0
   }
 
   def createResult(op: TestInnerProcess, callCounter: CallCounter)(
-    implicit ec: ExecutionContext): MyWork => Future[TestResult] = {
+    implicit ec: ExecutionContext): MyPayload => Future[TestResult] = {
 
-    (in: MyWork) =>
+    (in: MyPayload) =>
       {
         callCounter.calledCount = callCounter.calledCount + 1
 
@@ -109,28 +109,28 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       }
   }
 
-  val successful = (in: MyWork) => {
+  val successful = (in: MyPayload) => {
     Successful[MySummary](
       "Summary Successful"
     )
   }
 
-  val nonDeterministicFailure = (in: MyWork) =>
+  val nonDeterministicFailure = (in: MyPayload) =>
     NonDeterministicFailure[MySummary](
       new RuntimeException("NonDeterministicFailure")
   )
 
-  val deterministicFailure = (in: MyWork) =>
+  val deterministicFailure = (in: MyPayload) =>
     DeterministicFailure[MySummary](
       new RuntimeException("DeterministicFailure")
   )
 
-  val monitoringProcessorFailure = (in: MyWork) =>
+  val monitoringProcessorFailure = (in: MyPayload) =>
     MonitoringProcessorFailure[MySummary](
       new RuntimeException("MonitoringProcessorFailure")
   )
 
-  val exceptionState = (_: MyWork) => {
+  val exceptionState = (_: MyPayload) => {
     throw new RuntimeException("BOOM")
 
     Successful[MySummary]("exceptionState")

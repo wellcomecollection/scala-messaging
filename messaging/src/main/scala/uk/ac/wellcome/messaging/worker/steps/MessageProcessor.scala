@@ -5,14 +5,14 @@ import uk.ac.wellcome.messaging.worker.models.{DeterministicFailure, Result}
 import scala.concurrent.{ExecutionContext, Future}
 
 /***
-  * Executes some operation on a [[Work]] and returns a [[Result]] with a [[Value]]
+  * Executes some operation on a [[Payload]] and returns a [[Result]] with a [[Value]]
   */
-trait MessageProcessor[Work, Value] {
+trait MessageProcessor[Payload, Value] {
   type ResultValue = Future[Result[Value]]
 
-  protected val doWork: (Work) => ResultValue
+  protected val doWork: (Payload) => ResultValue
 
-  final def process(workEither: Either[Throwable, Work])(
+  final def process(workEither: Either[Throwable, Payload])(
     implicit ec: ExecutionContext): Future[Result[Value]] = workEither.fold(
     e => Future.successful(DeterministicFailure[Value](e)),
     w => {

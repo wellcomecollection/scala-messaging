@@ -17,29 +17,29 @@ import scala.util.Success
 
 /**
   * A Worker receives a [[Message]] and performs a series of steps. These steps are
-  *    - [[MessageDeserialiser.callDeserialise]]: deserialises the payload of the message into a [[Work]]
+  *    - [[MessageDeserialiser.callDeserialise]]: deserialises the payload of the message into a [[Payload]]
   *    - [[MonitoringProcessor.recordStart]]: starts monitoring
-  *    - [[MessageProcessor.process]]: performs an operation on the [[Work]]
+  *    - [[MessageProcessor.process]]: performs an operation on the [[Payload]]
   *    - [[MessageSender.send]]: sends the result of [[MessageProcessor.process]]
   *    - [[Logger.log]]: logs the result of the processing
   *    - [[MonitoringProcessor.recordEnd]]: ends monitoring
   *
   * @tparam Message: the message received by the Worker
-  * @tparam Work: the payload in the message
+  * @tparam Payload: the payload in the message
   * @tparam InfraServiceMonitoringContext: the monitoring context to be passed around between different services
   * @tparam InterServiceMonitoringContext: the monitoring context to be passed around within the current service
   * @tparam Value:  the result of the process function
   * @tparam Action: either [[Retry]] or [[Completed]]
   */
 trait Worker[Message,
-             Work,
+             Payload,
              InfraServiceMonitoringContext,
              InterServiceMonitoringContext,
              Value,
              Action,
              SerialisedMonitoringContext]
-    extends MessageProcessor[Work, Value]
-    with MessageDeserialiser[Message, Work, InfraServiceMonitoringContext]
+    extends MessageProcessor[Payload, Value]
+    with MessageDeserialiser[Message, Payload, InfraServiceMonitoringContext]
     with MessageSerialiser[
       Value,
       InterServiceMonitoringContext,
@@ -55,7 +55,7 @@ trait Worker[Message,
   protected val completedAction: MessageAction
 
   protected val monitoringProcessor: MonitoringProcessor[
-    Work,
+    Payload,
     InfraServiceMonitoringContext,
     InterServiceMonitoringContext]
   protected val messageSender: MessageSender[SerialisedMonitoringContext]

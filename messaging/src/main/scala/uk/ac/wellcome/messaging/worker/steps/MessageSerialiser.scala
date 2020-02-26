@@ -3,7 +3,7 @@ package uk.ac.wellcome.messaging.worker.steps
 import uk.ac.wellcome.messaging.worker.monitoring.tracing.MonitoringContextSerializerDeserialiser
 
 /**
-  * Deserialises a [[Message]] into a [[Work]] and an optional [[InterServiceMonitoringContext]]
+  * Deserialises a [[Message]] into a [[Payload]] and an optional [[InterServiceMonitoringContext]]
   */
 trait MessageSerialiser[
   Value, InterServiceMonitoringContext, SerialisedMonitoringContext] {

@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * Implementation of [[Worker]] based on akka streams
   */
 trait AkkaWorker[Message,
-                 Work,
+                 Payload,
                  InfraServiceMonitoringContext,
                  InterServiceMonitoringContext,
                  Value,
@@ -20,7 +20,7 @@ trait AkkaWorker[Message,
                  MessageAttributes]
     extends Worker[
       Message,
-      Work,
+      Payload,
       InfraServiceMonitoringContext,
       InterServiceMonitoringContext,
       Value,
@@ -34,7 +34,7 @@ trait AkkaWorker[Message,
     )
   private val ec = as.dispatcher
   protected val monitoringProcessorBuilder: (
-    ExecutionContext) => MonitoringProcessor[Work,
+    ExecutionContext) => MonitoringProcessor[Payload,
                                              InfraServiceMonitoringContext,
                                              InterServiceMonitoringContext]
 
