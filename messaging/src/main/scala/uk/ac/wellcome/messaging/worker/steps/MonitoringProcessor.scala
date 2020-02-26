@@ -5,11 +5,11 @@ import uk.ac.wellcome.messaging.worker.models._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * Records the start and end of an operation to monitor.
- * @tparam Work: the payload in the message
- * @tparam InfraServiceMonitoringContext: the monitoring context to be passed around between different services
- * @tparam InterServiceMonitoringContext: the monitoring context to be passed around within the current service
- */
+  * Records the start and end of an operation to monitor.
+  * @tparam Work: the payload in the message
+  * @tparam InfraServiceMonitoringContext: the monitoring context to be passed around between different services
+  * @tparam InterServiceMonitoringContext: the monitoring context to be passed around within the current service
+  */
 trait MonitoringProcessor[
   Work, InfraServiceMonitoringContext, InterServiceMonitoringContext] {
   implicit val ec: ExecutionContext
