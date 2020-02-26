@@ -1,16 +1,15 @@
 package uk.ac.wellcome.messaging.worker
 
-import io.circe.Encoder
 import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.worker.models.{Completed, FailedResult, NonDeterministicFailure, Result, Retry, Successful, WorkCompletion}
-import uk.ac.wellcome.messaging.worker.steps.{Logger, MessageProcessor, MessageDeserialiser, MonitoringProcessor}
+import uk.ac.wellcome.messaging.worker.steps._
 
 import scala.concurrent.Future
 import scala.util.Success
 
 /**
  * A Worker receives a [[Message]] and performs a series of steps. These steps are
- *    - [[MessageDeserialiser]]: deserialises the payload of the message into a [[Work]]
+ *    - [[MessageDeserialiser.callDeserialise]]: deserialises the payload of the message into a [[Work]]
  *    - [[MonitoringProcessor.recordStart]]: starts monitoring
  *    - [[MessageProcessor.process]]: performs an operation on the [[Work]]
  *    - [[MessageSender.send]]: sends the result of [[MessageProcessor.process]]
@@ -24,9 +23,9 @@ import scala.util.Success
  * @tparam Value:  the result of the process function
  * @tparam Action: either [[Retry]] or [[Completed]]
  */
-trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, Destination, MessageAttributes]
+trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, Destination, SerialisedMonitoringContext]
     extends MessageProcessor[Work, Value]
-    with MessageDeserialiser[Message, Work, InfraServiceMonitoringContext] with Logger{
+    with MessageDeserialiser[Message, Work, InfraServiceMonitoringContext] with MessageSerialiser[Value, InterServiceMonitoringContext, SerialisedMonitoringContext] with Logger{
 
   type Processed = Future[(Message, Action)]
 
@@ -38,23 +37,21 @@ trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitorin
   protected val completedAction: MessageAction
 
   protected val monitoringProcessor: MonitoringProcessor[Work, InfraServiceMonitoringContext, InterServiceMonitoringContext]
-  protected val messageSender: MessageSender[Destination, MessageAttributes]
+  protected val messageSender: MessageSender[Destination, SerialisedMonitoringContext]
 
-  final def processMessage(message: Message)(
-    implicit encoder: Encoder[Value]): Processed = {
+  final def processMessage(message: Message): Processed = {
     implicit val e =(monitoringProcessor.ec)
     work(message).map(completion)
   }
 
-  private def work(message: Message)(
-    implicit encoder: Encoder[Value]): Future[Completion] = {
+  private def work(message: Message): Future[Completion] = {
     implicit val e =(monitoringProcessor.ec)
     for {
       (workEither, rootContext) <- Future.successful(callDeserialise(message))
       localContext <- monitoringProcessor.recordStart(workEither, rootContext)
       value <- process(workEither)
       _ <- sendMessage(value, localContext)
-      _ <-log(value)
+      _ <- log(value)
       _ <- monitoringProcessor.recordEnd(localContext, value)
     } yield
       WorkCompletion(
@@ -63,10 +60,11 @@ trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitorin
       )
   }
 
-  private def sendMessage(value: Result[Value], localContext: Either[Throwable, InterServiceMonitoringContext])(
-    implicit encoder: Encoder[Value]) = {
+  private def sendMessage(value: Result[Value], localContext: Either[Throwable, InterServiceMonitoringContext]) = {
     value match {
-      case Successful(v) => Future.fromTry(messageSender.sendT(v, None).fold(e => Success(NonDeterministicFailure[Value](e)), v => Success(Successful(v))))
+      case Successful(v) => Future.fromTry{
+        val (body, attributes) = callSerialise(v,localContext.right.get)
+        messageSender.send(body.right.get, Some(attributes.right.get)).fold(e => Success(NonDeterministicFailure[Value](e)), v => Success(Successful(v)))}
       case failure: FailedResult[_] => Future.successful(failure)
     }
   }

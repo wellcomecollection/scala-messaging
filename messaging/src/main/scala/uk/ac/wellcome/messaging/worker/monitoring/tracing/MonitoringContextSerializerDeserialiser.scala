@@ -12,19 +12,19 @@ import scala.collection.JavaConverters._
   * about a Span in messages so that we can chain spans
   * together in the same trace
   */
-trait OpenTracingSpanSerializer[T] {
-  def serialise(tracer: Tracer, span: SpanContext): T
+trait MonitoringContextSerializerDeserialiser[InfraServiceMonitoringContext, T] {
+  def serialise(tracer: Tracer, monitoringContext: InfraServiceMonitoringContext): T
 
-  def deserialise(tracer: Tracer, t: T): SpanContext
+  def deserialise(tracer: Tracer, t: T): InfraServiceMonitoringContext
 }
 
-object MapOpenTracingSpanSerializer
-    extends OpenTracingSpanSerializer[Map[String, String]] {
+object MapOpenTracingSerializerDeserialiser
+    extends MonitoringContextSerializerDeserialiser[SpanContext, Map[String, String]] {
 
   override def serialise(tracer: Tracer,
-                         span: SpanContext): Map[String, String] = {
+                         monitoringContext: SpanContext): Map[String, String] = {
     val map = new util.HashMap[String, String]()
-    tracer.inject(span, Format.Builtin.TEXT_MAP, new TextMapAdapter(map))
+    tracer.inject(monitoringContext, Format.Builtin.TEXT_MAP, new TextMapAdapter(map))
     map.asScala.toMap
   }
 

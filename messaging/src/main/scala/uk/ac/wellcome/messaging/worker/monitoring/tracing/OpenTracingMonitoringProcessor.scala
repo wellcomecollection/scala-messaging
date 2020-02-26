@@ -1,7 +1,7 @@
 package uk.ac.wellcome.messaging.worker.monitoring.tracing
 
 import io.opentracing.contrib.concurrent.TracedExecutionContext
-import io.opentracing.{Span, Tracer}
+import io.opentracing.{Span, SpanContext, Tracer}
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
@@ -11,24 +11,23 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Implements the [[MonitoringProcessor]] interface with Opentracing (https://opentracing.io/).
   */
-class OpenTracingMonitoringProcessor[Work, InfraServiceMonitoringContext](
+class OpenTracingMonitoringProcessor[Work](
   namespace: String)(
   tracer: Tracer,
-  wrappedEc: ExecutionContext,
-  carrier: OpenTracingSpanSerializer[InfraServiceMonitoringContext])
-    extends MonitoringProcessor[Work, InfraServiceMonitoringContext, Span] {
+  wrappedEc: ExecutionContext)
+    extends MonitoringProcessor[Work, SpanContext, Span] {
 
   override implicit val ec: ExecutionContext =
     new TracedExecutionContext(wrappedEc, tracer)
 
   /**
     * Starts a [[Span]] and returns it.
-    * If an optional [[context]] is passed, it uses a [[OpenTracingSpanSerializer]]
+    * If an optional [[context]] is passed, it uses a [[MonitoringContextSerializerDeserialiser]]
     * to deserialise it into a [[io.opentracing.SpanContext]] and link it to the new [[Span]]
     */
   override def recordStart(
     work: Either[Throwable, Work],
-    context: Either[Throwable, Option[InfraServiceMonitoringContext]])
+    context: Either[Throwable, Option[SpanContext]])
     : Future[Either[Throwable, Span]] = {
     val f = Future {
       val spanBuilder = tracer.buildSpan(namespace)
@@ -36,8 +35,7 @@ class OpenTracingMonitoringProcessor[Work, InfraServiceMonitoringContext](
         case Right(None) =>
           spanBuilder.start()
         case Right(Some(c)) =>
-          val rootContext = carrier.deserialise(tracer, c)
-          spanBuilder.asChildOf(rootContext).start()
+          spanBuilder.asChildOf(c).start()
         case Left(ex) =>
           val span = spanBuilder.start()
           tagError(span, ex, classOf[DeterministicFailure[_]].getSimpleName)

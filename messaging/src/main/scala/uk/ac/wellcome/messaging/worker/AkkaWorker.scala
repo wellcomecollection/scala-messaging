@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.{Done, NotUsed}
-import io.circe.Encoder
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,12 +39,10 @@ trait AkkaWorker[Message, Work, InfraServiceMonitoringContext, InterServiceMonit
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction
 
-  private def completionSource(parallelism: Int)(
-    implicit encoder: Encoder[Value]): ProcessedSource =
+  private def completionSource(parallelism: Int): ProcessedSource =
     source.mapAsyncUnordered(parallelism)(processMessage)
 
-  def start(
-             implicit encoder: Encoder[Value]): Future[Done] =
+  def start: Future[Done] =
     completionSource(parallelism)
       .toMat(sink)(Keep.right)
       .run()
