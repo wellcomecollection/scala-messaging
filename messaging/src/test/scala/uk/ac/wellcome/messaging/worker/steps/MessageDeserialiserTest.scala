@@ -14,10 +14,7 @@ class MessageDeserialiserTest extends FunSpec with WorkerFixtures {
           (Right(work), Right(Some(now)))
       }
 
-    messageTransform(message) shouldBe (
-      (
-        Right(work),
-        Right(Some(now))))
+    messageTransform(message) shouldBe ((Right(work), Right(Some(now))))
   }
 
   it("returns Left if transform function throws an exception") {
@@ -29,9 +26,6 @@ class MessageDeserialiserTest extends FunSpec with WorkerFixtures {
           throw exception
       }
 
-    messageTransform(message) shouldBe (
-      (
-        Left(exception),
-        Left(exception)))
+    messageTransform(message) shouldBe ((Left(exception), Left(exception)))
   }
 }

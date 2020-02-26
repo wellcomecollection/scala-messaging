@@ -12,7 +12,10 @@ import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.monitoring.tracing.MonitoringContextSerializerDeserialiser
-import uk.ac.wellcome.messaging.worker.steps.{MonitoringProcessor, MessageSerialiser}
+import uk.ac.wellcome.messaging.worker.steps.{
+  MessageSerialiser,
+  MonitoringProcessor
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -52,8 +55,11 @@ class AlpakkaSQSWorker[Payload,
 
   type SQSAction = SQSMessage => (SQSMessage, sqs.MessageAction)
 
-  protected val msgDeserialiser = new SnsSqsDeserialiser[Payload, InfraServiceMonitoringContext]
-  protected val msgSerialiser: MessageSerialiser[Summary, InterServiceMonitoringContext, MessageAttributes] = ???
+  protected val msgDeserialiser =
+    new SnsSqsDeserialiser[Payload, InfraServiceMonitoringContext]
+  protected val msgSerialiser: MessageSerialiser[Summary,
+                                                 InterServiceMonitoringContext,
+                                                 MessageAttributes] = ???
 
   val parallelism: Int = config.sqsConfig.parallelism
   val source = SqsSource(config.sqsConfig.queueUrl)

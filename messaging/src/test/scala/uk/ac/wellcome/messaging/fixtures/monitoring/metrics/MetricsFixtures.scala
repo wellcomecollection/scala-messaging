@@ -47,7 +47,7 @@ trait MetricsFixtures extends Matchers {
   }
 
   def withMetricsMonitoringProcessor[Payload, R](namespace: String,
-                                              shouldFail: Boolean = false)(
+                                                 shouldFail: Boolean = false)(
     testWith: TestWith[(FakeMetricsMonitoringClient,
                         MetricsMonitoringProcessor[Payload]),
                        R])(implicit ec: ExecutionContext): R = {

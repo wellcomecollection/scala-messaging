@@ -46,9 +46,10 @@ trait Worker[Message,
   type Completion = WorkCompletion[Message, Value]
   type MessageAction = Message => (Message, Action)
 
-  protected val msgDeserialiser: MessageDeserialiser[Message,
-                                                     Payload,
-                                                     InfraServiceMonitoringContext]
+  protected val msgDeserialiser: MessageDeserialiser[
+    Message,
+    Payload,
+    InfraServiceMonitoringContext]
 
   protected val msgSerialiser: MessageSerialiser[Value,
                                                  InterServiceMonitoringContext,

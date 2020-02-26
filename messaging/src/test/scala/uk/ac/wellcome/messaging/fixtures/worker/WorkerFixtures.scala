@@ -8,7 +8,11 @@ import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
-import uk.ac.wellcome.messaging.worker.steps.{MessageProcessor, MessageSerialiser, MessageDeserialiser}
+import uk.ac.wellcome.messaging.worker.steps.{
+  MessageDeserialiser,
+  MessageProcessor,
+  MessageSerialiser
+}
 import uk.ac.wellcome.messaging.worker.monitoring.tracing.MonitoringContextSerializerDeserialiser
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -53,7 +57,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     val messageSender: MessageSender[MyMessageAttributes],
     testProcess: TestInnerProcess,
     val deserialiseMsg: MyMessage => (Either[Throwable, MyPayload],
-                                   Either[Throwable, Option[MyContext]])
+                                      Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)
       extends Worker[
         MyMessage,
@@ -65,16 +69,18 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
         MyMessageAttributes
       ] {
 
-    protected val msgDeserialiser = new MessageDeserialiser[MyMessage, MyPayload, MyContext] {
-      def deserialise(msg: MyMessage) = deserialiseMsg(msg)
-    }
-    protected val msgSerialiser: MessageSerialiser[MySummary, MyContext, MyMessageAttributes] = ???
+    protected val msgDeserialiser =
+      new MessageDeserialiser[MyMessage, MyPayload, MyContext] {
+        def deserialise(msg: MyMessage) = deserialiseMsg(msg)
+      }
+    protected val msgSerialiser
+      : MessageSerialiser[MySummary, MyContext, MyMessageAttributes] = ???
 
     val callCounter = new CallCounter()
 
-    val monitoringSerialiser: MonitoringContextSerializerDeserialiser[
-      MyContext,
-      MyMessageAttributes] = ???
+    val monitoringSerialiser
+      : MonitoringContextSerializerDeserialiser[MyContext,
+                                                MyMessageAttributes] = ???
 
     override val retryAction: MessageAction =
       (_, MyExternalMessageAction(new Retry {}))
