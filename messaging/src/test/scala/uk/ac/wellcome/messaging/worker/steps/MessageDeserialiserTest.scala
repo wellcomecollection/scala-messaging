@@ -10,12 +10,11 @@ class MessageDeserialiserTest extends FunSpec with WorkerFixtures {
     val now = Instant.now
     val messageTransform =
       new MessageDeserialiser[MyMessage, MyPayload, MyContext] {
-        override val deserialise: MyMessage => Transformed = _ => {
+        override def deserialise(msg: MyMessage): Transformed =
           (Right(work), Right(Some(now)))
-        }
       }
 
-    messageTransform.callDeserialise(message) shouldBe (
+    messageTransform(message) shouldBe (
       (
         Right(work),
         Right(Some(now))))
@@ -26,12 +25,11 @@ class MessageDeserialiserTest extends FunSpec with WorkerFixtures {
 
     val messageTransform =
       new MessageDeserialiser[MyMessage, MyPayload, MyContext] {
-        override val deserialise: MyMessage => Transformed = _ => {
+        override def deserialise(msg: MyMessage): Transformed =
           throw exception
-        }
       }
 
-    messageTransform.callDeserialise(message) shouldBe (
+    messageTransform(message) shouldBe (
       (
         Left(exception),
         Left(exception)))

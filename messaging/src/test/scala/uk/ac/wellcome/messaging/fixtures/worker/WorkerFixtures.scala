@@ -8,7 +8,7 @@ import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
-import uk.ac.wellcome.messaging.worker.steps.MessageProcessor
+import uk.ac.wellcome.messaging.worker.steps.{MessageProcessor, MessageSerialiser, MessageDeserialiser}
 import uk.ac.wellcome.messaging.worker.monitoring.tracing.MonitoringContextSerializerDeserialiser
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -52,7 +52,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     val monitoringProcessor: MetricsMonitoringProcessor[MyPayload],
     val messageSender: MessageSender[MyMessageAttributes],
     testProcess: TestInnerProcess,
-    val deserialise: MyMessage => (Either[Throwable, MyPayload],
+    val deserialiseMsg: MyMessage => (Either[Throwable, MyPayload],
                                    Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)
       extends Worker[
@@ -64,6 +64,11 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
         MyExternalMessageAction,
         MyMessageAttributes
       ] {
+
+    protected val msgDeserialiser = new MessageDeserialiser[MyMessage, MyPayload, MyContext] {
+      def deserialise(msg: MyMessage) = deserialiseMsg(msg)
+    }
+    protected val msgSerialiser: MessageSerialiser[MySummary, MyContext, MyMessageAttributes] = ???
 
     val callCounter = new CallCounter()
 

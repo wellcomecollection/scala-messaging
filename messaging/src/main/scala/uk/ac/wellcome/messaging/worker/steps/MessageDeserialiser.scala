@@ -11,9 +11,9 @@ trait MessageDeserialiser[Message, Payload, InfraServiceMonitoringContext] {
     (Either[Throwable, Payload],
      Either[Throwable, Option[InfraServiceMonitoringContext]])
 
-  protected val deserialise: Message => Transformed
+  protected def deserialise(msg: Message): Transformed
 
-  final def callDeserialise(message: Message): Transformed = {
+  final def apply(message: Message): Transformed = {
     Try(deserialise(message)).fold(
       e => (Left(e), Left(e)),
       result => result

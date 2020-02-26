@@ -11,8 +11,8 @@ trait MessageSerialiser[
     InterServiceMonitoringContext,
     SerialisedMonitoringContext]
 
-  final def callSerialise(value: Value,
-                          monitoringContext: InterServiceMonitoringContext)
+  final def apply(value: Value,
+                  monitoringContext: InterServiceMonitoringContext)
     : (Either[Throwable, String],
        Either[Throwable, SerialisedMonitoringContext]) = ???
 }

@@ -6,15 +6,15 @@ import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.worker.steps.MessageDeserialiser
 
-trait SnsSqsDeserialiser[Payload, MonitoringContext]
+class SnsSqsDeserialiser[Payload, MonitoringContext](
+  implicit decoder: Decoder[Payload])
     extends MessageDeserialiser[SQSMessage, Payload, MonitoringContext] {
 
   type SQSTransform = SQSMessage => Transformed
 
   implicit val nd = implicitly[Decoder[NotificationMessage]]
-  implicit val wd: Decoder[Payload]
 
-  val deserialise: SQSTransform = (message: SQSMessage) => {
+  final def deserialise(message: SQSMessage): Transformed = {
     val f = for {
       notification <- fromJson[NotificationMessage](message.getBody)
       work <- fromJson[Payload](notification.body)

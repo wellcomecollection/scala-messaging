@@ -39,17 +39,20 @@ trait Worker[Message,
              Action,
              SerialisedMonitoringContext]
     extends MessageProcessor[Payload, Value]
-    with MessageDeserialiser[Message, Payload, InfraServiceMonitoringContext]
-    with MessageSerialiser[
-      Value,
-      InterServiceMonitoringContext,
-      SerialisedMonitoringContext]
     with Logger {
 
   type Processed = Future[(Message, Action)]
 
   type Completion = WorkCompletion[Message, Value]
   type MessageAction = Message => (Message, Action)
+
+  protected val msgDeserialiser: MessageDeserialiser[Message,
+                                                     Payload,
+                                                     InfraServiceMonitoringContext]
+
+  protected val msgSerialiser: MessageSerialiser[Value,
+                                                 InterServiceMonitoringContext,
+                                                 SerialisedMonitoringContext]
 
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction
@@ -68,7 +71,7 @@ trait Worker[Message,
   private def work(message: Message): Future[Completion] = {
     implicit val e = (monitoringProcessor.ec)
     for {
-      (workEither, rootContext) <- Future.successful(callDeserialise(message))
+      (workEither, rootContext) <- Future.successful(msgDeserialiser(message))
       localContext <- monitoringProcessor.recordStart(workEither, rootContext)
       value <- process(workEither)
       _ <- sendMessage(value, localContext)
@@ -87,7 +90,7 @@ trait Worker[Message,
     value match {
       case Successful(v) =>
         Future.fromTry {
-          val (body, attributes) = callSerialise(v, localContext.right.get)
+          val (body, attributes) = msgSerialiser(v, localContext.right.get)
           messageSender
             .send(body.right.get, Some(attributes.right.get))
             .fold(
