@@ -36,7 +36,7 @@ class AlpakkaSQSWorker[Work,  InfraServiceMonitoringContext, InterServiceMonitor
       InterServiceMonitoringContext,
       Summary,
       MessageAction, Destination, MessageAttributes]
-    with SnsSqsTransform[Work, InfraServiceMonitoringContext]
+    with SnsSqsDeserialiser[Work, InfraServiceMonitoringContext]
     with Logging {
 
   type SQSAction = SQSMessage => (SQSMessage, sqs.MessageAction)

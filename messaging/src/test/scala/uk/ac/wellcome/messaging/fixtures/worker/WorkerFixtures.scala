@@ -53,7 +53,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     val monitoringProcessor: MetricsMonitoringProcessor[MyWork],
     val messageSender: MessageSender[MyDestination, MyMessageAttributes],
     testProcess: TestInnerProcess,
-    val transform: MyMessage => (Either[Throwable, MyWork],
+    val deserialise: MyMessage => (Either[Throwable, MyWork],
                                  Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)
       extends Worker[

@@ -3,19 +3,20 @@ package uk.ac.wellcome.messaging.worker
 import io.circe.Encoder
 import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.worker.models.{Completed, FailedResult, NonDeterministicFailure, Result, Retry, Successful, WorkCompletion}
-import uk.ac.wellcome.messaging.worker.steps.{Logger, MessageProcessor, MessageTransform, MonitoringProcessor}
+import uk.ac.wellcome.messaging.worker.steps.{Logger, MessageProcessor, MessageDeserialiser, MonitoringProcessor}
 
 import scala.concurrent.Future
 import scala.util.Success
 
 /**
  * A Worker receives a [[Message]] and performs a series of steps. These steps are
- *    - [[MessageTransform]]: deserialises the payload of the message into a [[Work]]
+ *    - [[MessageDeserialiser]]: deserialises the payload of the message into a [[Work]]
  *    - [[MonitoringProcessor.recordStart]]: starts monitoring
  *    - [[MessageProcessor.process]]: performs an operation on the [[Work]]
-      - [[MessageSender.send]]: sends the result of [[MessageProcessor.process]]
+ *    - [[MessageSender.send]]: sends the result of [[MessageProcessor.process]]
  *    - [[Logger.log]]: logs the result of the processing
  *    - [[MonitoringProcessor.recordEnd]]: ends monitoring
+ *
  * @tparam Message: the message received by the Worker
  * @tparam Work: the payload in the message
  * @tparam InfraServiceMonitoringContext: the monitoring context to be passed around between different services
@@ -25,7 +26,7 @@ import scala.util.Success
  */
 trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, Destination, MessageAttributes]
     extends MessageProcessor[Work, Value]
-    with MessageTransform[Message, Work, InfraServiceMonitoringContext] with Logger{
+    with MessageDeserialiser[Message, Work, InfraServiceMonitoringContext] with Logger{
 
   type Processed = Future[(Message, Action)]
 
@@ -49,7 +50,7 @@ trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitorin
     implicit encoder: Encoder[Value]): Future[Completion] = {
     implicit val e =(monitoringProcessor.ec)
     for {
-      (workEither, rootContext) <- Future.successful(callTransform(message))
+      (workEither, rootContext) <- Future.successful(callDeserialise(message))
       localContext <- monitoringProcessor.recordStart(workEither, rootContext)
       value <- process(workEither)
       _ <- sendMessage(value, localContext)
