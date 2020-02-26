@@ -9,6 +9,7 @@ import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
 import uk.ac.wellcome.messaging.worker.steps.MessageProcessor
+import uk.ac.wellcome.messaging.worker.monitoring.tracing.MonitoringContextSerializerDeserialiser
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -65,6 +66,10 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       ] {
 
     val callCounter = new CallCounter()
+
+    val monitoringSerialiser: MonitoringContextSerializerDeserialiser[
+      MyContext,
+      MyMessageAttributes] = ???
 
     override val retryAction: MessageAction =
       (_, MyExternalMessageAction(new Retry {}))
