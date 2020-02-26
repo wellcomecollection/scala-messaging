@@ -16,43 +16,49 @@ class MessageProcessorTest
     with WorkerFixtures
     with MetricsSenderFixture {
 
-    it("calls a successful transform and process functions and returns successful result type") {
-          val processor =
-            new MyMessageProcessor(createResult(successful, new CallCounter))
-          val futureResult = processor.process(Right(work))
+  it(
+    "calls a successful transform and process functions and returns successful result type") {
+    val processor =
+      new MyMessageProcessor(createResult(successful, new CallCounter))
+    val futureResult = processor.process(Right(work))
 
-          whenReady(futureResult)(shouldBeSuccessful)
-    }
+    whenReady(futureResult)(shouldBeSuccessful)
+  }
 
-    it("returns deterministic failure if transformation fails") {
-          val processor =
-            new MyMessageProcessor(createResult(successful, new CallCounter))
-          val futureResult = processor.process(Left(new RuntimeException()))
+  it("returns deterministic failure if transformation fails") {
+    val processor =
+      new MyMessageProcessor(createResult(successful, new CallCounter))
+    val futureResult = processor.process(Left(new RuntimeException()))
 
-          whenReady(futureResult)(shouldBeDeterministicFailure)
-    }
+    whenReady(futureResult)(shouldBeDeterministicFailure)
+  }
 
-    it("returns deterministic failure if process function fails with deterministic failure") {
-          val processor =
-            new MyMessageProcessor(createResult(deterministicFailure, new CallCounter))
-          val futureResult = processor.process(Right(work))
+  it(
+    "returns deterministic failure if process function fails with deterministic failure") {
+    val processor =
+      new MyMessageProcessor(
+        createResult(deterministicFailure, new CallCounter))
+    val futureResult = processor.process(Right(work))
 
-          whenReady(futureResult)(shouldBeDeterministicFailure)
-    }
+    whenReady(futureResult)(shouldBeDeterministicFailure)
+  }
 
-    it("returns non deterministic failure if process function fails with non deterministic failure") {
-          val processor =
-            new MyMessageProcessor(createResult(nonDeterministicFailure, new CallCounter))
-          val futureResult = processor.process(Right(work))
+  it(
+    "returns non deterministic failure if process function fails with non deterministic failure") {
+    val processor =
+      new MyMessageProcessor(
+        createResult(nonDeterministicFailure, new CallCounter))
+    val futureResult = processor.process(Right(work))
 
-          whenReady(futureResult)(shouldBeNonDeterministicFailure)
-    }
+    whenReady(futureResult)(shouldBeNonDeterministicFailure)
+  }
 
-    it("returns deterministic failure if process function fails with an unrecognised exception state") {
-          val processor =
-            new MyMessageProcessor(createResult(exceptionState, new CallCounter))
-          val futureResult = processor.process(Right(work))
+  it(
+    "returns deterministic failure if process function fails with an unrecognised exception state") {
+    val processor =
+      new MyMessageProcessor(createResult(exceptionState, new CallCounter))
+    val futureResult = processor.process(Right(work))
 
-          whenReady(futureResult)(shouldBeDeterministicFailure)
-    }
+    whenReady(futureResult)(shouldBeDeterministicFailure)
+  }
 }

@@ -2,7 +2,6 @@ package uk.ac.wellcome.messaging.worker.monitoring.metrics
 
 import java.time.Instant
 
-import uk.ac.wellcome.messaging.worker.logging.Logger
 import uk.ac.wellcome.messaging.worker.models.{
   MonitoringProcessorFailure,
   Result,
@@ -12,28 +11,26 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final class MetricsMonitoringProcessor[
-  Work,
-  ProcessMonitoringClient <: MetricsMonitoringClient](val namespace: String)(
-  implicit val monitoringClient: ProcessMonitoringClient)
-    extends MonitoringProcessor[Work, Instant]
-    with Logger
+final class MetricsMonitoringProcessor[Work](val namespace: String)(
+  implicit val monitoringClient: MetricsMonitoringClient,
+  val ec: ExecutionContext)
+    extends MonitoringProcessor[Work, Instant, Instant]
     with MetricsProcessor {
 
   override def recordStart(work: Either[Throwable, Work],
-                           context: Either[Throwable, Option[Instant]])(
-    implicit ec: ExecutionContext): Future[Instant] =
-    Future.successful(Instant.now)
+                           context: Either[Throwable, Option[Instant]])
+    : Future[Either[Throwable, Instant]] =
+    Future.successful(Right(Instant.now))
 
   override def recordEnd[Recorded](
-    work: Either[Throwable, Work],
-    context: Instant,
+    context: Either[Throwable, Instant],
     result: Result[Recorded]
-  )(implicit ec: ExecutionContext): Future[Result[Unit]] = {
+  ): Future[Result[Unit]] = {
 
     val monitoring = for {
-      _: Unit <- log(result)
-      _: Unit <- metric(result, context)
+      _: Unit <- metric(
+        result,
+        context.getOrElse(throw new Exception(s"context was Left: $context")))
     } yield Successful[Unit]()
 
     monitoring recover {

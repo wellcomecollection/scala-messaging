@@ -347,7 +347,7 @@ def branch_name():
 
 
 def autoformat():
-    sbt('scalafmt')
+    sbt('scalafmt', 'test:scalafmt')
 
     check_release_file()
 

@@ -24,11 +24,11 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-    val worker = new MyWorker(
-      monitoringProcessor,
-      successful,
-      messageToWork(shouldFail = false)
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          successful,
+          messageToWork(shouldFail = false)
+        )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -50,11 +50,11 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-    val worker = new MyWorker(
-      monitoringProcessor,
-      successful,
-      messageToWork(shouldFail = true)
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          successful,
+          messageToWork(shouldFail = true)
+        )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -71,18 +71,19 @@ class WorkerTest
     }
   }
 
-  it("increments deterministic failure metric if transformation fails unexpectedly") {
+  it(
+    "increments deterministic failure metric if transformation fails unexpectedly") {
     def transform(message: MyMessage) = throw new RuntimeException
 
     withMetricsMonitoringProcessor[MyWork, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-    val worker = new MyWorker(
-      monitoringProcessor,
-      successful,
-      transform
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          successful,
+          transform
+        )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -104,11 +105,11 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = true) {
       case (monitoringClient, monitoringProcessor) =>
-    val worker = new MyWorker(
-      monitoringProcessor,
-      successful,
-      messageToWork(shouldFail = false)
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          successful,
+          messageToWork(shouldFail = false)
+        )
 
         val process = worker.processMessage(message)
 
@@ -128,11 +129,11 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-    val worker = new MyWorker(
-      monitoringProcessor,
-      deterministicFailure,
-      messageToWork(shouldFail = false)
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          deterministicFailure,
+          messageToWork(shouldFail = false)
+        )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -155,11 +156,11 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-    val worker = new MyWorker(
-      monitoringProcessor,
-      nonDeterministicFailure,
-      messageToWork(shouldFail = false)
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          nonDeterministicFailure,
+          messageToWork(shouldFail = false)
+        )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>

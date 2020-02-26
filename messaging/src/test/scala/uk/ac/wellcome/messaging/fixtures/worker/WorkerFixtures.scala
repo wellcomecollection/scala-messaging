@@ -26,11 +26,12 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       new MyWork(message.s)
   }
 
-  def messageToWork(shouldFail: Boolean = false)(message: MyMessage):(Either[Throwable,MyWork], Either[Throwable, Option[MyContext]]) =
+  def messageToWork(shouldFail: Boolean = false)(message: MyMessage)
+    : (Either[Throwable, MyWork], Either[Throwable, Option[MyContext]]) =
     if (shouldFail) {
-      (Left(new RuntimeException("BOOM")),Right(None))
+      (Left(new RuntimeException("BOOM")), Right(None))
     } else {
-      (Right(MyWork(message)),Right(None))
+      (Right(MyWork(message)), Right(None))
     }
 
   def actionToAction(toActionShouldFail: Boolean)(result: Result[MySummary])(
@@ -42,23 +43,27 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     }
   }
 
-
-
   case class MyExternalMessageAction(action: Action)
 
   class MyWorker(
-    val monitoringProcessor: MetricsMonitoringProcessor[MyWork, FakeMetricsMonitoringClient],
+    val monitoringProcessor: MetricsMonitoringProcessor[MyWork],
     testProcess: TestInnerProcess,
-    val transform: MyMessage => (Either[Throwable,MyWork], Either[Throwable, Option[MyContext]])
+    val transform: MyMessage => (Either[Throwable, MyWork],
+                                 Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)
       extends Worker[
-        MyMessage, MyWork, MyContext, MySummary, MyExternalMessageAction
+        MyMessage,
+        MyWork,
+        MyContext,
+        MyContext,
+        MySummary,
+        MyExternalMessageAction
       ] {
 
     val callCounter = new CallCounter()
 
     override val retryAction: MessageAction =
-        (_, MyExternalMessageAction(new Retry {}))
+      (_, MyExternalMessageAction(new Retry {}))
 
     override val completedAction: MessageAction =
       (_, MyExternalMessageAction(new Completed {}))
@@ -84,14 +89,15 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     var calledCount = 0
   }
 
-  def createResult(op: TestInnerProcess,
-                   callCounter: CallCounter)(implicit ec: ExecutionContext): MyWork => Future[TestResult] = {
+  def createResult(op: TestInnerProcess, callCounter: CallCounter)(
+    implicit ec: ExecutionContext): MyWork => Future[TestResult] = {
 
-    (in: MyWork) => {
-      callCounter.calledCount = callCounter.calledCount + 1
+    (in: MyWork) =>
+      {
+        callCounter.calledCount = callCounter.calledCount + 1
 
-      Future(op(in))
-    }
+        Future(op(in))
+      }
   }
 
   val successful = (in: MyWork) => {

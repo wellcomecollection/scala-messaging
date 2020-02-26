@@ -1,4 +1,4 @@
-package uk.ac.wellcome.messaging.worker.logging
+package uk.ac.wellcome.messaging.worker.steps
 
 import grizzled.slf4j.Logging
 import uk.ac.wellcome.messaging.worker.models._

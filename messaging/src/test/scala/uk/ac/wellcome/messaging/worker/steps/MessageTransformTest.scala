@@ -14,7 +14,10 @@ class MessageTransformTest extends FunSpec with WorkerFixtures {
       }
     }
 
-    messageTransform.callTransform(message) shouldBe ((Right(work), Right(Some(now))))
+    messageTransform.callTransform(message) shouldBe (
+      (
+        Right(work),
+        Right(Some(now))))
   }
 
   it("returns Left if transform function throws an exception") {
@@ -26,6 +29,9 @@ class MessageTransformTest extends FunSpec with WorkerFixtures {
       }
     }
 
-    messageTransform.callTransform(message) shouldBe ((Left(exception), Left(exception)))
+    messageTransform.callTransform(message) shouldBe (
+      (
+        Left(exception),
+        Left(exception)))
   }
 }

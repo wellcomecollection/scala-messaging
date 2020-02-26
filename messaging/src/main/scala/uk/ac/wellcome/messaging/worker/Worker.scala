@@ -2,37 +2,64 @@ package uk.ac.wellcome.messaging.worker
 
 import uk.ac.wellcome.messaging.worker.models.{Completed, Retry, WorkCompletion}
 import uk.ac.wellcome.messaging.worker.steps.{
+  Logger,
   MessageProcessor,
   MessageTransform,
   MonitoringProcessor
 }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-trait Worker[Message, Work, MonitoringContext, Summary, Action]
+/**
+  * A Worker receives a [[Message]] and performs a series of steps. These steps are
+  *    - [[MessageTransform]]: deserialises the payload of the message into a [[Work]]
+  *    - [[MonitoringProcessor.recordStart]]: starts monitoring
+  *    - [[MessageProcessor.process]]: performs an operation on the [[Work]]
+  *    - [[Logger.log]]: logs the result of the processing
+  *    - [[MonitoringProcessor.recordEnd]]: ends monitoring
+  * @tparam Message: the message received by the Worker
+  * @tparam Work: the payload in the message
+  * @tparam InfraServiceMonitoringContext: the monitoring context to be passed around between different services
+  * @tparam InterServiceMonitoringContext: the monitoring context to be passed around within the current service
+  * @tparam Summary: description of the result of the process function
+  * @tparam Action: either [[Retry]] or [[Completed]]
+  */
+trait Worker[Message,
+             Work,
+             InfraServiceMonitoringContext,
+             InterServiceMonitoringContext,
+             Summary,
+             Action]
     extends MessageProcessor[Work, Summary]
-    with MessageTransform[Message, Work, MonitoringContext] {
+    with MessageTransform[Message, Work, InfraServiceMonitoringContext]
+    with Logger {
 
   type Processed = Future[(Message, Action)]
-
-  implicit val ec: ExecutionContext
 
   type Completion = WorkCompletion[Message, Summary]
   type MessageAction = Message => (Message, Action)
 
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction
-  val monitoringProcessor: MonitoringProcessor[Work, MonitoringContext]
 
-  final def processMessage(message: Message): Processed =
+  protected val monitoringProcessor: MonitoringProcessor[
+    Work,
+    InfraServiceMonitoringContext,
+    InterServiceMonitoringContext]
+
+  final def processMessage(message: Message): Processed = {
+    implicit val e = (monitoringProcessor.ec)
     work(message).map(completion)
+  }
 
   private def work(message: Message): Future[Completion] = {
+    implicit val e = (monitoringProcessor.ec)
     for {
       (workEither, rootContext) <- Future.successful(callTransform(message))
       localContext <- monitoringProcessor.recordStart(workEither, rootContext)
       summary <- process(workEither)
-      _ <- monitoringProcessor.recordEnd(workEither, localContext, summary)
+      _ <- log(summary)
+      _ <- monitoringProcessor.recordEnd(localContext, summary)
     } yield
       WorkCompletion(
         message,

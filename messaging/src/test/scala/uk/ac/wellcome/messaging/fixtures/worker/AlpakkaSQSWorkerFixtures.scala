@@ -7,7 +7,11 @@ import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
-import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
+import uk.ac.wellcome.messaging.sqsworker.alpakka.{
+  AlpakkaSQSWorker,
+  AlpakkaSQSWorkerConfig
+}
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
 import uk.ac.wellcome.monitoring.MetricsConfig
 
 import scala.concurrent.ExecutionContext
@@ -15,14 +19,15 @@ import scala.concurrent.duration._
 import scala.util.Random
 
 trait AlpakkaSQSWorkerFixtures
-  extends WorkerFixtures
+    extends WorkerFixtures
     with MetricsFixtures
     with Matchers
     with SQS {
 
-  def createAlpakkaSQSWorkerConfig(
-    queue: Queue,
-    namespace: String = Random.alphanumeric take 10 mkString): AlpakkaSQSWorkerConfig =
+  def createAlpakkaSQSWorkerConfig(queue: Queue,
+                                   namespace: String =
+                                     Random.alphanumeric take 10 mkString)
+    : AlpakkaSQSWorkerConfig =
     AlpakkaSQSWorkerConfig(
       metricsConfig = MetricsConfig(namespace, flushInterval = 1.second),
       sqsConfig = createSQSConfigWith(queue)
@@ -32,27 +37,29 @@ trait AlpakkaSQSWorkerFixtures
     queue: Queue,
     process: TestInnerProcess,
     namespace: String = Random.alphanumeric take 10 mkString
-  )(testWith: TestWith[(AlpakkaSQSWorker[MyWork, MyContext, MySummary],
-                        AlpakkaSQSWorkerConfig,
-                        FakeMetricsMonitoringClient,
-                        CallCounter),
-                       R])(
-    implicit
-    as: ActorSystem,
-    ec: ExecutionContext): R =
-
-    withMetricsMonitoringProcessor[MyWork, R](namespace, false) { case (monitoringClient, monitoringProcessor) =>
-      implicit val mp = monitoringProcessor
+  )(testWith: TestWith[
+      (AlpakkaSQSWorker[MyWork, MyContext, MyContext, MySummary],
+       AlpakkaSQSWorkerConfig,
+       FakeMetricsMonitoringClient,
+       CallCounter),
+      R])(implicit
+          as: ActorSystem,
+          ec: ExecutionContext): R =
+    withFakeMonitoringClient(false) { client: FakeMetricsMonitoringClient =>
+      val metricsProcessorBuilder
+        : (ExecutionContext) => MetricsMonitoringProcessor[MyWork] =
+        new MetricsMonitoringProcessor[MyWork](namespace)(client, _)
 
       val config = createAlpakkaSQSWorkerConfig(queue, namespace)
 
       val callCounter = new CallCounter()
-      val testProcess = (o: MyWork) =>
-        createResult(process, callCounter)(ec)(o)
+      val testProcess = (o: MyWork) => createResult(process, callCounter)(ec)(o)
 
       val worker =
-        new AlpakkaSQSWorker[MyWork, MyContext, MySummary](config)(testProcess)
+        new AlpakkaSQSWorker[MyWork, MyContext, MyContext, MySummary](
+          config,
+          metricsProcessorBuilder)(testProcess)
 
-      testWith((worker, config, monitoringClient, callCounter))
+      testWith((worker, config, client, callCounter))
     }
 }

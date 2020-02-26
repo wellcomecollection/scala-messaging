@@ -1,24 +1,42 @@
 package uk.ac.wellcome.messaging.worker
 
-import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
+import akka.{Done, NotUsed}
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-trait AkkaWorker[Message, Work, MonitoringContext, Summary, Action]
-    extends Worker[Message, Work, MonitoringContext, Summary, Action] {
+/**
+  * Implementation of [[Worker]] based on akka streams
+  */
+trait AkkaWorker[Message,
+                 Work,
+                 InfraServiceMonitoringContext,
+                 InterServiceMonitoringContext,
+                 Summary,
+                 Action]
+    extends Worker[
+      Message,
+      Work,
+      InfraServiceMonitoringContext,
+      InterServiceMonitoringContext,
+      Summary,
+      Action] {
 
   implicit val as: ActorSystem
   implicit val am: ActorMaterializer =
     ActorMaterializer(
       ActorMaterializerSettings(as)
     )
-  implicit val ec = as.dispatcher
-  implicit val monitoringProcessor: MonitoringProcessor[Work, MonitoringContext]
+  private val ec = as.dispatcher
+  protected val monitoringProcessorBuilder: (
+    ExecutionContext) => MonitoringProcessor[Work,
+                                             InfraServiceMonitoringContext,
+                                             InterServiceMonitoringContext]
 
+  override final val monitoringProcessor = monitoringProcessorBuilder(ec)
   type MessageSource = Source[Message, NotUsed]
   type MessageSink = Sink[(Message, Action), Future[Done]]
 

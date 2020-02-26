@@ -51,12 +51,13 @@ trait SQS extends Matchers with Logging {
     secretKey = sqsSecretKey
   )
 
-  implicit val asyncSqsClient: AmazonSQSAsync = SQSClientFactory.createAsyncClient(
-    region = regionName,
-    endpoint = sqsEndpointUrl,
-    accessKey = sqsAccessKey,
-    secretKey = sqsSecretKey
-  )
+  implicit val asyncSqsClient: AmazonSQSAsync =
+    SQSClientFactory.createAsyncClient(
+      region = regionName,
+      endpoint = sqsEndpointUrl,
+      accessKey = sqsAccessKey,
+      secretKey = sqsSecretKey
+    )
 
   private def withLocalSqsQueue[R](client: AmazonSQS): Fixture[Queue, R] =
     fixture[Queue, R](
@@ -69,9 +70,7 @@ trait SQS extends Matchers with Logging {
           .get("QueueArn")
         val queue = Queue(response.getQueueUrl, arn)
         client
-          .setQueueAttributes(
-            queue.url,
-            Map("VisibilityTimeout" -> "1").asJava)
+          .setQueueAttributes(queue.url, Map("VisibilityTimeout" -> "1").asJava)
         queue
       },
       destroy = { queue =>
