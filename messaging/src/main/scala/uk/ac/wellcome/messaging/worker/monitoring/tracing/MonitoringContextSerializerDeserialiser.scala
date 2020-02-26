@@ -13,22 +13,20 @@ import scala.collection.JavaConverters._
   * together in the same trace
   */
 trait MonitoringContextSerializerDeserialiser[InfraServiceMonitoringContext, T] {
-  def serialise(tracer: Tracer, monitoringContext: InfraServiceMonitoringContext): T
+  def serialise(monitoringContext: InfraServiceMonitoringContext): T
 
-  def deserialise(tracer: Tracer, t: T): InfraServiceMonitoringContext
+  def deserialise(t: T): InfraServiceMonitoringContext
 }
 
-object MapOpenTracingSerializerDeserialiser
+trait MapOpenTracingSerializerDeserialiser
     extends MonitoringContextSerializerDeserialiser[SpanContext, Map[String, String]] {
-
-  override def serialise(tracer: Tracer,
-                         monitoringContext: SpanContext): Map[String, String] = {
+  val tracer: Tracer
+  override def serialise(monitoringContext: SpanContext): Map[String, String] = {
     val map = new util.HashMap[String, String]()
     tracer.inject(monitoringContext, Format.Builtin.TEXT_MAP, new TextMapAdapter(map))
     map.asScala.toMap
   }
 
-  override def deserialise(tracer: Tracer,
-                           t: Map[String, String]): SpanContext =
+  override def deserialise(t: Map[String, String]): SpanContext =
     tracer.extract(Format.Builtin.TEXT_MAP, new TextMapAdapter(t.asJava))
 }

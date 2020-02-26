@@ -59,7 +59,7 @@ trait AlpakkaSQSWorkerFixtures
       val testProcess = (o: MyWork) => createResult(process, callCounter)(ec)(o)
 
       val worker =
-        new AlpakkaSQSWorker[MyWork, MyContext, MyContext, MySummary, MyDestination, MyMessageAttributes](config,metricsProcessorBuilder, messageSender)(testProcess)
+        new AlpakkaSQSWorker[MyWork, MyContext, MyContext, MySummary, MyDestination, MyMessageAttributes](config,metricsProcessorBuilder, ,messageSender)(testProcess)
 
       testWith((worker, config, client, callCounter))
     }

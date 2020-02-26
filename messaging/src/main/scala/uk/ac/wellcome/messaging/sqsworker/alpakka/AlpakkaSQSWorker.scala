@@ -11,6 +11,7 @@ import io.circe.Decoder
 import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
+import uk.ac.wellcome.messaging.worker.monitoring.tracing.MonitoringContextSerializerDeserialiser
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -22,6 +23,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class AlpakkaSQSWorker[Work,  InfraServiceMonitoringContext, InterServiceMonitoringContext, Summary, Destination, MessageAttributes](
   config: AlpakkaSQSWorkerConfig,
   val monitoringProcessorBuilder: (ExecutionContext) => MonitoringProcessor[Work,  InfraServiceMonitoringContext, InterServiceMonitoringContext],
+  val monitoringSerialiser: MonitoringContextSerializerDeserialiser[InterServiceMonitoringContext, MessageAttributes],
   val  messageSender: MessageSender[Destination, MessageAttributes]
 )(
   val doWork: Work => Future[Result[Summary]]
@@ -59,6 +61,7 @@ object AlpakkaSQSWorker {
   def apply[Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Summary, Destination, MessageAttributes](
                                                                                                        config: AlpakkaSQSWorkerConfig,
                                                                                                        monitoringProcessorBuilder: (ExecutionContext) => MonitoringProcessor[Work, InfraServiceMonitoringContext, InterServiceMonitoringContext],
+                                                                                                       monitoringSerialiser: MonitoringContextSerializerDeserialiser[InterServiceMonitoringContext, MessageAttributes],
                                                                                                      messageSender: MessageSender[Destination, MessageAttributes])(
     process: Work => Future[Result[Summary]]
   )(implicit
@@ -66,6 +69,6 @@ object AlpakkaSQSWorker {
     as: ActorSystem,
     wd: Decoder[Work]) =
     new AlpakkaSQSWorker[Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Summary, Destination, MessageAttributes](
-      config, monitoringProcessorBuilder, messageSender
+      config, monitoringProcessorBuilder, monitoringSerialiser,messageSender
     )(process)
 }
