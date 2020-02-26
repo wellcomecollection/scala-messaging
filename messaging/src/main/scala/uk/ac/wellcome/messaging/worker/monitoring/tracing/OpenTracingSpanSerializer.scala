@@ -18,7 +18,7 @@ trait OpenTracingSpanSerializer[T] {
   def deserialise(tracer: Tracer, t: T): SpanContext
 }
 
-object MapOpenTracingSpanSerializer$$
+object MapOpenTracingSpanSerializer
     extends OpenTracingSpanSerializer[Map[String, String]] {
 
   override def serialise(tracer: Tracer,
