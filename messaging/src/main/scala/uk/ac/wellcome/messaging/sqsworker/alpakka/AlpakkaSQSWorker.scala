@@ -17,14 +17,24 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 import scala.concurrent.{ExecutionContext, Future}
 
 /***
- * Implementation of [[AkkaWorker]] that uses SQS as source and sink.
- * It receives messages from SQS and deletes messages from SQS on successful completion
- */
-class AlpakkaSQSWorker[Work,  InfraServiceMonitoringContext, InterServiceMonitoringContext, Summary, Destination, MessageAttributes](
+  * Implementation of [[AkkaWorker]] that uses SQS as source and sink.
+  * It receives messages from SQS and deletes messages from SQS on successful completion
+  */
+class AlpakkaSQSWorker[Work,
+                       InfraServiceMonitoringContext,
+                       InterServiceMonitoringContext,
+                       Summary,
+                       Destination,
+                       MessageAttributes](
   config: AlpakkaSQSWorkerConfig,
-  val monitoringProcessorBuilder: (ExecutionContext) => MonitoringProcessor[Work,  InfraServiceMonitoringContext, InterServiceMonitoringContext],
-  val monitoringSerialiser: MonitoringContextSerializerDeserialiser[InterServiceMonitoringContext, MessageAttributes],
-  val  messageSender: MessageSender[Destination, MessageAttributes]
+  val monitoringProcessorBuilder: (
+    ExecutionContext) => MonitoringProcessor[Work,
+                                             InfraServiceMonitoringContext,
+                                             InterServiceMonitoringContext],
+  val monitoringSerialiser: MonitoringContextSerializerDeserialiser[
+    InterServiceMonitoringContext,
+    MessageAttributes],
+  val messageSender: MessageSender[Destination, MessageAttributes]
 )(
   val doWork: Work => Future[Result[Summary]]
 )(implicit
@@ -37,7 +47,9 @@ class AlpakkaSQSWorker[Work,  InfraServiceMonitoringContext, InterServiceMonitor
       InfraServiceMonitoringContext,
       InterServiceMonitoringContext,
       Summary,
-      MessageAction, Destination, MessageAttributes]
+      MessageAction,
+      Destination,
+      MessageAttributes]
     with SnsSqsDeserialiser[Work, InfraServiceMonitoringContext]
     with Logging {
 
@@ -58,17 +70,36 @@ class AlpakkaSQSWorker[Work,  InfraServiceMonitoringContext, InterServiceMonitor
 }
 
 object AlpakkaSQSWorker {
-  def apply[Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Summary, Destination, MessageAttributes](
-                                                                                                       config: AlpakkaSQSWorkerConfig,
-                                                                                                       monitoringProcessorBuilder: (ExecutionContext) => MonitoringProcessor[Work, InfraServiceMonitoringContext, InterServiceMonitoringContext],
-                                                                                                       monitoringSerialiser: MonitoringContextSerializerDeserialiser[InterServiceMonitoringContext, MessageAttributes],
-                                                                                                     messageSender: MessageSender[Destination, MessageAttributes])(
+  def apply[Work,
+            InfraServiceMonitoringContext,
+            InterServiceMonitoringContext,
+            Summary,
+            Destination,
+            MessageAttributes](
+    config: AlpakkaSQSWorkerConfig,
+    monitoringProcessorBuilder: (
+      ExecutionContext) => MonitoringProcessor[Work,
+                                               InfraServiceMonitoringContext,
+                                               InterServiceMonitoringContext],
+    monitoringSerialiser: MonitoringContextSerializerDeserialiser[
+      InterServiceMonitoringContext,
+      MessageAttributes],
+    messageSender: MessageSender[Destination, MessageAttributes])(
     process: Work => Future[Result[Summary]]
   )(implicit
     sc: AmazonSQSAsync,
     as: ActorSystem,
     wd: Decoder[Work]) =
-    new AlpakkaSQSWorker[Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Summary, Destination, MessageAttributes](
-      config, monitoringProcessorBuilder, monitoringSerialiser,messageSender
+    new AlpakkaSQSWorker[
+      Work,
+      InfraServiceMonitoringContext,
+      InterServiceMonitoringContext,
+      Summary,
+      Destination,
+      MessageAttributes](
+      config,
+      monitoringProcessorBuilder,
+      monitoringSerialiser,
+      messageSender
     )(process)
 }

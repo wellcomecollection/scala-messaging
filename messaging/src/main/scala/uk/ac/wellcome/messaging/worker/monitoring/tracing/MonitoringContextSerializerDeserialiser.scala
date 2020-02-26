@@ -19,11 +19,17 @@ trait MonitoringContextSerializerDeserialiser[InfraServiceMonitoringContext, T] 
 }
 
 trait MapOpenTracingSerializerDeserialiser
-    extends MonitoringContextSerializerDeserialiser[SpanContext, Map[String, String]] {
+    extends MonitoringContextSerializerDeserialiser[
+      SpanContext,
+      Map[String, String]] {
   val tracer: Tracer
-  override def serialise(monitoringContext: SpanContext): Map[String, String] = {
+  override def serialise(
+    monitoringContext: SpanContext): Map[String, String] = {
     val map = new util.HashMap[String, String]()
-    tracer.inject(monitoringContext, Format.Builtin.TEXT_MAP, new TextMapAdapter(map))
+    tracer.inject(
+      monitoringContext,
+      Format.Builtin.TEXT_MAP,
+      new TextMapAdapter(map))
     map.asScala.toMap
   }
 

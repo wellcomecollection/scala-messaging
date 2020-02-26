@@ -25,13 +25,13 @@ class WorkerTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
-    val messageSender = new MemoryMessageSender()
+        val messageSender = new MemoryMessageSender()
         val worker = new MyWorker(
-      monitoringProcessor,
-      messageSender,
-      successful,
-      messageToWork(shouldFail = false)
-    )
+          monitoringProcessor,
+          messageSender,
+          successful,
+          messageToWork(shouldFail = false)
+        )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -55,12 +55,12 @@ class WorkerTest
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
         val messageSender = new MemoryMessageSender()
-    val worker = new MyWorker(
-      monitoringProcessor,
-      messageSender,
-      successful,
-      messageToWork(shouldFail = true)
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          messageSender,
+          successful,
+          messageToWork(shouldFail = true)
+        )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -87,12 +87,12 @@ class WorkerTest
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
         val messageSender = new MemoryMessageSender()
-    val worker = new MyWorker(
-      monitoringProcessor,
-      new MemoryMessageSender(),
-      successful,
-      transform
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          new MemoryMessageSender(),
+          successful,
+          transform
+        )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -116,12 +116,12 @@ class WorkerTest
       shouldFail = true) {
       case (monitoringClient, monitoringProcessor) =>
         val messageSender = new MemoryMessageSender()
-    val worker = new MyWorker(
-      monitoringProcessor,
-      messageSender,
-      successful,
-      messageToWork(shouldFail = false)
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          messageSender,
+          successful,
+          messageToWork(shouldFail = false)
+        )
 
         val process = worker.processMessage(message)
 
@@ -142,12 +142,12 @@ class WorkerTest
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
         val messageSender = new MemoryMessageSender()
-    val worker = new MyWorker(
-      monitoringProcessor,
-      messageSender,
-      deterministicFailure,
-      messageToWork(shouldFail = false)
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          messageSender,
+          deterministicFailure,
+          messageToWork(shouldFail = false)
+        )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -172,12 +172,12 @@ class WorkerTest
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
         val messageSender = new MemoryMessageSender()
-    val worker = new MyWorker(
-      monitoringProcessor,
-      messageSender,
-      nonDeterministicFailure,
-      messageToWork(shouldFail = false)
-    )
+        val worker = new MyWorker(
+          monitoringProcessor,
+          messageSender,
+          nonDeterministicFailure,
+          messageToWork(shouldFail = false)
+        )
 
         val process = worker.processMessage(message)
         whenReady(process) { _ =>
@@ -194,6 +194,5 @@ class WorkerTest
         }
     }
   }
-
 
 }

@@ -9,10 +9,25 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * Implementation of [[Worker]] based on akka streams
- */
-trait AkkaWorker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, Destination, MessageAttributes]
-    extends Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, Destination, MessageAttributes] {
+  * Implementation of [[Worker]] based on akka streams
+  */
+trait AkkaWorker[Message,
+                 Work,
+                 InfraServiceMonitoringContext,
+                 InterServiceMonitoringContext,
+                 Value,
+                 Action,
+                 Destination,
+                 MessageAttributes]
+    extends Worker[
+      Message,
+      Work,
+      InfraServiceMonitoringContext,
+      InterServiceMonitoringContext,
+      Value,
+      Action,
+      Destination,
+      MessageAttributes] {
 
   implicit val as: ActorSystem
   implicit val am: ActorMaterializer =

@@ -6,7 +6,8 @@ import uk.ac.wellcome.messaging.{IndividualMessageSender, MessageSender}
 
 import scala.util.{Random, Try}
 
-class MemoryIndividualMessageSender extends IndividualMessageSender[String,  Map[String, String]] {
+class MemoryIndividualMessageSender
+    extends IndividualMessageSender[String, Map[String, String]] {
   case class MemoryMessage(
     body: String,
     subject: String,
@@ -15,8 +16,9 @@ class MemoryIndividualMessageSender extends IndividualMessageSender[String,  Map
 
   var messages: List[MemoryMessage] = List.empty
 
-  override def send(body: String, attributes: Option[ Map[String, String]])(subject: String,
-                                  destination: String): Try[Unit] = Try {
+  override def send(body: String, attributes: Option[Map[String, String]])(
+    subject: String,
+    destination: String): Try[Unit] = Try {
     messages = messages :+ MemoryMessage(body, subject, destination)
   }
 

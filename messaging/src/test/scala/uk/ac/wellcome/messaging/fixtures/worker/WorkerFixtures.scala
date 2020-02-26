@@ -21,7 +21,6 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   type MyDestination = String
   type MyMessageAttributes = Map[String, String]
 
-
   case class MyMessage(s: String)
   case class MyWork(s: String)
 
@@ -54,10 +53,17 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     val messageSender: MessageSender[MyDestination, MyMessageAttributes],
     testProcess: TestInnerProcess,
     val deserialise: MyMessage => (Either[Throwable, MyWork],
-                                 Either[Throwable, Option[MyContext]])
+                                   Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)
       extends Worker[
-        MyMessage, MyWork, MyContext, MyContext, MySummary, MyExternalMessageAction,MyDestination,MyMessageAttributes
+        MyMessage,
+        MyWork,
+        MyContext,
+        MyContext,
+        MySummary,
+        MyExternalMessageAction,
+        MyDestination,
+        MyMessageAttributes
       ] {
 
     val callCounter = new CallCounter()

@@ -14,10 +14,17 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
   it("sends individual messages") {
     val sender = new MemoryIndividualMessageSender()
 
-    sender.send("hello world", None)(subject = "my first message", destination = "greetings") shouldBe Success(())
-    sender.send("guten tag", None)(subject = "auf deutsch", destination = "greetings") shouldBe Success(())
-    sender.send("你好", None)(subject = "中文", destination = "greetings") shouldBe Success(())
-    sender.send("chinese", None)(subject = "a non-alphabet language", destination = "languages") shouldBe Success(())
+    sender.send("hello world", None)(
+      subject = "my first message",
+      destination = "greetings") shouldBe Success(())
+    sender.send("guten tag", None)(
+      subject = "auf deutsch",
+      destination = "greetings") shouldBe Success(())
+    sender.send("你好", None)(subject = "中文", destination = "greetings") shouldBe Success(
+      ())
+    sender.send("chinese", None)(
+      subject = "a non-alphabet language",
+      destination = "languages") shouldBe Success(())
 
     sender.messages shouldBe List(
       sender.MemoryMessage("hello world", "my first message", "greetings"),
@@ -37,7 +44,9 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     val snake = Animal(name = "snake", legs = 0)
 
     Seq(dog, octopus, snake).map { animal =>
-      sender.sendT(animal, None)(subject = "animals", destination = "all creatures") shouldBe Success(())
+      sender.sendT(animal, None)(
+        subject = "animals",
+        destination = "all creatures") shouldBe Success(())
     }
 
     Seq(dog, octopus, snake).zip(sender.messages).map {
@@ -57,7 +66,9 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     val sender = new MemoryIndividualMessageSender()
 
     containers.map { c =>
-      sender.sendT[Container](c, None)(destination = "containers", subject = "stuff to store things in") shouldBe Success(())
+      sender.sendT[Container](c, None)(
+        destination = "containers",
+        subject = "stuff to store things in") shouldBe Success(())
     }
 
     containers.zip(sender.messages).map {

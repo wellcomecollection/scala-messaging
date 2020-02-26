@@ -11,8 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Implements the [[MonitoringProcessor]] interface with Opentracing (https://opentracing.io/).
   */
-class OpenTracingMonitoringProcessor[Work](
-  namespace: String)(
+class OpenTracingMonitoringProcessor[Work](namespace: String)(
   tracer: Tracer,
   wrappedEc: ExecutionContext)
     extends MonitoringProcessor[Work, SpanContext, Span] {
@@ -25,9 +24,8 @@ class OpenTracingMonitoringProcessor[Work](
     * If an optional [[context]] is passed, it uses a [[MonitoringContextSerializerDeserialiser]]
     * to deserialise it into a [[io.opentracing.SpanContext]] and link it to the new [[Span]]
     */
-  override def recordStart(
-    work: Either[Throwable, Work],
-    context: Either[Throwable, Option[SpanContext]])
+  override def recordStart(work: Either[Throwable, Work],
+                           context: Either[Throwable, Option[SpanContext]])
     : Future[Either[Throwable, Span]] = {
     val f = Future {
       val spanBuilder = tracer.buildSpan(namespace)
@@ -61,22 +59,25 @@ class OpenTracingMonitoringProcessor[Work](
     span: Either[Throwable, Span],
     result: Result[Recorded]): Future[Result[Unit]] = {
     val f: Future[Result[Unit]] = Future {
-      span.fold(throwable => MonitoringProcessorFailure(throwable), span => {
-        result match {
-          case Successful(_) =>
-          case f@DeterministicFailure(failure) =>
-            tagError(span, failure, f.getClass.getSimpleName)
-          case f@NonDeterministicFailure(failure) =>
-            tagError(span, failure, f.getClass.getSimpleName)
-          case _ =>
+      span.fold(
+        throwable => MonitoringProcessorFailure(throwable),
+        span => {
+          result match {
+            case Successful(_) =>
+            case f @ DeterministicFailure(failure) =>
+              tagError(span, failure, f.getClass.getSimpleName)
+            case f @ NonDeterministicFailure(failure) =>
+              tagError(span, failure, f.getClass.getSimpleName)
+            case _ =>
+          }
+          span.finish()
+          Successful[Unit](None)
         }
-        span.finish()
-        Successful[Unit](None)
-      }
       )
     }
-    f recover { case e =>
-      MonitoringProcessorFailure[Unit](e)
+    f recover {
+      case e =>
+        MonitoringProcessorFailure[Unit](e)
     }
   }
 

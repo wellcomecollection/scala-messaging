@@ -12,12 +12,9 @@ import scala.concurrent.ExecutionContext
 trait TracingFixtures extends Matchers { this: Suite =>
 
   def withOpenTracingMetricsProcessor[MyWork, R](tracer: Tracer)(
-    testWith: TestWith[
-      OpenTracingMonitoringProcessor[MyWork],
-      R]): R = {
+    testWith: TestWith[OpenTracingMonitoringProcessor[MyWork], R]): R = {
     val processor =
-      new OpenTracingMonitoringProcessor[MyWork](
-        "namespace")(
+      new OpenTracingMonitoringProcessor[MyWork]("namespace")(
         tracer,
         ExecutionContext.Implicits.global)
     testWith(processor)

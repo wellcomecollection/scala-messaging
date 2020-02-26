@@ -28,7 +28,9 @@ final class MetricsMonitoringProcessor[Work](val namespace: String)(
   ): Future[Result[Unit]] = {
 
     val monitoring = for {
-      _: Unit <- metric(result, context.getOrElse(throw new Exception(s"context was Left: $context")))
+      _: Unit <- metric(
+        result,
+        context.getOrElse(throw new Exception(s"context was Left: $context")))
     } yield Successful[Unit](())
 
     monitoring recover {

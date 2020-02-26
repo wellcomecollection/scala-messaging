@@ -3,9 +3,10 @@ package uk.ac.wellcome.messaging.worker.steps
 import uk.ac.wellcome.messaging.worker.models.{DeterministicFailure, Result}
 
 import scala.concurrent.{ExecutionContext, Future}
+
 /***
- * Executes some operation on a [[Work]] and returns a [[Result]] with a [[Value]]
- */
+  * Executes some operation on a [[Work]] and returns a [[Result]] with a [[Value]]
+  */
 trait MessageProcessor[Work, Value] {
   type ResultValue = Future[Result[Value]]
 
