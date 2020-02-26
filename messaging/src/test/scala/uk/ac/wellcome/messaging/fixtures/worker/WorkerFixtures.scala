@@ -18,7 +18,6 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   type TestResult = Result[MySummary]
   type TestInnerProcess = MyWork => TestResult
   type TestProcess = MyWork => Future[TestResult]
-  type MyDestination = String
   type MyMessageAttributes = Map[String, String]
 
   case class MyMessage(s: String)
@@ -50,7 +49,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
 
   class MyWorker(
     val monitoringProcessor: MetricsMonitoringProcessor[MyWork],
-    val messageSender: MessageSender[MyDestination, MyMessageAttributes],
+    val messageSender: MessageSender[MyMessageAttributes],
     testProcess: TestInnerProcess,
     val deserialise: MyMessage => (Either[Throwable, MyWork],
                                    Either[Throwable, Option[MyContext]])
@@ -62,7 +61,6 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
         MyContext,
         MySummary,
         MyExternalMessageAction,
-        MyDestination,
         MyMessageAttributes
       ] {
 

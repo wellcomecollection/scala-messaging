@@ -24,7 +24,6 @@ class AlpakkaSQSWorker[Work,
                        InfraServiceMonitoringContext,
                        InterServiceMonitoringContext,
                        Summary,
-                       Destination,
                        MessageAttributes](
   config: AlpakkaSQSWorkerConfig,
   val monitoringProcessorBuilder: (
@@ -34,7 +33,7 @@ class AlpakkaSQSWorker[Work,
   val monitoringSerialiser: MonitoringContextSerializerDeserialiser[
     InterServiceMonitoringContext,
     MessageAttributes],
-  val messageSender: MessageSender[Destination, MessageAttributes]
+  val messageSender: MessageSender[MessageAttributes]
 )(
   val doWork: Work => Future[Result[Summary]]
 )(implicit
@@ -48,7 +47,6 @@ class AlpakkaSQSWorker[Work,
       InterServiceMonitoringContext,
       Summary,
       MessageAction,
-      Destination,
       MessageAttributes]
     with SnsSqsDeserialiser[Work, InfraServiceMonitoringContext]
     with Logging {
@@ -74,7 +72,6 @@ object AlpakkaSQSWorker {
             InfraServiceMonitoringContext,
             InterServiceMonitoringContext,
             Summary,
-            Destination,
             MessageAttributes](
     config: AlpakkaSQSWorkerConfig,
     monitoringProcessorBuilder: (
@@ -84,7 +81,7 @@ object AlpakkaSQSWorker {
     monitoringSerialiser: MonitoringContextSerializerDeserialiser[
       InterServiceMonitoringContext,
       MessageAttributes],
-    messageSender: MessageSender[Destination, MessageAttributes])(
+    messageSender: MessageSender[MessageAttributes])(
     process: Work => Future[Result[Summary]]
   )(implicit
     sc: AmazonSQSAsync,
@@ -95,7 +92,6 @@ object AlpakkaSQSWorker {
       InfraServiceMonitoringContext,
       InterServiceMonitoringContext,
       Summary,
-      Destination,
       MessageAttributes](
       config,
       monitoringProcessorBuilder,

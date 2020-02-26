@@ -28,7 +28,10 @@ class MemoryIndividualMessageSender
       .map { fromJson[T](_).get }
 }
 
-class MemoryMessageSender extends MessageSender[String, Map[String, String]] {
+class MemoryMessageSender extends MessageSender[Map[String, String]] {
+
+  type Destination = String
+
   val destination: String = Random.alphanumeric.take(10) mkString
   val subject: String = Random.alphanumeric.take(10) mkString
 

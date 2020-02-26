@@ -17,7 +17,6 @@ trait AkkaWorker[Message,
                  InterServiceMonitoringContext,
                  Value,
                  Action,
-                 Destination,
                  MessageAttributes]
     extends Worker[
       Message,
@@ -26,7 +25,6 @@ trait AkkaWorker[Message,
       InterServiceMonitoringContext,
       Value,
       Action,
-      Destination,
       MessageAttributes] {
 
   implicit val as: ActorSystem
