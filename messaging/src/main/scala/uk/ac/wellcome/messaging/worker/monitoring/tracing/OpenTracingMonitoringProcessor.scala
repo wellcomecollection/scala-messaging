@@ -8,18 +8,26 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
-class OpenTracingMonitoringProcessor[Work, S](namespace: String)(
+/**
+ * Implements the [[MonitoringProcessor]] interface with Opentracing (https://opentracing.io/).
+ */
+class OpenTracingMonitoringProcessor[Work, InfraServiceMonitoringContext](namespace: String)(
   tracer: Tracer,
   wrappedEc: ExecutionContext,
-  carrier: OpenTracingSpanSerializer[S])
-    extends MonitoringProcessor[Work, S, Span] {
+  carrier: OpenTracingSpanSerializer[InfraServiceMonitoringContext])
+    extends MonitoringProcessor[Work, InfraServiceMonitoringContext, Span] {
 
   override implicit val ec: ExecutionContext =
     new TracedExecutionContext(wrappedEc, tracer)
 
+  /**
+   * Starts a [[Span]] and returns it.
+   * If an optional [[context]] is passed, it uses a [[OpenTracingSpanSerializer]]
+   * to deserialise it into a [[io.opentracing.SpanContext]] and link it to the new [[Span]]
+   */
   override def recordStart(
     work: Either[Throwable, Work],
-    context: Either[Throwable, Option[S]]): Future[Either[Throwable, Span]] = {
+    context: Either[Throwable, Option[InfraServiceMonitoringContext]]): Future[Either[Throwable, Span]] = {
     val f = Future {
       val spanBuilder = tracer.buildSpan(namespace)
       val span = context match {
@@ -45,6 +53,10 @@ class OpenTracingMonitoringProcessor[Work, S](namespace: String)(
     }
   }
 
+  /**
+   * Receives a [[Span]] and calls [[Span.finish]]. It tags the [[Span]] as
+   * errored based on the type of [[result]]
+   */
   override def recordEnd[Recorded](
     span: Either[Throwable, Span],
     result: Result[Recorded]): Future[Result[Unit]] = {
