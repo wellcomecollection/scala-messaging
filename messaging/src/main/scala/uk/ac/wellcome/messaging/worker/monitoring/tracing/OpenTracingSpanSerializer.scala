@@ -8,17 +8,18 @@ import io.opentracing.{SpanContext, Tracer}
 import scala.collection.JavaConverters._
 
 /**
- * This trait allows to send and receive information
- * about a Span in messages so that we can chain spans
- * together in the same trace
- */
+  * This trait allows to send and receive information
+  * about a Span in messages so that we can chain spans
+  * together in the same trace
+  */
 trait OpenTracingSpanSerializer[T] {
   def serialise(tracer: Tracer, span: SpanContext): T
 
   def deserialise(tracer: Tracer, t: T): SpanContext
 }
 
-object MapOpenTracingSpanSerializer$$ extends OpenTracingSpanSerializer[Map[String, String]] {
+object MapOpenTracingSpanSerializer$$
+    extends OpenTracingSpanSerializer[Map[String, String]] {
 
   override def serialise(tracer: Tracer,
                          span: SpanContext): Map[String, String] = {
@@ -27,6 +28,7 @@ object MapOpenTracingSpanSerializer$$ extends OpenTracingSpanSerializer[Map[Stri
     map.asScala.toMap
   }
 
-  override def deserialise(tracer: Tracer, t: Map[String, String]): SpanContext =
+  override def deserialise(tracer: Tracer,
+                           t: Map[String, String]): SpanContext =
     tracer.extract(Format.Builtin.TEXT_MAP, new TextMapAdapter(t.asJava))
 }

@@ -5,8 +5,8 @@ import io.opentracing.{Span, Tracer}
 import org.scalatest.{Matchers, Suite}
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.messaging.worker.monitoring.tracing.{
-  OpenTracingSpanSerializer,
-  OpenTracingMonitoringProcessor
+  OpenTracingMonitoringProcessor,
+  OpenTracingSpanSerializer
 }
 
 import scala.collection.JavaConverters._
@@ -15,8 +15,8 @@ import scala.concurrent.ExecutionContext
 trait TracingFixtures extends Matchers { this: Suite =>
 
   def withOpenTracingMetricsProcessor[MyWork, R](
-                                                  MapContextCarrier: OpenTracingSpanSerializer[Map[String, String]],
-                                                  tracer: Tracer)(
+    MapContextCarrier: OpenTracingSpanSerializer[Map[String, String]],
+    tracer: Tracer)(
     testWith: TestWith[
       OpenTracingMonitoringProcessor[MyWork, Map[String, String]],
       R]): R = {

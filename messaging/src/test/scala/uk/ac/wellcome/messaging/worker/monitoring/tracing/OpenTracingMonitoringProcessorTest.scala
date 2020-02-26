@@ -109,7 +109,9 @@ class OpenTracingMonitoringProcessorTest
         val parentSpan = mockTracer.buildSpan("parent").start()
         val parentTraceId = parentSpan.context().toTraceId
         val parentSpanId = parentSpan.context().toSpanId
-        val context = MapOpenTracingSpanSerializer$$.serialise(mockTracer, parentSpan.context())
+        val context = MapOpenTracingSpanSerializer$$.serialise(
+          mockTracer,
+          parentSpan.context())
         parentSpan.finish()
 
         whenReady(processor.recordStart(Right(work), Right(Some(context)))) {
