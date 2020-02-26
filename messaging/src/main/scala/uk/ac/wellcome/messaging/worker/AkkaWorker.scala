@@ -11,8 +11,8 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * Implementation of [[Worker]] based on akka streams
  */
-trait AkkaWorker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, Destination, MessageAttributes]
-    extends Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, Destination, MessageAttributes] {
+trait AkkaWorker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, MessageAttributes]
+    extends Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, MessageAttributes] {
 
   implicit val as: ActorSystem
   implicit val am: ActorMaterializer =

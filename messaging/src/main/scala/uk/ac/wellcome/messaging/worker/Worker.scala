@@ -23,7 +23,7 @@ import scala.util.Success
  * @tparam Value:  the result of the process function
  * @tparam Action: either [[Retry]] or [[Completed]]
  */
-trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, Destination, SerialisedMonitoringContext]
+trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitoringContext, Value, Action, SerialisedMonitoringContext]
     extends MessageProcessor[Work, Value]
     with MessageDeserialiser[Message, Work, InfraServiceMonitoringContext] with MessageSerialiser[Value, InterServiceMonitoringContext, SerialisedMonitoringContext] with Logger{
 
@@ -37,7 +37,7 @@ trait Worker[Message, Work, InfraServiceMonitoringContext, InterServiceMonitorin
   protected val completedAction: MessageAction
 
   protected val monitoringProcessor: MonitoringProcessor[Work, InfraServiceMonitoringContext, InterServiceMonitoringContext]
-  protected val messageSender: MessageSender[Destination, SerialisedMonitoringContext]
+  protected val messageSender: MessageSender[SerialisedMonitoringContext]
 
   final def processMessage(message: Message): Processed = {
     implicit val e =(monitoringProcessor.ec)

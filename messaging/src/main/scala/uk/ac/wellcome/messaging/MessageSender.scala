@@ -13,7 +13,10 @@ trait IndividualMessageSender[Destination, MessageAttributes] {
     toJson(t).flatMap { send(_, attributes)(subject, destination) }
 }
 
-trait MessageSender[Destination, MessageAttributes] {
+trait MessageSender[MessageAttributes] {
+  
+  type Destination
+
   protected val underlying: IndividualMessageSender[Destination, MessageAttributes]
 
   val subject: String

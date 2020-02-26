@@ -24,7 +24,10 @@ class SNSMessageSender(
   snsClient: AmazonSNS,
   snsConfig: SNSConfig,
   val subject: String
-) extends MessageSender[SNSConfig, Map[String, String]] {
+) extends MessageSender[Map[String, String]] {
+
+  type Destination = SNSConfig
+
   override protected val underlying: IndividualMessageSender[SNSConfig, Map[String, String]] =
     new SNSIndividualMessageSender(
       snsClient = snsClient
