@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class OpenTracingMonitoringProcessor[Work, S](namespace: String)(
   tracer: Tracer,
   wrappedEc: ExecutionContext,
-  carrier: ContextCarrier[S])
+  carrier: OpenTracingSpanSerializer[S])
     extends MonitoringProcessor[Work, S, Span] {
 
   override implicit val ec: ExecutionContext =
@@ -26,7 +26,7 @@ class OpenTracingMonitoringProcessor[Work, S](namespace: String)(
         case Right(None) =>
           spanBuilder.start()
         case Right(Some(c)) =>
-          val rootContext = carrier.extract(tracer, c)
+          val rootContext = carrier.deserialise(tracer, c)
           spanBuilder.asChildOf(rootContext).start()
         case Left(ex) =>
           val span = spanBuilder.start()

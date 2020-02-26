@@ -19,7 +19,7 @@ class OpenTracingMonitoringProcessorTest
   it("opens and finishes a span") {
     val mockTracer = new MockTracer()
     withOpenTracingMetricsProcessor[MyWork, Assertion](
-      MapContextCarrier,
+      MapOpenTracingSpanSerializer$$,
       mockTracer) { processor =>
       whenReady(processor.recordStart(Right(work), Right(None))) {
         span: Either[Throwable, Span] =>
@@ -37,7 +37,7 @@ class OpenTracingMonitoringProcessorTest
   it("opens and finishes a span and records a deterministic error in process") {
     val mockTracer = new MockTracer()
     withOpenTracingMetricsProcessor[MyWork, Assertion](
-      MapContextCarrier,
+      MapOpenTracingSpanSerializer$$,
       mockTracer) { processor =>
       whenReady(processor.recordStart(Right(work), Right(None))) { spanEither =>
         spanEither shouldBe a[Right[_, _]]
@@ -62,7 +62,7 @@ class OpenTracingMonitoringProcessorTest
     "opens and finishes a span and records a non deterministic error in process") {
     val mockTracer = new MockTracer()
     withOpenTracingMetricsProcessor[MyWork, Assertion](
-      MapContextCarrier,
+      MapOpenTracingSpanSerializer$$,
       mockTracer) { processor =>
       whenReady(processor.recordStart(Right(work), Right(None))) { spanEither =>
         spanEither shouldBe a[Right[_, _]]
@@ -86,7 +86,7 @@ class OpenTracingMonitoringProcessorTest
     it("records an error if it receives a left instead of a work") {
       val mockTracer = new MockTracer()
       withOpenTracingMetricsProcessor[MyWork, Assertion](
-        MapContextCarrier,
+        MapOpenTracingSpanSerializer$$,
         mockTracer) { processor =>
         val exception = new RuntimeException("BOOM!")
         whenReady(processor.recordStart(Left(exception), Right(None))) {
@@ -104,12 +104,12 @@ class OpenTracingMonitoringProcessorTest
     it("opens a span as child of another passed as context") {
       val mockTracer = new MockTracer()
       withOpenTracingMetricsProcessor[MyWork, Assertion](
-        MapContextCarrier,
+        MapOpenTracingSpanSerializer$$,
         mockTracer) { processor =>
         val parentSpan = mockTracer.buildSpan("parent").start()
         val parentTraceId = parentSpan.context().toTraceId
         val parentSpanId = parentSpan.context().toSpanId
-        val context = MapContextCarrier.inject(mockTracer, parentSpan.context())
+        val context = MapOpenTracingSpanSerializer$$.serialise(mockTracer, parentSpan.context())
         parentSpan.finish()
 
         whenReady(processor.recordStart(Right(work), Right(Some(context)))) {
@@ -132,7 +132,7 @@ class OpenTracingMonitoringProcessorTest
     it("records an error if it receives a left instead of a parent span") {
       val mockTracer = new MockTracer()
       withOpenTracingMetricsProcessor[MyWork, Assertion](
-        MapContextCarrier,
+        MapOpenTracingSpanSerializer$$,
         mockTracer) { processor =>
         val exception = new RuntimeException("AAAARGH!")
         whenReady(processor.recordStart(Right(work), Left(exception))) {
@@ -154,7 +154,7 @@ class OpenTracingMonitoringProcessorTest
           operationName: MySummary): MockTracer#SpanBuilder = throw exception
       }
       withOpenTracingMetricsProcessor[MyWork, Assertion](
-        MapContextCarrier,
+        MapOpenTracingSpanSerializer$$,
         failingTracer) { processor =>
         whenReady(processor.recordStart(Right(work), Right(None))) {
           spanEither =>
@@ -170,7 +170,7 @@ class OpenTracingMonitoringProcessorTest
       val exception = new RuntimeException("TADAAA")
       val mockTracer = new MockTracer()
       withOpenTracingMetricsProcessor[MyWork, Assertion](
-        MapContextCarrier,
+        MapOpenTracingSpanSerializer$$,
         mockTracer) { processor =>
         val nonDeterministicErrorResult = nonDeterministicFailure(work)
         whenReady(
@@ -192,7 +192,7 @@ class OpenTracingMonitoringProcessorTest
       val span = mockTracer.buildSpan("parent").start()
       span.finish()
       withOpenTracingMetricsProcessor[MyWork, Assertion](
-        MapContextCarrier,
+        MapOpenTracingSpanSerializer$$,
         mockTracer) { processor =>
         val nonDeterministicErrorResult = nonDeterministicFailure(work)
         whenReady(processor.recordEnd(Right(span), nonDeterministicErrorResult)) {
