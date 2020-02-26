@@ -8,6 +8,9 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
 
+/**
+ * Implementation of [[Worker]] based on akka streams
+ */
 trait AkkaWorker[Message,
                  Work,
                  InfraServiceMonitoringContext,

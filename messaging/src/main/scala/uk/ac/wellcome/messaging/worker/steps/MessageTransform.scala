@@ -2,10 +2,13 @@ package uk.ac.wellcome.messaging.worker.steps
 
 import scala.util.Try
 
-trait MessageTransform[Message, Work, MonitoringContext] {
+/**
+ * Deserialises a [[Message]] into a [[Work]] and an optional [[InfraServiceMonitoringContext]]
+ */
+trait MessageTransform[Message, Work, InfraServiceMonitoringContext] {
 
   type Transformed =
-    (Either[Throwable, Work], Either[Throwable, Option[MonitoringContext]])
+    (Either[Throwable, Work], Either[Throwable, Option[InfraServiceMonitoringContext]])
 
   protected val transform: Message => Transformed
 

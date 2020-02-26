@@ -14,6 +14,10 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
 
+/***
+ * Implementation of [[AkkaWorker]] that uses SQS as source and sink.
+ * It receives messages from SQS and deletes messages from SQS on successful completion
+ */
 class AlpakkaSQSWorker[Work,
                        InfraServiceMonitoringContext,
                        InterServiceMonitoringContext,

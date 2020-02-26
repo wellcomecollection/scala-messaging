@@ -10,6 +10,20 @@ import uk.ac.wellcome.messaging.worker.steps.{
 
 import scala.concurrent.Future
 
+/**
+ * A Worker receives a [[Message]] and performs a series of steps. These steps are
+ *    - [[MessageTransform]]: deserialises the payload of the message into a [[Work]]
+ *    - [[MonitoringProcessor.recordStart]]: starts monitoring
+ *    - [[MessageProcessor.process]]: performs an operation on the [[Work]]
+ *    - [[Logger.log]]: logs the result of the processing
+ *    - [[MonitoringProcessor.recordEnd]]: ends monitoring
+ * @tparam Message: the message received by the Worker
+ * @tparam Work: the payload in the message
+ * @tparam InfraServiceMonitoringContext: the monitoring context to be passed around between different services
+ * @tparam InterServiceMonitoringContext: the monitoring context to be passed around within the current service
+ * @tparam Summary: description of the result of the process function
+ * @tparam Action: either [[Retry]] or [[Completed]]
+ */
 trait Worker[Message,
              Work,
              InfraServiceMonitoringContext,
