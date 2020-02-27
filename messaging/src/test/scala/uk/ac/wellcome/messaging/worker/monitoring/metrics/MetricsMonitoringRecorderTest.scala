@@ -11,7 +11,7 @@ import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits._
 
-class MetricsMonitoringProcessorTest
+class MetricsMonitoringRecorderTest
     extends FunSpec
     with Matchers
     with Akka

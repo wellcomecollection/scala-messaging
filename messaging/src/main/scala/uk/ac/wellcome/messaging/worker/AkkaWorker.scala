@@ -17,7 +17,7 @@ trait AkkaWorker[Message,
                  InterServiceMonitoringContext,
                  Value,
                  Action,
-                 MessageAttributes]
+  SerialisedMonitoringContext]
     extends Worker[
       Message,
       Payload,
@@ -25,7 +25,7 @@ trait AkkaWorker[Message,
       InterServiceMonitoringContext,
       Value,
       Action,
-      MessageAttributes] {
+      SerialisedMonitoringContext] {
 
   implicit val as: ActorSystem
   implicit val am: ActorMaterializer =
@@ -36,8 +36,7 @@ trait AkkaWorker[Message,
   protected val monitoringProcessorBuilder: (
     ExecutionContext) => MonitoringProcessor[Payload,
                                              InfraServiceMonitoringContext,
-                                             InterServiceMonitoringContext]
-
+                                             InterServiceMonitoringContext, SerialisedMonitoringContext]
   override final val monitoringProcessor = monitoringProcessorBuilder(ec)
   type MessageSource = Source[Message, NotUsed]
   type MessageSink = Sink[(Message, Action), Future[Done]]

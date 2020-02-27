@@ -10,7 +10,7 @@ import uk.ac.wellcome.messaging.worker.models.MonitoringProcessorFailure
 
 import scala.collection.JavaConverters._
 
-class OpenTracingMonitoringProcessorTest
+class OpenTracingMonitoringRecorderTest
     extends FunSpec
     with WorkerFixtures
     with ScalaFutures
@@ -107,12 +107,9 @@ class OpenTracingMonitoringProcessorTest
           val parentSpan = mockTracer.buildSpan("parent").start()
           val parentTraceId = parentSpan.context().toTraceId
           val parentSpanId = parentSpan.context().toSpanId
-          // val context = MapOpenTracingSerializerDeserialiser.serialise(
-          //   mockTracer,
-          //   parentSpan.context())
           parentSpan.finish()
 
-          whenReady(processor.recordStart(Right(work), Right(Some(???)))) {
+          whenReady(processor.recordStart(Right(work), Right(Some(parentSpan.context())))) {
             spanEither =>
               spanEither shouldBe a[Right[_, _]]
               val span = spanEither.right.get

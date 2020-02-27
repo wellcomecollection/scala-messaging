@@ -12,7 +12,7 @@ import uk.ac.wellcome.messaging.sqsworker.alpakka.{
   AlpakkaSQSWorker,
   AlpakkaSQSWorkerConfig
 }
-import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringRecorder
 import uk.ac.wellcome.monitoring.MetricsConfig
 
 import scala.concurrent.ExecutionContext
@@ -52,8 +52,8 @@ trait AlpakkaSQSWorkerFixtures
                            ec: ExecutionContext): R =
     withFakeMonitoringClient(false) { client: FakeMetricsMonitoringClient =>
       val metricsProcessorBuilder
-        : (ExecutionContext) => MetricsMonitoringProcessor[MyPayload] =
-        new MetricsMonitoringProcessor[MyPayload](namespace)(client, _)
+        : (ExecutionContext) => MetricsMonitoringRecorder[MyPayload] =
+        new MetricsMonitoringRecorder[MyPayload](namespace)(client, _)
 
       val config = createAlpakkaSQSWorkerConfig(queue, namespace)
 
@@ -70,7 +70,6 @@ trait AlpakkaSQSWorkerFixtures
           MyMessageAttributes](
           config,
           metricsProcessorBuilder,
-          ???,
           messageSender)(testProcess)
 
       testWith((worker, config, client, callCounter))

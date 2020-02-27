@@ -17,12 +17,12 @@ import scala.util.Success
 
 /**
   * A Worker receives a [[Message]] and performs a series of steps. These steps are
-  *    - [[MessageDeserialiser.callDeserialise]]: deserialises the payload of the message into a [[Payload]]
-  *    - [[MonitoringProcessor.recordStart]]: starts monitoring
+  *    - [[MessageDeserialiser.apply]]: deserialises the payload of the message into a [[Payload]]
+  *    - [[MonitoringRecorder.recordStart]]: starts monitoring
   *    - [[MessageProcessor.process]]: performs an operation on the [[Payload]]
   *    - [[MessageSender.send]]: sends the result of [[MessageProcessor.process]]
   *    - [[Logger.log]]: logs the result of the processing
-  *    - [[MonitoringProcessor.recordEnd]]: ends monitoring
+  *    - [[MonitoringRecorder.recordEnd]]: ends monitoring
   *
   * @tparam Message: the message received by the Worker
   * @tparam Payload: the payload in the message
@@ -61,7 +61,7 @@ trait Worker[Message,
   protected val monitoringProcessor: MonitoringProcessor[
     Payload,
     InfraServiceMonitoringContext,
-    InterServiceMonitoringContext]
+    InterServiceMonitoringContext, SerialisedMonitoringContext]
   protected val messageSender: MessageSender[SerialisedMonitoringContext]
 
   final def processMessage(message: Message): Processed = {

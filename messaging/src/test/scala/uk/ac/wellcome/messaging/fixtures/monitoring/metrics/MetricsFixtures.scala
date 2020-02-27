@@ -5,7 +5,7 @@ import org.scalatest.{Assertion, Matchers}
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.messaging.worker.monitoring.metrics.{
   MetricsMonitoringClient,
-  MetricsMonitoringProcessor
+  MetricsMonitoringRecorder
 }
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -49,12 +49,12 @@ trait MetricsFixtures extends Matchers {
   def withMetricsMonitoringProcessor[Payload, R](namespace: String,
                                                  shouldFail: Boolean = false)(
     testWith: TestWith[(FakeMetricsMonitoringClient,
-                        MetricsMonitoringProcessor[Payload]),
+                        MetricsMonitoringRecorder[Payload]),
                        R])(implicit ec: ExecutionContext): R = {
     withFakeMonitoringClient(shouldFail) {
       client: FakeMetricsMonitoringClient =>
         val metricsProcessor =
-          new MetricsMonitoringProcessor[Payload](namespace)(client, ec)
+          new MetricsMonitoringRecorder[Payload](namespace)(client, ec)
         testWith((client, metricsProcessor))
     }
   }

@@ -7,14 +7,14 @@ import uk.ac.wellcome.messaging.worker.models.{
   Result,
   Successful
 }
-import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
+import uk.ac.wellcome.messaging.worker.steps.MonitoringRecorder
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final class MetricsMonitoringProcessor[Payload](val namespace: String)(
+final class MetricsMonitoringRecorder[Payload](val namespace: String)(
   implicit val monitoringClient: MetricsMonitoringClient,
   val ec: ExecutionContext)
-    extends MonitoringProcessor[Payload, Instant, Instant]
+    extends MonitoringRecorder[Payload, Instant, Instant]
     with MetricsProcessor {
 
   override def recordStart(work: Either[Throwable, Payload],

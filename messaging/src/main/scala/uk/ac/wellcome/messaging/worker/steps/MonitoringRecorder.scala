@@ -1,6 +1,7 @@
 package uk.ac.wellcome.messaging.worker.steps
 
 import uk.ac.wellcome.messaging.worker.models._
+import uk.ac.wellcome.messaging.worker.monitoring.serialize.{MonitoringContextDeserialiser, MonitoringContextSerialiser}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -10,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @tparam InfraServiceMonitoringContext: the monitoring context to be passed around between different services
   * @tparam InterServiceMonitoringContext: the monitoring context to be passed around within the current service
   */
-trait MonitoringProcessor[
+trait MonitoringRecorder[
   Payload, InfraServiceMonitoringContext, InterServiceMonitoringContext] {
   implicit val ec: ExecutionContext
 
@@ -23,3 +24,6 @@ trait MonitoringProcessor[
     context: Either[Throwable, InterServiceMonitoringContext],
     result: Result[Recorded]): Future[Result[Unit]]
 }
+
+trait MonitoringProcessor[Payload, InfraServiceMonitoringContext, InterServiceMonitoringContext, SerialisedMonitoringContext] extends MonitoringRecorder[
+  Payload, InfraServiceMonitoringContext, InterServiceMonitoringContext] with MonitoringContextSerialiser[InfraServiceMonitoringContext, SerialisedMonitoringContext] with MonitoringContextDeserialiser[InfraServiceMonitoringContext, SerialisedMonitoringContext]

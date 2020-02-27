@@ -7,7 +7,7 @@ import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
-import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringRecorder
 import uk.ac.wellcome.messaging.worker.steps.{
   MessageDeserialiser,
   MessageProcessor,
@@ -53,10 +53,10 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   case class MyExternalMessageAction(action: Action)
 
   class MyWorker(
-    val monitoringProcessor: MetricsMonitoringProcessor[MyPayload],
-    val messageSender: MessageSender[MyMessageAttributes],
-    testProcess: TestInnerProcess,
-    val deserialiseMsg: MyMessage => (Either[Throwable, MyPayload],
+                  val monitoringProcessor: MetricsMonitoringRecorder[MyPayload],
+                  val messageSender: MessageSender[MyMessageAttributes],
+                  testProcess: TestInnerProcess,
+                  val deserialiseMsg: MyMessage => (Either[Throwable, MyPayload],
                                       Either[Throwable, Option[MyContext]])
   )(implicit val ec: ExecutionContext)
       extends Worker[

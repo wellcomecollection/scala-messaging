@@ -8,13 +8,11 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
-/**
-  * Implements the [[MonitoringProcessor]] interface with Opentracing (https://opentracing.io/).
-  */
-class OpenTracingMonitoringProcessor[Payload](namespace: String)(
-  tracer: Tracer,
+
+class OpenTracingMonitoringRecorder[Payload](namespace: String)(
+  val tracer: Tracer,
   wrappedEc: ExecutionContext)
-    extends MonitoringProcessor[Payload, SpanContext, Span] {
+    extends MonitoringProcessor[Payload, SpanContext, Span, Map[String, String]] with MapOpenTracingSerializerDeserialiser {
 
   override implicit val ec: ExecutionContext =
     new TracedExecutionContext(wrappedEc, tracer)

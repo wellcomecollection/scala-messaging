@@ -11,11 +11,7 @@ import io.circe.Decoder
 import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
-import uk.ac.wellcome.messaging.worker.monitoring.tracing.MonitoringContextSerializerDeserialiser
-import uk.ac.wellcome.messaging.worker.steps.{
-  MessageSerialiser,
-  MonitoringProcessor
-}
+import uk.ac.wellcome.messaging.worker.steps.{MessageSerialiser, MonitoringProcessor}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -26,17 +22,13 @@ import scala.concurrent.{ExecutionContext, Future}
 class AlpakkaSQSWorker[Payload,
                        InfraServiceMonitoringContext,
                        InterServiceMonitoringContext,
-                       Summary,
-                       MessageAttributes](
+                       Summary](
   config: AlpakkaSQSWorkerConfig,
   val monitoringProcessorBuilder: (
     ExecutionContext) => MonitoringProcessor[Payload,
                                              InfraServiceMonitoringContext,
-                                             InterServiceMonitoringContext],
-  val monitoringSerialiser: MonitoringContextSerializerDeserialiser[
-    InterServiceMonitoringContext,
-    MessageAttributes],
-  val messageSender: MessageSender[MessageAttributes]
+                                             InterServiceMonitoringContext, Map[String, String]],
+  val messageSender: MessageSender[Map[String, String]]
 )(
   val doWork: Payload => Future[Result[Summary]]
 )(implicit
@@ -50,16 +42,16 @@ class AlpakkaSQSWorker[Payload,
       InterServiceMonitoringContext,
       Summary,
       MessageAction,
-      MessageAttributes]
+      Map[String, String]]
     with Logging {
 
   type SQSAction = SQSMessage => (SQSMessage, sqs.MessageAction)
 
   protected val msgDeserialiser =
-    new SnsSqsDeserialiser[Payload, InfraServiceMonitoringContext]
+    new SnsSqsDeserialiser[Payload, InfraServiceMonitoringContext](monitoringProcessor)
   protected val msgSerialiser: MessageSerialiser[Summary,
                                                  InterServiceMonitoringContext,
-                                                 MessageAttributes] = ???
+    Map[String, String]] = ???
 
   val parallelism: Int = config.sqsConfig.parallelism
   val source = SqsSource(config.sqsConfig.queueUrl)
@@ -79,17 +71,14 @@ object AlpakkaSQSWorker {
   def apply[Payload,
             InfraServiceMonitoringContext,
             InterServiceMonitoringContext,
-            Summary,
-            MessageAttributes](
+            Summary](
     config: AlpakkaSQSWorkerConfig,
     monitoringProcessorBuilder: (
       ExecutionContext) => MonitoringProcessor[Payload,
                                                InfraServiceMonitoringContext,
-                                               InterServiceMonitoringContext],
-    monitoringSerialiser: MonitoringContextSerializerDeserialiser[
-      InterServiceMonitoringContext,
-      MessageAttributes],
-    messageSender: MessageSender[MessageAttributes])(
+                                               InterServiceMonitoringContext, Map[String, String]],
+
+    messageSender: MessageSender[Map[String, String]])(
     process: Payload => Future[Result[Summary]]
   )(implicit
     sc: AmazonSQSAsync,
@@ -99,11 +88,9 @@ object AlpakkaSQSWorker {
       Payload,
       InfraServiceMonitoringContext,
       InterServiceMonitoringContext,
-      Summary,
-      MessageAttributes](
+      Summary](
       config,
       monitoringProcessorBuilder,
-      monitoringSerialiser,
       messageSender
     )(process)
 }
