@@ -16,17 +16,11 @@ class SnsSqsDeserialiser[Payload](
 
   final def deserialise(message: SQSMessage): Deserialised = {
     val notificationMessage = fromJson[NotificationMessage](message.getBody)
-    val payload = for {
+    val deserialised = for {
       notification <- notificationMessage
       work <- fromJson[Payload](notification.body)
-    } yield work
-
-
-    val monitoringContext =for {
-      notification <- notificationMessage
-      attributes: Map[String, String] = notification.MessageAttributes.mapValues(_.Value)
-
-    } yield attributes
-    (payload.toEither, monitoringContext.toEither)
+      attributes = notification.MessageAttributes.mapValues(_.Value)
+    } yield (work, attributes)
+    deserialised.toEither
   }
 }

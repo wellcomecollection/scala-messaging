@@ -2,15 +2,7 @@ package uk.ac.wellcome.messaging.worker
 
 import io.circe.Encoder
 import uk.ac.wellcome.messaging.MessageSender
-import uk.ac.wellcome.messaging.worker.models.{
-  Completed,
-  FailedResult,
-  NonDeterministicFailure,
-  Result,
-  Retry,
-  Successful,
-  WorkCompletion
-}
+import uk.ac.wellcome.messaging.worker.models.{Completed, DeterministicFailure, FailedResult, NonDeterministicFailure, Result, Retry, Successful, WorkCompletion}
 import uk.ac.wellcome.messaging.worker.steps._
 
 import scala.concurrent.Future
@@ -65,9 +57,9 @@ trait Worker[Message,
   private def work(message: Message)(implicit encoder: Encoder[Value]): Future[Completion] = {
     implicit val e = (monitoringProcessor.ec)
     for {
-      (work, rootTraceMetadata) <- Future.successful(msgDeserialiser(message))
-      trace <- monitoringProcessor.recordStart(work, rootTraceMetadata)
-      value <- process(work)
+      deserialised <- Future.successful(msgDeserialiser(message))
+      trace <- monitoringProcessor.recordStart(deserialised)
+      value <- deserialised.fold(e => Future.successful(DeterministicFailure[Value](e)), {case (work, _)  => process(work)})
       _ <- sendMessage(value, trace)
       _ <- log(value)
       _ <- monitoringProcessor.recordEnd(trace, value)

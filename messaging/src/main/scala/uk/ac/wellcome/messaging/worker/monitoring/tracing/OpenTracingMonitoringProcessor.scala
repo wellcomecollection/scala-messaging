@@ -26,25 +26,18 @@ class OpenTracingMonitoringProcessor[Payload](namespace: String)(
     * If an optional [[context]] is passed, it uses a [[MonitoringContextSerializerDeserialiser]]
     * to deserialise it into a [[io.opentracing.SpanContext]] and link it to the new [[Span]]
     */
-  override def recordStart(work: Either[Throwable, Payload],
-                           context: Either[Throwable, Map[String, String]])
+  override def recordStart(deserialised: Either[Throwable, (Payload, Map[String, String])])
     : Future[Either[Throwable, (Span, Map[String, String])]] = {
     val f = Future {
       val spanBuilder = tracer.buildSpan(namespace)
-      val span = context match {
-        case Right(map) if map.isEmpty =>
-          spanBuilder.start()
-        case Right(map) =>
-          val rootSpanContext = deserialise(map)
+      val span = deserialised match {
+        case Right((_, tracingContext)) if tracingContext.isEmpty => spanBuilder.start()
+        case Right((_, tracingContext)) =>
+          val rootSpanContext = deserialise(tracingContext)
           spanBuilder.asChildOf(rootSpanContext.get).start()
-        case Left(ex) =>
+        case Left(e) =>
           val span = spanBuilder.start()
-          tagError(span, ex, classOf[DeterministicFailure[_]].getSimpleName)
-      }
-      work match {
-        case Right(_) =>
-        case Left(ex) =>
-          tagError(span, ex, classOf[DeterministicFailure[_]].getSimpleName)
+          tagError(span, e, classOf[DeterministicFailure[_]].getSimpleName)
       }
       Right((span, serialise(span).get))
     }
@@ -52,6 +45,7 @@ class OpenTracingMonitoringProcessor[Payload](namespace: String)(
       case e =>
         Left(e)
     }
+
   }
 
   /**

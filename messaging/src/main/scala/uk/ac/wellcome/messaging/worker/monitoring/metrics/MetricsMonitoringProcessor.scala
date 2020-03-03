@@ -13,8 +13,7 @@ final class MetricsMonitoringProcessor[Payload](val namespace: String)(
     extends MonitoringProcessor[Payload, Map[String,String], Instant]
     with MetricsProcessor {
 
-  override def recordStart(work: Either[Throwable, Payload],
-                           context: Either[Throwable, Map[String,String]])
+  override def recordStart(work: Either[Throwable, (Payload, Map[String,String])])
     : Future[Either[Throwable, (Instant, Map[String,String])]] =
     Future.successful(Right((Instant.now, Map.empty)))
 

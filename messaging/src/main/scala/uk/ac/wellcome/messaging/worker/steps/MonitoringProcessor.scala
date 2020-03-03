@@ -15,8 +15,7 @@ trait MonitoringProcessor[
   implicit val ec: ExecutionContext
 
   def recordStart(
-    work: Either[Throwable, Payload],
-    context: Either[Throwable, MessageMetadata])
+                   deserialised: Either[Throwable, (Payload, MessageMetadata)])
     : Future[Either[Throwable, (Trace, MessageMetadata)]]
 
   def recordEnd[Recorded](

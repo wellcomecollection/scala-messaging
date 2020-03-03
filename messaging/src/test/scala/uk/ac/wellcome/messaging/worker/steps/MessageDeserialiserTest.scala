@@ -1,20 +1,17 @@
 package uk.ac.wellcome.messaging.worker.steps
 
-import java.time.Instant
-
 import org.scalatest.FunSpec
 import uk.ac.wellcome.messaging.fixtures.worker.WorkerFixtures
 
 class MessageDeserialiserTest extends FunSpec with WorkerFixtures {
   it("calls transform function and returns result") {
-    val now = Instant.now
     val messageTransform =
       new MessageDeserialiser[MyMessage, MyPayload, MyMessageMetadata] {
         override def deserialise(msg: MyMessage): Deserialised =
-          (Right(work), Right(Map[String,String]()))
+          (Right((work,Map[String,String]())))
       }
 
-    messageTransform(message) shouldBe ((Right(work), Right(Some(now))))
+    messageTransform(message) shouldBe (Right((work, Map[String,String]())))
   }
 
   it("returns Left if transform function throws an exception") {
@@ -26,6 +23,6 @@ class MessageDeserialiserTest extends FunSpec with WorkerFixtures {
           throw exception
       }
 
-    messageTransform(message) shouldBe ((Left(exception), Left(exception)))
+    messageTransform(message) shouldBe (Left(exception))
   }
 }

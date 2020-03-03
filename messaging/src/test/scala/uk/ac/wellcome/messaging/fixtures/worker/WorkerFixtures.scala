@@ -29,11 +29,11 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   }
 
   def messageToPayload(shouldFail: Boolean = false)(message: MyMessage)
-    : (Either[Throwable, MyPayload], Either[Throwable, MyMessageMetadata]) =
+    : Either[Throwable, (MyPayload,MyMessageMetadata)] =
     if (shouldFail) {
-      (Left(new RuntimeException("BOOM")), Right(Map.empty))
+      Left(new RuntimeException("BOOM"))
     } else {
-      (Right(MyPayload(message)), Right(Map.empty))
+      Right((MyPayload(message),Map.empty))
     }
 
   def actionToAction(toActionShouldFail: Boolean)(result: Result[MySummary])(
@@ -51,8 +51,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
                   val monitoringProcessor: MetricsMonitoringProcessor[MyPayload],
                   val messageSender: MessageSender[MyMessageMetadata],
                   testProcess: TestInnerProcess,
-                  val deserialiseMsg: MyMessage => (Either[Throwable, MyPayload],
-                                      Either[Throwable, MyMessageMetadata])
+                  val deserialiseMsg: MyMessage => (Either[Throwable, (MyPayload,MyMessageMetadata)])
   )(implicit val ec: ExecutionContext)
       extends Worker[
         MyMessage,

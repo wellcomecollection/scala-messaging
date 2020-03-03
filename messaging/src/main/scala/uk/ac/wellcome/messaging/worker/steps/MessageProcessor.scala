@@ -12,18 +12,16 @@ trait MessageProcessor[Payload, Value] {
 
   protected val doWork: (Payload) => ResultValue
 
-  final def process(workEither: Either[Throwable, Payload])(
-    implicit ec: ExecutionContext): Future[Result[Value]] = workEither.fold(
-    e => Future.successful(DeterministicFailure[Value](e)),
-    w => {
+  final def process(work: Payload)(
+    implicit ec: ExecutionContext): Future[Result[Value]] = {
 
-      val working = for {
-        result <- doWork(w)
+    val working = for {
+      result <- doWork(work)
 
-      } yield result
-      working recover {
-        case e => DeterministicFailure[Value](e)
-      }
+    } yield result
+    working recover {
+      case e => DeterministicFailure[Value](e)
     }
-  )
+  }
+
 }
