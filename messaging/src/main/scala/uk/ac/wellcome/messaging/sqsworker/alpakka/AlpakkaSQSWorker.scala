@@ -19,13 +19,13 @@ import scala.concurrent.{ExecutionContext, Future}
   * Implementation of [[AkkaWorker]] that uses SQS as source and sink.
   * It receives messages from SQS and deletes messages from SQS on successful completion
   */
-class AlpakkaSQSWorker[
-   Payload,
-                       Trace,
-                       Value](
-                                 config: AlpakkaSQSWorkerConfig,
-                                 val monitoringProcessorBuilder: (ExecutionContext) => MonitoringProcessor[Payload, Map[String, String], Trace],
-                                 val messageSender: MessageSender[Map[String, String]]
+class AlpakkaSQSWorker[Payload, Trace, Value](
+  config: AlpakkaSQSWorkerConfig,
+  val monitoringProcessorBuilder: (
+    ExecutionContext) => MonitoringProcessor[Payload,
+                                             Map[String, String],
+                                             Trace],
+  val messageSender: MessageSender[Map[String, String]]
 )(
   val doWork: Payload => Future[Result[Value]]
 )(implicit
@@ -34,7 +34,7 @@ class AlpakkaSQSWorker[
   sc: AmazonSQSAsync,
 ) extends AkkaWorker[
       SQSMessage,
-  Map[String, String],
+      Map[String, String],
       Payload,
       Trace,
       Value,
@@ -42,7 +42,6 @@ class AlpakkaSQSWorker[
     with Logging {
 
   type SQSAction = SQSMessage => (SQSMessage, sqs.MessageAction)
-
 
   protected val msgDeserialiser = new SnsSqsDeserialiser[Payload]
 
@@ -64,18 +63,16 @@ object AlpakkaSQSWorker {
   def apply[Payload, Trace, Value](
     config: AlpakkaSQSWorkerConfig,
     monitoringProcessorBuilder: (
-      ExecutionContext) => MonitoringProcessor[Payload, Map[String, String], Trace],
-
+      ExecutionContext) => MonitoringProcessor[Payload,
+                                               Map[String, String],
+                                               Trace],
     messageSender: MessageSender[Map[String, String]])(
     process: Payload => Future[Result[Value]]
   )(implicit
     sc: AmazonSQSAsync,
     as: ActorSystem,
     wd: Decoder[Payload]) =
-    new AlpakkaSQSWorker[
-      Payload,
-      Trace,
-      Value](
+    new AlpakkaSQSWorker[Payload, Trace, Value](
       config,
       monitoringProcessorBuilder,
       messageSender

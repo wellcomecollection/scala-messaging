@@ -8,7 +8,10 @@ import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
-import uk.ac.wellcome.messaging.worker.steps.{MessageDeserialiser, MessageProcessor}
+import uk.ac.wellcome.messaging.worker.steps.{
+  MessageDeserialiser,
+  MessageProcessor
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,12 +31,12 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       new MyPayload(message.s)
   }
 
-  def messageToPayload(shouldFail: Boolean = false)(message: MyMessage)
-    : Either[Throwable, (MyPayload,MyMessageMetadata)] =
+  def messageToPayload(shouldFail: Boolean = false)(
+    message: MyMessage): Either[Throwable, (MyPayload, MyMessageMetadata)] =
     if (shouldFail) {
       Left(new RuntimeException("BOOM"))
     } else {
-      Right((MyPayload(message),Map.empty))
+      Right((MyPayload(message), Map.empty))
     }
 
   def actionToAction(toActionShouldFail: Boolean)(result: Result[MySummary])(
@@ -48,10 +51,11 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   case class MyExternalMessageAction(action: Action)
 
   class MyWorker(
-                  val monitoringProcessor: MetricsMonitoringProcessor[MyPayload],
-                  val messageSender: MessageSender[MyMessageMetadata],
-                  testProcess: TestInnerProcess,
-                  val deserialiseMsg: MyMessage => (Either[Throwable, (MyPayload,MyMessageMetadata)])
+    val monitoringProcessor: MetricsMonitoringProcessor[MyPayload],
+    val messageSender: MessageSender[MyMessageMetadata],
+    testProcess: TestInnerProcess,
+    val deserialiseMsg: MyMessage => (Either[Throwable,
+                                             (MyPayload, MyMessageMetadata)])
   )(implicit val ec: ExecutionContext)
       extends Worker[
         MyMessage,
@@ -68,7 +72,6 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       }
 
     val callCounter = new CallCounter()
-
 
     override val retryAction: MessageAction =
       (_, MyExternalMessageAction(new Retry {}))

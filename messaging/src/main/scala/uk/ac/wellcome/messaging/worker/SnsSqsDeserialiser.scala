@@ -6,8 +6,7 @@ import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
 import uk.ac.wellcome.messaging.worker.steps.MessageDeserialiser
 
-class SnsSqsDeserialiser[Payload](
-  implicit decoder: Decoder[Payload])
+class SnsSqsDeserialiser[Payload](implicit decoder: Decoder[Payload])
     extends MessageDeserialiser[SQSMessage, Payload, Map[String, String]] {
 
   type SQSTransform = SQSMessage => Deserialised

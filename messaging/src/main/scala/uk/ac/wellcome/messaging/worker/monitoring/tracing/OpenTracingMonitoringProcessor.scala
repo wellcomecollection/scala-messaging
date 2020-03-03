@@ -12,11 +12,10 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-
 class OpenTracingMonitoringProcessor[Payload](namespace: String)(
   val tracer: Tracer,
   wrappedEc: ExecutionContext)
-    extends MonitoringProcessor[Payload,  Map[String, String], Span] {
+    extends MonitoringProcessor[Payload, Map[String, String], Span] {
 
   override implicit val ec: ExecutionContext =
     new TracedExecutionContext(wrappedEc, tracer)
@@ -26,12 +25,14 @@ class OpenTracingMonitoringProcessor[Payload](namespace: String)(
     * If an optional [[context]] is passed, it uses a [[MonitoringContextSerializerDeserialiser]]
     * to deserialise it into a [[io.opentracing.SpanContext]] and link it to the new [[Span]]
     */
-  override def recordStart(deserialised: Either[Throwable, (Payload, Map[String, String])])
+  override def recordStart(
+    deserialised: Either[Throwable, (Payload, Map[String, String])])
     : Future[Either[Throwable, (Span, Map[String, String])]] = {
     val f = Future {
       val spanBuilder = tracer.buildSpan(namespace)
       val span = deserialised match {
-        case Right((_, tracingContext)) if tracingContext.isEmpty => spanBuilder.start()
+        case Right((_, tracingContext)) if tracingContext.isEmpty =>
+          spanBuilder.start()
         case Right((_, tracingContext)) =>
           val rootSpanContext = deserialise(tracingContext)
           spanBuilder.asChildOf(rootSpanContext.get).start()
@@ -57,18 +58,18 @@ class OpenTracingMonitoringProcessor[Payload](namespace: String)(
     result: Result[Recorded]): Future[Result[Unit]] = {
     val f: Future[Result[Unit]] = Future {
       span.fold(
-        throwable => MonitoringProcessorFailure(throwable),
-        { case (span, _) =>
-          result match {
-            case Successful(_) =>
-            case f @ DeterministicFailure(failure) =>
-              tagError(span, failure, f.getClass.getSimpleName)
-            case f @ NonDeterministicFailure(failure) =>
-              tagError(span, failure, f.getClass.getSimpleName)
-            case _ =>
-          }
-          span.finish()
-          Successful[Unit](None)
+        throwable => MonitoringProcessorFailure(throwable), {
+          case (span, _) =>
+            result match {
+              case Successful(_) =>
+              case f @ DeterministicFailure(failure) =>
+                tagError(span, failure, f.getClass.getSimpleName)
+              case f @ NonDeterministicFailure(failure) =>
+                tagError(span, failure, f.getClass.getSimpleName)
+              case _ =>
+            }
+            span.finish()
+            Successful[Unit](None)
         }
       )
     }
@@ -86,8 +87,7 @@ class OpenTracingMonitoringProcessor[Payload](namespace: String)(
     span.log(Map("event" -> "error", "error.object" -> failure).asJava)
   }
 
-  private def serialise(
-                 span: Span): Try[Map[String, String]] = {
+  private def serialise(span: Span): Try[Map[String, String]] = {
     Try {
       val map = new util.HashMap[String, String]()
 
@@ -101,10 +101,11 @@ class OpenTracingMonitoringProcessor[Payload](namespace: String)(
   }
 
   private def deserialise(t: Map[String, String]): Try[SpanContext] =
-    Try{
+    Try {
 
-      val spanContext = tracer.extract(Format.Builtin.TEXT_MAP, new TextMapAdapter(t.asJava))
-      if(spanContext == null) {
+      val spanContext =
+        tracer.extract(Format.Builtin.TEXT_MAP, new TextMapAdapter(t.asJava))
+      if (spanContext == null) {
         throw new RuntimeException("Unable to parse monitoring context")
       }
       spanContext

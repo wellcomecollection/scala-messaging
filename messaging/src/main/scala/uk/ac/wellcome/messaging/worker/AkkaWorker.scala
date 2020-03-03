@@ -12,18 +12,8 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Implementation of [[Worker]] based on akka streams
   */
-trait AkkaWorker[Message, MessageMetadata,
-                 Payload,
-                 Trace,
-                 Value,
-                 Action]
-    extends Worker[
-      Message,
-      MessageMetadata,
-      Payload,
-      Trace,
-      Value,
-      Action] {
+trait AkkaWorker[Message, MessageMetadata, Payload, Trace, Value, Action]
+    extends Worker[Message, MessageMetadata, Payload, Trace, Value, Action] {
 
   implicit val as: ActorSystem
   implicit val am: ActorMaterializer =
@@ -32,7 +22,7 @@ trait AkkaWorker[Message, MessageMetadata,
     )
   private val ec = as.dispatcher
   protected val monitoringProcessorBuilder: (
-    ExecutionContext) => MonitoringProcessor[Payload, MessageMetadata ,Trace]
+    ExecutionContext) => MonitoringProcessor[Payload, MessageMetadata, Trace]
   override final val monitoringProcessor = monitoringProcessorBuilder(ec)
   type MessageSource = Source[Message, NotUsed]
   type MessageSink = Sink[(Message, Action), Future[Done]]
@@ -47,7 +37,8 @@ trait AkkaWorker[Message, MessageMetadata,
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction
 
-  private def completionSource(parallelism: Int)(implicit encoder: Encoder[Value]): ProcessedSource =
+  private def completionSource(parallelism: Int)(
+    implicit encoder: Encoder[Value]): ProcessedSource =
     source.mapAsyncUnordered(parallelism)(processMessage)
 
   def start(implicit encoder: Encoder[Value]): Future[Done] =

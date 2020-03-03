@@ -2,11 +2,15 @@ package uk.ac.wellcome.messaging.worker.monitoring.serialize
 
 import scala.util.Try
 
-trait MonitoringContextSerialiser[InfraServiceMonitoringContext, SerializedMonitoringContext] {
-  def serialise(monitoringContext: InfraServiceMonitoringContext): Try[Option[SerializedMonitoringContext]]
+trait MonitoringContextSerialiser[
+  InfraServiceMonitoringContext, SerializedMonitoringContext] {
+  def serialise(monitoringContext: InfraServiceMonitoringContext)
+    : Try[Option[SerializedMonitoringContext]]
 
 }
-trait MonitoringContextDeserialiser[InfraServiceMonitoringContext, SerializedMonitoringContext] {
+trait MonitoringContextDeserialiser[
+  InfraServiceMonitoringContext, SerializedMonitoringContext] {
 
-  def deserialise(t: Option[SerializedMonitoringContext]): Try[Option[InfraServiceMonitoringContext]]
+  def deserialise(t: Option[SerializedMonitoringContext])
+    : Try[Option[InfraServiceMonitoringContext]]
 }

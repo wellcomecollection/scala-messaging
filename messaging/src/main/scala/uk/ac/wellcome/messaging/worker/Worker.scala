@@ -2,7 +2,16 @@ package uk.ac.wellcome.messaging.worker
 
 import io.circe.Encoder
 import uk.ac.wellcome.messaging.MessageSender
-import uk.ac.wellcome.messaging.worker.models.{Completed, DeterministicFailure, FailedResult, NonDeterministicFailure, Result, Retry, Successful, WorkCompletion}
+import uk.ac.wellcome.messaging.worker.models.{
+  Completed,
+  DeterministicFailure,
+  FailedResult,
+  NonDeterministicFailure,
+  Result,
+  Retry,
+  Successful,
+  WorkCompletion
+}
 import uk.ac.wellcome.messaging.worker.steps._
 
 import scala.concurrent.Future
@@ -23,12 +32,7 @@ import scala.util.Success
   * @tparam Value:  the result of the process function
   * @tparam Action: either [[Retry]] or [[Completed]]
   */
-trait Worker[Message,
- MessageMetadata,
-             Payload,
-             Trace,
-             Value,
-             Action]
+trait Worker[Message, MessageMetadata, Payload, Trace, Value, Action]
     extends MessageProcessor[Payload, Value]
     with Logger {
 
@@ -37,29 +41,34 @@ trait Worker[Message,
   type Completion = WorkCompletion[Message, Value]
   type MessageAction = Message => (Message, Action)
 
-  protected val msgDeserialiser: MessageDeserialiser[
-    Message, Payload, MessageMetadata]
+  protected val msgDeserialiser: MessageDeserialiser[Message,
+                                                     Payload,
+                                                     MessageMetadata]
 
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction
 
-  protected val monitoringProcessor: MonitoringProcessor[
-    Payload,
-    MessageMetadata,
-    Trace]
+  protected val monitoringProcessor: MonitoringProcessor[Payload,
+                                                         MessageMetadata,
+                                                         Trace]
   protected val messageSender: MessageSender[MessageMetadata]
 
-  final def processMessage(message: Message)(implicit encoder: Encoder[Value]): Processed = {
+  final def processMessage(message: Message)(
+    implicit encoder: Encoder[Value]): Processed = {
     implicit val e = (monitoringProcessor.ec)
     work(message).map(completion)
   }
 
-  private def work(message: Message)(implicit encoder: Encoder[Value]): Future[Completion] = {
+  private def work(message: Message)(
+    implicit encoder: Encoder[Value]): Future[Completion] = {
     implicit val e = (monitoringProcessor.ec)
     for {
       deserialised <- Future.successful(msgDeserialiser(message))
       trace <- monitoringProcessor.recordStart(deserialised)
-      value <- deserialised.fold(e => Future.successful(DeterministicFailure[Value](e)), {case (work, _)  => process(work)})
+      value <- deserialised.fold(
+        e => Future.successful(DeterministicFailure[Value](e)), {
+          case (work, _) => process(work)
+        })
       _ <- sendMessage(value, trace)
       _ <- log(value)
       _ <- monitoringProcessor.recordEnd(trace, value)
@@ -71,13 +80,15 @@ trait Worker[Message,
   }
 
   private def sendMessage(
-                           value: Result[Value],
-                           tracingContext: Either[Throwable, (Trace, MessageMetadata)])(implicit encoder: Encoder[Value]) = {
+    value: Result[Value],
+    tracingContext: Either[Throwable, (Trace, MessageMetadata)])(
+    implicit encoder: Encoder[Value]) = {
     value match {
       case Successful(v) =>
         Future.fromTry {
           messageSender
-            .sendT(v, tracingContext.right.get._2).fold(
+            .sendT(v, tracingContext.right.get._2)
+            .fold(
               e => Success(NonDeterministicFailure[Value](e)),
               v => Success(Successful(v)))
         }

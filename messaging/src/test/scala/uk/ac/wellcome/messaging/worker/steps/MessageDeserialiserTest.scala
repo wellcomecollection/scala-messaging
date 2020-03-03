@@ -8,10 +8,10 @@ class MessageDeserialiserTest extends FunSpec with WorkerFixtures {
     val messageTransform =
       new MessageDeserialiser[MyMessage, MyPayload, MyMessageMetadata] {
         override def deserialise(msg: MyMessage): Deserialised =
-          (Right((work,Map[String,String]())))
+          (Right((work, Map[String, String]())))
       }
 
-    messageTransform(message) shouldBe (Right((work, Map[String,String]())))
+    messageTransform(message) shouldBe (Right((work, Map[String, String]())))
   }
 
   it("returns Left if transform function throws an exception") {

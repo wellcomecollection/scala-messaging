@@ -10,16 +10,12 @@ import scala.concurrent.{ExecutionContext, Future}
   * @tparam MessageMetadata: the monitoring context to be passed around between different services
   * @tparam Trace: the monitoring context to be passed around within the current service
   */
-trait MonitoringProcessor[
-  Payload, MessageMetadata, Trace] {
+trait MonitoringProcessor[Payload, MessageMetadata, Trace] {
   implicit val ec: ExecutionContext
 
-  def recordStart(
-                   deserialised: Either[Throwable, (Payload, MessageMetadata)])
+  def recordStart(deserialised: Either[Throwable, (Payload, MessageMetadata)])
     : Future[Either[Throwable, (Trace, MessageMetadata)]]
 
-  def recordEnd[Recorded](
-                           context: Either[Throwable, (Trace, MessageMetadata)],
-                           result: Result[Recorded]): Future[Result[Unit]]
+  def recordEnd[Recorded](context: Either[Throwable, (Trace, MessageMetadata)],
+                          result: Result[Recorded]): Future[Result[Unit]]
 }
-

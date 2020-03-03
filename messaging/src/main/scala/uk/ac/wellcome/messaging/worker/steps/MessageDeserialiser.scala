@@ -7,7 +7,7 @@ import scala.util.Try
   */
 trait MessageDeserialiser[Message, Payload, MessageMetadata] {
 
-  type Deserialised = Either[Throwable, (Payload,MessageMetadata)]
+  type Deserialised = Either[Throwable, (Payload, MessageMetadata)]
 
   protected def deserialise(msg: Message): Deserialised
 

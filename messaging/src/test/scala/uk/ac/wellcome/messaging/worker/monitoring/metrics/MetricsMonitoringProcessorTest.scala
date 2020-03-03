@@ -31,7 +31,8 @@ class MetricsMonitoringProcessorTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, processor) =>
-        val recorded = processor.recordEnd(Right((Instant.now, Map.empty)), successful(work))
+        val recorded =
+          processor.recordEnd(Right((Instant.now, Map.empty)), successful(work))
 
         whenReady(recorded) { action =>
           shouldBeSuccessful(action)
@@ -54,7 +55,8 @@ class MetricsMonitoringProcessorTest
       namespace = "namespace",
       shouldFail = true) {
       case (monitoringClient, processor) =>
-        val recorded = processor.recordEnd(Right((Instant.now, Map.empty)), successful(work))
+        val recorded =
+          processor.recordEnd(Right((Instant.now, Map.empty)), successful(work))
 
         whenReady(recorded) { action =>
           shouldBeMonitoringProcessorFailure(action)
@@ -71,7 +73,9 @@ class MetricsMonitoringProcessorTest
       shouldFail = false) {
       case (monitoringClient, processor) =>
         val recorded =
-          processor.recordEnd(Right((Instant.now, Map.empty)), deterministicFailure(work))
+          processor.recordEnd(
+            Right((Instant.now, Map.empty)),
+            deterministicFailure(work))
 
         whenReady(recorded) { action =>
           shouldBeSuccessful(action)
@@ -95,7 +99,9 @@ class MetricsMonitoringProcessorTest
       shouldFail = false) {
       case (monitoringClient, processor) =>
         val recorded =
-          processor.recordEnd(Right((Instant.now, Map.empty)), nonDeterministicFailure(work))
+          processor.recordEnd(
+            Right((Instant.now, Map.empty)),
+            nonDeterministicFailure(work))
 
         whenReady(recorded) { action =>
           shouldBeSuccessful(action)

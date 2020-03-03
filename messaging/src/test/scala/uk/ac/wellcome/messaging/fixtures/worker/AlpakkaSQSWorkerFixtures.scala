@@ -8,7 +8,10 @@ import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
-import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
+import uk.ac.wellcome.messaging.sqsworker.alpakka.{
+  AlpakkaSQSWorker,
+  AlpakkaSQSWorkerConfig
+}
 import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
 import uk.ac.wellcome.monitoring.MetricsConfig
 
@@ -32,13 +35,11 @@ trait AlpakkaSQSWorkerFixtures
     )
 
   def withAlpakkaSQSWorker[R](
-                               queue: Queue,
-                               process: TestInnerProcess,
-                               messageSender: MessageSender[MyMessageMetadata],
-                               namespace: String = Random.alphanumeric take 10 mkString
-  )(testWith: TestWith[(AlpakkaSQSWorker[MyPayload,
-                                         MyTrace,
-                                         MySummary],
+    queue: Queue,
+    process: TestInnerProcess,
+    messageSender: MessageSender[MyMessageMetadata],
+    namespace: String = Random.alphanumeric take 10 mkString
+  )(testWith: TestWith[(AlpakkaSQSWorker[MyPayload, MyTrace, MySummary],
                         AlpakkaSQSWorkerConfig,
                         FakeMetricsMonitoringClient,
                         CallCounter),
@@ -57,10 +58,7 @@ trait AlpakkaSQSWorkerFixtures
         (o: MyPayload) => createResult(process, callCounter)(ec)(o)
 
       val worker =
-        new AlpakkaSQSWorker[
-          MyPayload,
-          MyTrace,
-          MySummary](
+        new AlpakkaSQSWorker[MyPayload, MyTrace, MySummary](
           config,
           metricsProcessorBuilder,
           messageSender)(testProcess)
