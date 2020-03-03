@@ -4,7 +4,7 @@ import io.opentracing.mock.MockSpan
 import io.opentracing.{Span, Tracer}
 import org.scalatest.{Matchers, Suite}
 import uk.ac.wellcome.fixtures.TestWith
-import uk.ac.wellcome.messaging.worker.monitoring.tracing.OpenTracingMonitoringRecorder
+import uk.ac.wellcome.messaging.worker.monitoring.tracing.OpenTracingMonitoringProcessor
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
@@ -12,9 +12,9 @@ import scala.concurrent.ExecutionContext
 trait TracingFixtures extends Matchers { this: Suite =>
 
   def withOpenTracingMetricsProcessor[MyPayload, R](tracer: Tracer)(
-    testWith: TestWith[OpenTracingMonitoringRecorder[MyPayload], R]): R = {
+    testWith: TestWith[OpenTracingMonitoringProcessor[MyPayload], R]): R = {
     val processor =
-      new OpenTracingMonitoringRecorder[MyPayload]("namespace")(
+      new OpenTracingMonitoringProcessor[MyPayload]("namespace")(
         tracer,
         ExecutionContext.Implicits.global)
     testWith(processor)

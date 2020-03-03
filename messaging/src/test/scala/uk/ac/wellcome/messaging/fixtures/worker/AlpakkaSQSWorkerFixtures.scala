@@ -8,11 +8,8 @@ import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
-import uk.ac.wellcome.messaging.sqsworker.alpakka.{
-  AlpakkaSQSWorker,
-  AlpakkaSQSWorkerConfig
-}
-import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringRecorder
+import uk.ac.wellcome.messaging.sqsworker.alpakka.{AlpakkaSQSWorker, AlpakkaSQSWorkerConfig}
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
 import uk.ac.wellcome.monitoring.MetricsConfig
 
 import scala.concurrent.ExecutionContext
@@ -35,15 +32,13 @@ trait AlpakkaSQSWorkerFixtures
     )
 
   def withAlpakkaSQSWorker[R](
-    queue: Queue,
-    process: TestInnerProcess,
-    messageSender: MessageSender[MyMessageAttributes],
-    namespace: String = Random.alphanumeric take 10 mkString
+                               queue: Queue,
+                               process: TestInnerProcess,
+                               messageSender: MessageSender[MyMessageMetadata],
+                               namespace: String = Random.alphanumeric take 10 mkString
   )(testWith: TestWith[(AlpakkaSQSWorker[MyPayload,
-                                         MyContext,
-                                         MyContext,
-                                         MySummary,
-                                         MyMessageAttributes],
+                                         MyTrace,
+                                         MySummary],
                         AlpakkaSQSWorkerConfig,
                         FakeMetricsMonitoringClient,
                         CallCounter),
@@ -52,8 +47,8 @@ trait AlpakkaSQSWorkerFixtures
                            ec: ExecutionContext): R =
     withFakeMonitoringClient(false) { client: FakeMetricsMonitoringClient =>
       val metricsProcessorBuilder
-        : (ExecutionContext) => MetricsMonitoringRecorder[MyPayload] =
-        new MetricsMonitoringRecorder[MyPayload](namespace)(client, _)
+        : (ExecutionContext) => MetricsMonitoringProcessor[MyPayload] =
+        new MetricsMonitoringProcessor[MyPayload](namespace)(client, _)
 
       val config = createAlpakkaSQSWorkerConfig(queue, namespace)
 
@@ -64,10 +59,8 @@ trait AlpakkaSQSWorkerFixtures
       val worker =
         new AlpakkaSQSWorker[
           MyPayload,
-          MyContext,
-          MyContext,
-          MySummary,
-          MyMessageAttributes](
+          MyTrace,
+          MySummary](
           config,
           metricsProcessorBuilder,
           messageSender)(testProcess)

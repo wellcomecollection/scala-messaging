@@ -9,7 +9,7 @@ import scala.util.Try
 class SNSIndividualMessageSender(
   snsClient: AmazonSNS,
 ) extends IndividualMessageSender[SNSConfig, Map[String, String]] {
-  override def send(message: String, attributes: Option[Map[String, String]])(
+  override def send(message: String, attributes: Map[String, String])(
     subject: String,
     destination: SNSConfig): Try[Unit] = Try {
     snsClient.publish(

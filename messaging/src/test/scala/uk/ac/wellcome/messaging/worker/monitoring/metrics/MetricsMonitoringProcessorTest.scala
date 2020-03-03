@@ -11,7 +11,7 @@ import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits._
 
-class MetricsMonitoringRecorderTest
+class MetricsMonitoringProcessorTest
     extends FunSpec
     with Matchers
     with Akka
@@ -31,7 +31,7 @@ class MetricsMonitoringRecorderTest
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, processor) =>
-        val recorded = processor.recordEnd(Right(Instant.now), successful(work))
+        val recorded = processor.recordEnd(Right((Instant.now, Map.empty)), successful(work))
 
         whenReady(recorded) { action =>
           shouldBeSuccessful(action)
@@ -54,7 +54,7 @@ class MetricsMonitoringRecorderTest
       namespace = "namespace",
       shouldFail = true) {
       case (monitoringClient, processor) =>
-        val recorded = processor.recordEnd(Right(Instant.now), successful(work))
+        val recorded = processor.recordEnd(Right((Instant.now, Map.empty)), successful(work))
 
         whenReady(recorded) { action =>
           shouldBeMonitoringProcessorFailure(action)
@@ -71,7 +71,7 @@ class MetricsMonitoringRecorderTest
       shouldFail = false) {
       case (monitoringClient, processor) =>
         val recorded =
-          processor.recordEnd(Right(Instant.now), deterministicFailure(work))
+          processor.recordEnd(Right((Instant.now, Map.empty)), deterministicFailure(work))
 
         whenReady(recorded) { action =>
           shouldBeSuccessful(action)
@@ -95,7 +95,7 @@ class MetricsMonitoringRecorderTest
       shouldFail = false) {
       case (monitoringClient, processor) =>
         val recorded =
-          processor.recordEnd(Right(Instant.now), nonDeterministicFailure(work))
+          processor.recordEnd(Right((Instant.now, Map.empty)), nonDeterministicFailure(work))
 
         whenReady(recorded) { action =>
           shouldBeSuccessful(action)

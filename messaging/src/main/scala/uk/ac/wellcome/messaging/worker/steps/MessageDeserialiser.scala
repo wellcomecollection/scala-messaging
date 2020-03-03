@@ -5,15 +5,15 @@ import scala.util.Try
 /**
   * Deserialises a [[Message]] into a [[Payload]] and an optional [[InfraServiceMonitoringContext]]
   */
-trait MessageDeserialiser[Message, Payload, InfraServiceMonitoringContext] {
+trait MessageDeserialiser[Message, Payload, MessageMetadata] {
 
-  type Transformed =
+  type Deserialised =
     (Either[Throwable, Payload],
-     Either[Throwable, Option[InfraServiceMonitoringContext]])
+     Either[Throwable, MessageMetadata])
 
-  protected def deserialise(msg: Message): Transformed
+  protected def deserialise(msg: Message): Deserialised
 
-  final def apply(message: Message): Transformed = {
+  final def apply(message: Message): Deserialised = {
     Try(deserialise(message)).fold(
       e => (Left(e), Left(e)),
       result => result

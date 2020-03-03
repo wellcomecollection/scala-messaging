@@ -4,18 +4,17 @@ import com.amazonaws.services.sqs.model.{Message => SQSMessage}
 import io.circe.Decoder
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.NotificationMessage
-import uk.ac.wellcome.messaging.worker.monitoring.serialize.MonitoringContextDeserialiser
 import uk.ac.wellcome.messaging.worker.steps.MessageDeserialiser
 
-class SnsSqsDeserialiser[Payload, MonitoringContext](monitoringContextDeserialiser: MonitoringContextDeserialiser[MonitoringContext, Map[String, String]])(
+class SnsSqsDeserialiser[Payload](
   implicit decoder: Decoder[Payload])
-    extends MessageDeserialiser[SQSMessage, Payload, MonitoringContext] {
+    extends MessageDeserialiser[SQSMessage, Payload, Map[String, String]] {
 
-  type SQSTransform = SQSMessage => Transformed
+  type SQSTransform = SQSMessage => Deserialised
 
   implicit val nd = implicitly[Decoder[NotificationMessage]]
 
-  final def deserialise(message: SQSMessage): Transformed = {
+  final def deserialise(message: SQSMessage): Deserialised = {
     val notificationMessage = fromJson[NotificationMessage](message.getBody)
     val payload = for {
       notification <- notificationMessage
@@ -25,9 +24,9 @@ class SnsSqsDeserialiser[Payload, MonitoringContext](monitoringContextDeserialis
 
     val monitoringContext =for {
       notification <- notificationMessage
-      attributes = notification.MessageAttributes.map(map => map.mapValues(_.Value))
-      context <- monitoringContextDeserialiser.deserialise(attributes)
-    } yield context
+      attributes: Map[String, String] = notification.MessageAttributes.mapValues(_.Value)
+
+    } yield attributes
     (payload.toEither, monitoringContext.toEither)
   }
 }

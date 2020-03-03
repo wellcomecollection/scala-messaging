@@ -16,7 +16,7 @@ class MemoryIndividualMessageSender
 
   var messages: List[MemoryMessage] = List.empty
 
-  override def send(body: String, attributes: Option[Map[String, String]])(
+  override def send(body: String, attributes: Map[String, String])(
     subject: String,
     destination: String): Try[Unit] = Try {
     messages = messages :+ MemoryMessage(body, subject, destination)

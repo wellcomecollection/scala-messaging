@@ -7,23 +7,18 @@ import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
-import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringRecorder
-import uk.ac.wellcome.messaging.worker.steps.{
-  MessageDeserialiser,
-  MessageProcessor,
-  MessageSerialiser
-}
-import uk.ac.wellcome.messaging.worker.monitoring.tracing.MonitoringContextSerializerDeserialiser
+import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
+import uk.ac.wellcome.messaging.worker.steps.{MessageDeserialiser, MessageProcessor}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait WorkerFixtures extends Matchers with MetricsFixtures {
   type MySummary = String
-  type MyContext = Instant
+  type MyTrace = Instant
   type TestResult = Result[MySummary]
   type TestInnerProcess = MyPayload => TestResult
   type TestProcess = MyPayload => Future[TestResult]
-  type MyMessageAttributes = Map[String, String]
+  type MyMessageMetadata = Map[String, String]
 
   case class MyMessage(s: String)
   case class MyPayload(s: String)
@@ -34,11 +29,11 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   }
 
   def messageToPayload(shouldFail: Boolean = false)(message: MyMessage)
-    : (Either[Throwable, MyPayload], Either[Throwable, Option[MyContext]]) =
+    : (Either[Throwable, MyPayload], Either[Throwable, MyMessageMetadata]) =
     if (shouldFail) {
-      (Left(new RuntimeException("BOOM")), Right(None))
+      (Left(new RuntimeException("BOOM")), Right(Map.empty))
     } else {
-      (Right(MyPayload(message)), Right(None))
+      (Right(MyPayload(message)), Right(Map.empty))
     }
 
   def actionToAction(toActionShouldFail: Boolean)(result: Result[MySummary])(
@@ -53,34 +48,28 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   case class MyExternalMessageAction(action: Action)
 
   class MyWorker(
-                  val monitoringProcessor: MetricsMonitoringRecorder[MyPayload],
-                  val messageSender: MessageSender[MyMessageAttributes],
+                  val monitoringProcessor: MetricsMonitoringProcessor[MyPayload],
+                  val messageSender: MessageSender[MyMessageMetadata],
                   testProcess: TestInnerProcess,
                   val deserialiseMsg: MyMessage => (Either[Throwable, MyPayload],
-                                      Either[Throwable, Option[MyContext]])
+                                      Either[Throwable, MyMessageMetadata])
   )(implicit val ec: ExecutionContext)
       extends Worker[
         MyMessage,
+        MyMessageMetadata,
         MyPayload,
-        MyContext,
-        MyContext,
+        MyTrace,
         MySummary,
-        MyExternalMessageAction,
-        MyMessageAttributes
+        MyExternalMessageAction
       ] {
 
     protected val msgDeserialiser =
-      new MessageDeserialiser[MyMessage, MyPayload, MyContext] {
+      new MessageDeserialiser[MyMessage, MyPayload, MyMessageMetadata] {
         def deserialise(msg: MyMessage) = deserialiseMsg(msg)
       }
-    protected val msgSerialiser
-      : MessageSerialiser[MySummary, MyContext, MyMessageAttributes] = ???
 
     val callCounter = new CallCounter()
 
-    val monitoringSerialiser
-      : MonitoringContextSerializerDeserialiser[MyContext,
-                                                MyMessageAttributes] = ???
 
     override val retryAction: MessageAction =
       (_, MyExternalMessageAction(new Retry {}))

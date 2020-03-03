@@ -4,7 +4,7 @@ import io.circe.generic.extras.JsonKey
 
 case class NotificationMessage(
   @JsonKey("Message") body: String,
-  MessageAttributes: Option[Map[String, AttributeValue]] = None
+  MessageAttributes: Map[String, AttributeValue] = Map.empty
 )
 case class AttributeValue(
   Type: String,

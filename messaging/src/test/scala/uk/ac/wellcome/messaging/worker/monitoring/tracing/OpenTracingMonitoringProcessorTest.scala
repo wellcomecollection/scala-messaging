@@ -10,7 +10,7 @@ import uk.ac.wellcome.messaging.worker.models.MonitoringProcessorFailure
 
 import scala.collection.JavaConverters._
 
-class OpenTracingMonitoringRecorderTest
+class OpenTracingMonitoringProcessorTest
     extends FunSpec
     with WorkerFixtures
     with ScalaFutures
@@ -20,8 +20,8 @@ class OpenTracingMonitoringRecorderTest
     val mockTracer = new MockTracer()
     withOpenTracingMetricsProcessor[MyPayload, Assertion](mockTracer) {
       processor =>
-        whenReady(processor.recordStart(Right(work), Right(None))) {
-          span: Either[Throwable, Span] =>
+        whenReady(processor.recordStart(Right(work), Right(Map.empty))) {
+          span: Either[Throwable, (Span, Map[String,String])] =>
             span shouldBe a[Right[_, _]]
             span.right.get shouldNot be(null)
             whenReady(processor.recordEnd(span, successful(work))) { _ =>
@@ -37,10 +37,10 @@ class OpenTracingMonitoringRecorderTest
     val mockTracer = new MockTracer()
     withOpenTracingMetricsProcessor[MyPayload, Assertion](mockTracer) {
       processor =>
-        whenReady(processor.recordStart(Right(work), Right(None))) {
+        whenReady(processor.recordStart(Right(work), Right(Map.empty))) {
           spanEither =>
             spanEither shouldBe a[Right[_, _]]
-            val span = spanEither.right.get
+            val span = spanEither.right.get._1
             span shouldNot be(null)
 
             val deterministicErrorResult = deterministicFailure(work)
@@ -62,10 +62,10 @@ class OpenTracingMonitoringRecorderTest
     val mockTracer = new MockTracer()
     withOpenTracingMetricsProcessor[MyPayload, Assertion](mockTracer) {
       processor =>
-        whenReady(processor.recordStart(Right(work), Right(None))) {
+        whenReady(processor.recordStart(Right(work), Right(Map.empty))) {
           spanEither =>
             spanEither shouldBe a[Right[_, _]]
-            val span = spanEither.right.get
+            val span = spanEither.right.get._1
             span shouldNot be(null)
 
             val nonDeterministicErrorResult = nonDeterministicFailure(work)
@@ -88,10 +88,10 @@ class OpenTracingMonitoringRecorderTest
       withOpenTracingMetricsProcessor[MyPayload, Assertion](mockTracer) {
         processor =>
           val exception = new RuntimeException("BOOM!")
-          whenReady(processor.recordStart(Left(exception), Right(None))) {
+          whenReady(processor.recordStart(Left(exception), Right(Map.empty))) {
             spanEither =>
               spanEither shouldBe a[Right[_, _]]
-              val span = spanEither.right.get
+              val span = spanEither.right.get._1
               span shouldNot be(null)
 
               spanShouldBeTaggeddWith(span, exception, "DeterministicFailure")
@@ -109,10 +109,10 @@ class OpenTracingMonitoringRecorderTest
           val parentSpanId = parentSpan.context().toSpanId
           parentSpan.finish()
 
-          whenReady(processor.recordStart(Right(work), Right(Some(parentSpan.context())))) {
+          whenReady(processor.recordStart(Right(work), Right(Map.empty))) {
             spanEither =>
               spanEither shouldBe a[Right[_, _]]
-              val span = spanEither.right.get
+              val span = spanEither.right.get._1
               span shouldNot be(null)
               val references = span.asInstanceOf[MockSpan].references().asScala
               references should have size (1)
@@ -134,7 +134,7 @@ class OpenTracingMonitoringRecorderTest
           whenReady(processor.recordStart(Right(work), Left(exception))) {
             spanEither =>
               spanEither shouldBe a[Right[_, _]]
-              val span = spanEither.right.get
+              val span = spanEither.right.get._1
               span shouldNot be(null)
               val references = span.asInstanceOf[MockSpan].references().asScala
               references shouldBe empty
@@ -151,7 +151,7 @@ class OpenTracingMonitoringRecorderTest
       }
       withOpenTracingMetricsProcessor[MyPayload, Assertion](failingTracer) {
         processor =>
-          whenReady(processor.recordStart(Right(work), Right(None))) {
+          whenReady(processor.recordStart(Right(work), Right(Map.empty))) {
             spanEither =>
               spanEither shouldBe a[Left[_, _]]
               spanEither.left.get shouldBe exception
@@ -189,7 +189,7 @@ class OpenTracingMonitoringRecorderTest
         processor =>
           val nonDeterministicErrorResult = nonDeterministicFailure(work)
           whenReady(
-            processor.recordEnd(Right(span), nonDeterministicErrorResult)) {
+            processor.recordEnd(Right((span, Map.empty)), nonDeterministicErrorResult)) {
             result =>
               result shouldBe a[MonitoringProcessorFailure[_]]
           }

@@ -14,15 +14,15 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
   it("sends individual messages") {
     val sender = new MemoryIndividualMessageSender()
 
-    sender.send("hello world", None)(
+    sender.send("hello world", Map.empty)(
       subject = "my first message",
       destination = "greetings") shouldBe Success(())
-    sender.send("guten tag", None)(
+    sender.send("guten tag", Map.empty)(
       subject = "auf deutsch",
       destination = "greetings") shouldBe Success(())
-    sender.send("你好", None)(subject = "中文", destination = "greetings") shouldBe Success(
+    sender.send("你好", Map.empty)(subject = "中文", destination = "greetings") shouldBe Success(
       ())
-    sender.send("chinese", None)(
+    sender.send("chinese", Map.empty)(
       subject = "a non-alphabet language",
       destination = "languages") shouldBe Success(())
 
@@ -44,7 +44,7 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     val snake = Animal(name = "snake", legs = 0)
 
     Seq(dog, octopus, snake).map { animal =>
-      sender.sendT(animal, None)(
+      sender.sendT(animal, Map.empty)(
         subject = "animals",
         destination = "all creatures") shouldBe Success(())
     }
@@ -66,7 +66,7 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     val sender = new MemoryIndividualMessageSender()
 
     containers.map { c =>
-      sender.sendT[Container](c, None)(
+      sender.sendT[Container](c, Map.empty)(
         destination = "containers",
         subject = "stuff to store things in") shouldBe Success(())
     }
@@ -83,10 +83,10 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
       override val subject = "ideas for my design"
     }
 
-    sender.send("red", None) shouldBe Success(())
-    sender.send("yellow", None) shouldBe Success(())
-    sender.send("green", None) shouldBe Success(())
-    sender.send("blue", None) shouldBe Success(())
+    sender.send("red", Map.empty) shouldBe Success(())
+    sender.send("yellow", Map.empty) shouldBe Success(())
+    sender.send("green", Map.empty) shouldBe Success(())
+    sender.send("blue", Map.empty) shouldBe Success(())
 
     sender.messages.map { _.destination } shouldBe Seq(
       "colours",
@@ -108,9 +108,9 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
 
     case class Tree(name: String)
 
-    sender.sendT(Tree("oak"), None) shouldBe Success(())
-    sender.sendT(Tree("ash"), None) shouldBe Success(())
-    sender.sendT(Tree("yew"), None) shouldBe Success(())
+    sender.sendT(Tree("oak"), Map.empty) shouldBe Success(())
+    sender.sendT(Tree("ash"), Map.empty) shouldBe Success(())
+    sender.sendT(Tree("yew"), Map.empty) shouldBe Success(())
 
     sender.messages.map { _.destination } shouldBe Seq(
       "trees",
@@ -127,7 +127,7 @@ class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
     val sender = new MemoryMessageSender()
 
     containers.map { c =>
-      sender.sendT[Container](c, None) shouldBe Success(())
+      sender.sendT[Container](c, Map.empty) shouldBe Success(())
     }
 
     containers.zip(sender.messages).map {
