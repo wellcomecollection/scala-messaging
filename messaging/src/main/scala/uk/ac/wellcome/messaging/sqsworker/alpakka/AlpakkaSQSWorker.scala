@@ -8,6 +8,7 @@ import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.{Message => SQSMessage}
 import grizzled.slf4j.Logging
 import io.circe.Decoder
+import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
@@ -18,32 +19,31 @@ import scala.concurrent.{ExecutionContext, Future}
   * Implementation of [[AkkaWorker]] that uses SQS as source and sink.
   * It receives messages from SQS and deletes messages from SQS on successful completion
   */
-class AlpakkaSQSWorker[Work,
-                       InfraServiceMonitoringContext,
-                       InterServiceMonitoringContext,
-                       Summary](
+class AlpakkaSQSWorker[Payload, Trace, Value](
   config: AlpakkaSQSWorkerConfig,
   val monitoringProcessorBuilder: (
-    ExecutionContext) => MonitoringProcessor[Work,
-                                             InfraServiceMonitoringContext,
-                                             InterServiceMonitoringContext]
+    ExecutionContext) => MonitoringProcessor[Payload,
+                                             Map[String, String],
+                                             Trace],
+  val messageSender: MessageSender[Map[String, String]]
 )(
-  val doWork: Work => Future[Result[Summary]]
+  val doWork: Payload => Future[Result[Value]]
 )(implicit
   val as: ActorSystem,
-  val wd: Decoder[Work],
+  val wd: Decoder[Payload],
   sc: AmazonSQSAsync,
 ) extends AkkaWorker[
       SQSMessage,
-      Work,
-      InfraServiceMonitoringContext,
-      InterServiceMonitoringContext,
-      Summary,
+      Map[String, String],
+      Payload,
+      Trace,
+      Value,
       MessageAction]
-    with SnsSqsTransform[Work, InfraServiceMonitoringContext]
     with Logging {
 
   type SQSAction = SQSMessage => (SQSMessage, sqs.MessageAction)
+
+  protected val msgDeserialiser = new SnsSqsDeserialiser[Payload]
 
   val parallelism: Int = config.sqsConfig.parallelism
   val source = SqsSource(config.sqsConfig.queueUrl)
@@ -60,26 +60,21 @@ class AlpakkaSQSWorker[Work,
 }
 
 object AlpakkaSQSWorker {
-  def apply[Work,
-            InfraServiceMonitoringContext,
-            InterServiceMonitoringContext,
-            Summary](
+  def apply[Payload, Trace, Value](
     config: AlpakkaSQSWorkerConfig,
     monitoringProcessorBuilder: (
-      ExecutionContext) => MonitoringProcessor[Work,
-                                               InfraServiceMonitoringContext,
-                                               InterServiceMonitoringContext])(
-    process: Work => Future[Result[Summary]]
+      ExecutionContext) => MonitoringProcessor[Payload,
+                                               Map[String, String],
+                                               Trace],
+    messageSender: MessageSender[Map[String, String]])(
+    process: Payload => Future[Result[Value]]
   )(implicit
     sc: AmazonSQSAsync,
     as: ActorSystem,
-    wd: Decoder[Work]) =
-    new AlpakkaSQSWorker[
-      Work,
-      InfraServiceMonitoringContext,
-      InterServiceMonitoringContext,
-      Summary](
+    wd: Decoder[Payload]) =
+    new AlpakkaSQSWorker[Payload, Trace, Value](
       config,
-      monitoringProcessorBuilder
+      monitoringProcessorBuilder,
+      messageSender
     )(process)
 }

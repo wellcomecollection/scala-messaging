@@ -6,7 +6,8 @@ import uk.ac.wellcome.messaging.{IndividualMessageSender, MessageSender}
 
 import scala.util.{Random, Try}
 
-class MemoryIndividualMessageSender extends IndividualMessageSender[String] {
+class MemoryIndividualMessageSender
+    extends IndividualMessageSender[String, Map[String, String]] {
   case class MemoryMessage(
     body: String,
     subject: String,
@@ -15,18 +16,22 @@ class MemoryIndividualMessageSender extends IndividualMessageSender[String] {
 
   var messages: List[MemoryMessage] = List.empty
 
-  override def send(body: String)(subject: String,
-                                  destination: String): Try[Unit] = Try {
+  override def send(body: String, attributes: Map[String, String])(
+    subject: String,
+    destination: String): Try[Unit] = Try {
     messages = messages :+ MemoryMessage(body, subject, destination)
   }
 
-  def getMessages[T]()(implicit decoder: Decoder[T]): Seq[T] =
+  def getMessages[T](implicit decoder: Decoder[T]): Seq[T] =
     messages
       .map { _.body }
       .map { fromJson[T](_).get }
 }
 
-class MemoryMessageSender extends MessageSender[String] {
+class MemoryMessageSender extends MessageSender[Map[String, String]] {
+
+  type Destination = String
+
   val destination: String = Random.alphanumeric.take(10) mkString
   val subject: String = Random.alphanumeric.take(10) mkString
 
@@ -35,6 +40,6 @@ class MemoryMessageSender extends MessageSender[String] {
 
   def messages: List[underlying.MemoryMessage] = underlying.messages
 
-  def getMessages[T]()(implicit decoder: Decoder[T]): Seq[T] =
-    underlying.getMessages[T]()
+  def getMessages[T](implicit decoder: Decoder[T]): Seq[T] =
+    underlying.getMessages[T]
 }

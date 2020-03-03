@@ -27,11 +27,12 @@ class MetricsMonitoringProcessorTest
 
   it("records a success metric") {
 
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, processor) =>
-        val recorded = processor.recordEnd(Right(Instant.now), successful(work))
+        val recorded =
+          processor.recordEnd(Right((Instant.now, Map.empty)), successful(work))
 
         whenReady(recorded) { action =>
           shouldBeSuccessful(action)
@@ -50,11 +51,12 @@ class MetricsMonitoringProcessorTest
   }
 
   it("reports monitoring failure if recording fails") {
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = true) {
       case (monitoringClient, processor) =>
-        val recorded = processor.recordEnd(Right(Instant.now), successful(work))
+        val recorded =
+          processor.recordEnd(Right((Instant.now, Map.empty)), successful(work))
 
         whenReady(recorded) { action =>
           shouldBeMonitoringProcessorFailure(action)
@@ -66,12 +68,14 @@ class MetricsMonitoringProcessorTest
   }
 
   it("records a deterministic failure") {
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, processor) =>
         val recorded =
-          processor.recordEnd(Right(Instant.now), deterministicFailure(work))
+          processor.recordEnd(
+            Right((Instant.now, Map.empty)),
+            deterministicFailure(work))
 
         whenReady(recorded) { action =>
           shouldBeSuccessful(action)
@@ -90,12 +94,14 @@ class MetricsMonitoringProcessorTest
   }
 
   it("records a non deterministic failure") {
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, processor) =>
         val recorded =
-          processor.recordEnd(Right(Instant.now), nonDeterministicFailure(work))
+          processor.recordEnd(
+            Right((Instant.now, Map.empty)),
+            nonDeterministicFailure(work))
 
         whenReady(recorded) { action =>
           shouldBeSuccessful(action)

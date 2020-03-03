@@ -8,9 +8,10 @@ import scala.util.Try
 
 class SNSIndividualMessageSender(
   snsClient: AmazonSNS,
-) extends IndividualMessageSender[SNSConfig] {
-  override def send(message: String)(subject: String,
-                                     destination: SNSConfig): Try[Unit] = Try {
+) extends IndividualMessageSender[SNSConfig, Map[String, String]] {
+  override def send(message: String, attributes: Map[String, String])(
+    subject: String,
+    destination: SNSConfig): Try[Unit] = Try {
     snsClient.publish(
       new PublishRequest()
         .withMessage(message)
@@ -24,8 +25,12 @@ class SNSMessageSender(
   snsClient: AmazonSNS,
   snsConfig: SNSConfig,
   val subject: String
-) extends MessageSender[SNSConfig] {
-  override protected val underlying: IndividualMessageSender[SNSConfig] =
+) extends MessageSender[Map[String, String]] {
+
+  type Destination = SNSConfig
+
+  override protected val underlying
+    : IndividualMessageSender[SNSConfig, Map[String, String]] =
     new SNSIndividualMessageSender(
       snsClient = snsClient
     )

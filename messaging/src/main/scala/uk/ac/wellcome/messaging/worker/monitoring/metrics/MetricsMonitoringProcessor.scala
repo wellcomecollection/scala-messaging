@@ -11,27 +11,29 @@ import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final class MetricsMonitoringProcessor[Work](val namespace: String)(
+final class MetricsMonitoringProcessor[Payload](val namespace: String)(
   implicit val monitoringClient: MetricsMonitoringClient,
   val ec: ExecutionContext)
-    extends MonitoringProcessor[Work, Instant, Instant]
+    extends MonitoringProcessor[Payload, Map[String, String], Instant]
     with MetricsProcessor {
 
-  override def recordStart(work: Either[Throwable, Work],
-                           context: Either[Throwable, Option[Instant]])
-    : Future[Either[Throwable, Instant]] =
-    Future.successful(Right(Instant.now))
+  override def recordStart(
+    work: Either[Throwable, (Payload, Map[String, String])])
+    : Future[Either[Throwable, (Instant, Map[String, String])]] =
+    Future.successful(Right((Instant.now, Map.empty)))
 
   override def recordEnd[Recorded](
-    context: Either[Throwable, Instant],
+    context: Either[Throwable, (Instant, Map[String, String])],
     result: Result[Recorded]
   ): Future[Result[Unit]] = {
 
     val monitoring = for {
       _: Unit <- metric(
         result,
-        context.getOrElse(throw new Exception(s"context was Left: $context")))
-    } yield Successful[Unit]()
+        context
+          .getOrElse(throw new Exception(s"context was Left: $context"))
+          ._1)
+    } yield Successful[Unit](())
 
     monitoring recover {
       case e => MonitoringProcessorFailure[Unit](e)

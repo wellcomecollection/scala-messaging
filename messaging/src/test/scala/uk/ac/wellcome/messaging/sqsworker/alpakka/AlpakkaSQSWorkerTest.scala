@@ -6,6 +6,7 @@ import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS.QueuePair
 import uk.ac.wellcome.messaging.fixtures.worker.AlpakkaSQSWorkerFixtures
+import uk.ac.wellcome.messaging.memory.MemoryMessageSender
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -25,13 +26,17 @@ class AlpakkaSQSWorkerTest
       withLocalSqsQueueAndDlq {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
-            withAlpakkaSQSWorker(queue, successful, namespace) {
+            withAlpakkaSQSWorker(
+              queue,
+              successful,
+              new MemoryMessageSender(),
+              namespace) {
               case (worker, _, metrics, callCounter) =>
                 worker.start
 
-                val myWork = MyWork("my-new-work")
+                val myPayload = MyPayload("my-new-work")
 
-                sendNotificationToSQS(queue, myWork)
+                sendNotificationToSQS(queue, myPayload)
 
                 eventually {
                   callCounter.calledCount shouldBe 1
@@ -60,13 +65,17 @@ class AlpakkaSQSWorkerTest
       withLocalSqsQueueAndDlq {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
-            withAlpakkaSQSWorker(queue, deterministicFailure, namespace) {
+            withAlpakkaSQSWorker(
+              queue,
+              deterministicFailure,
+              new MemoryMessageSender(),
+              namespace) {
               case (worker, _, metrics, callCounter) =>
                 worker.start
 
-                val myWork = MyWork("my-new-work")
+                val myPayload = MyPayload("my-new-work")
 
-                sendNotificationToSQS(queue, myWork)
+                sendNotificationToSQS(queue, myPayload)
 
                 eventually {
                   callCounter.calledCount shouldBe 1
@@ -95,13 +104,17 @@ class AlpakkaSQSWorkerTest
       withLocalSqsQueueAndDlq {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
-            withAlpakkaSQSWorker(queue, nonDeterministicFailure, namespace) {
+            withAlpakkaSQSWorker(
+              queue,
+              nonDeterministicFailure,
+              new MemoryMessageSender(),
+              namespace) {
               case (worker, _, metrics, callCounter) =>
                 worker.start
 
-                val myWork = MyWork("my-new-work")
+                val myPayload = MyPayload("my-new-work")
 
-                sendNotificationToSQS(queue, myWork)
+                sendNotificationToSQS(queue, myPayload)
 
                 eventually {
                   callCounter.calledCount shouldBe 3
@@ -132,7 +145,11 @@ class AlpakkaSQSWorkerTest
       withLocalSqsQueueAndDlq {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
-            withAlpakkaSQSWorker(queue, successful, namespace) {
+            withAlpakkaSQSWorker(
+              queue,
+              successful,
+              new MemoryMessageSender(),
+              namespace) {
               case (worker, _, metrics, _) =>
                 worker.start
 
@@ -166,7 +183,11 @@ class AlpakkaSQSWorkerTest
       withLocalSqsQueueAndDlq {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
-            withAlpakkaSQSWorker(queue, successful, namespace) {
+            withAlpakkaSQSWorker(
+              queue,
+              successful,
+              new MemoryMessageSender(),
+              namespace) {
               case (worker, _, metrics, _) =>
                 worker.start
 

@@ -5,25 +5,23 @@ import uk.ac.wellcome.messaging.worker.models.{DeterministicFailure, Result}
 import scala.concurrent.{ExecutionContext, Future}
 
 /***
-  * Executes some operation on a [[Work]] and returns a [[Result]] with a onptional descriptive [[Summary]]
+  * Executes some operation on a [[Payload]] and returns a [[Result]] with a [[Value]]
   */
-trait MessageProcessor[Work, Summary] {
-  type ResultSummary = Future[Result[Summary]]
+trait MessageProcessor[Payload, Value] {
+  type ResultValue = Future[Result[Value]]
 
-  protected val doWork: (Work) => ResultSummary
+  protected val doWork: (Payload) => ResultValue
 
-  final def process(workEither: Either[Throwable, Work])(
-    implicit ec: ExecutionContext): Future[Result[Summary]] = workEither.fold(
-    e => Future.successful(DeterministicFailure[Summary](e)),
-    w => {
+  final def process(work: Payload)(
+    implicit ec: ExecutionContext): Future[Result[Value]] = {
 
-      val working = for {
-        result <- doWork(w)
+    val working = for {
+      result <- doWork(work)
 
-      } yield result
-      working recover {
-        case e => DeterministicFailure[Summary](e)
-      }
+    } yield result
+    working recover {
+      case e => DeterministicFailure[Value](e)
     }
-  )
+  }
+
 }

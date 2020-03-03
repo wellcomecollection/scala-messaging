@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import org.scalatest.Matchers
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
+import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.Queue
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
@@ -36,29 +37,31 @@ trait AlpakkaSQSWorkerFixtures
   def withAlpakkaSQSWorker[R](
     queue: Queue,
     process: TestInnerProcess,
+    messageSender: MessageSender[MyMessageMetadata],
     namespace: String = Random.alphanumeric take 10 mkString
-  )(testWith: TestWith[
-      (AlpakkaSQSWorker[MyWork, MyContext, MyContext, MySummary],
-       AlpakkaSQSWorkerConfig,
-       FakeMetricsMonitoringClient,
-       CallCounter),
-      R])(implicit
-          as: ActorSystem,
-          ec: ExecutionContext): R =
+  )(testWith: TestWith[(AlpakkaSQSWorker[MyPayload, MyTrace, MySummary],
+                        AlpakkaSQSWorkerConfig,
+                        FakeMetricsMonitoringClient,
+                        CallCounter),
+                       R])(implicit
+                           as: ActorSystem,
+                           ec: ExecutionContext): R =
     withFakeMonitoringClient(false) { client: FakeMetricsMonitoringClient =>
       val metricsProcessorBuilder
-        : (ExecutionContext) => MetricsMonitoringProcessor[MyWork] =
-        new MetricsMonitoringProcessor[MyWork](namespace)(client, _)
+        : (ExecutionContext) => MetricsMonitoringProcessor[MyPayload] =
+        new MetricsMonitoringProcessor[MyPayload](namespace)(client, _)
 
       val config = createAlpakkaSQSWorkerConfig(queue, namespace)
 
       val callCounter = new CallCounter()
-      val testProcess = (o: MyWork) => createResult(process, callCounter)(ec)(o)
+      val testProcess =
+        (o: MyPayload) => createResult(process, callCounter)(ec)(o)
 
       val worker =
-        new AlpakkaSQSWorker[MyWork, MyContext, MyContext, MySummary](
+        new AlpakkaSQSWorker[MyPayload, MyTrace, MySummary](
           config,
-          metricsProcessorBuilder)(testProcess)
+          metricsProcessorBuilder,
+          messageSender)(testProcess)
 
       testWith((worker, config, client, callCounter))
     }

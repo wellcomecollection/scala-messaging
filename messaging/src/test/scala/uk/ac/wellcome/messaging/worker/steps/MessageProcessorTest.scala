@@ -20,17 +20,9 @@ class MessageProcessorTest
     "calls a successful transform and process functions and returns successful result type") {
     val processor =
       new MyMessageProcessor(createResult(successful, new CallCounter))
-    val futureResult = processor.process(Right(work))
+    val futureResult = processor.process(work)
 
     whenReady(futureResult)(shouldBeSuccessful)
-  }
-
-  it("returns deterministic failure if transformation fails") {
-    val processor =
-      new MyMessageProcessor(createResult(successful, new CallCounter))
-    val futureResult = processor.process(Left(new RuntimeException()))
-
-    whenReady(futureResult)(shouldBeDeterministicFailure)
   }
 
   it(
@@ -38,7 +30,7 @@ class MessageProcessorTest
     val processor =
       new MyMessageProcessor(
         createResult(deterministicFailure, new CallCounter))
-    val futureResult = processor.process(Right(work))
+    val futureResult = processor.process(work)
 
     whenReady(futureResult)(shouldBeDeterministicFailure)
   }
@@ -48,7 +40,7 @@ class MessageProcessorTest
     val processor =
       new MyMessageProcessor(
         createResult(nonDeterministicFailure, new CallCounter))
-    val futureResult = processor.process(Right(work))
+    val futureResult = processor.process(work)
 
     whenReady(futureResult)(shouldBeNonDeterministicFailure)
   }
@@ -57,7 +49,7 @@ class MessageProcessorTest
     "returns deterministic failure if process function fails with an unrecognised exception state") {
     val processor =
       new MyMessageProcessor(createResult(exceptionState, new CallCounter))
-    val futureResult = processor.process(Right(work))
+    val futureResult = processor.process(work)
 
     whenReady(futureResult)(shouldBeDeterministicFailure)
   }

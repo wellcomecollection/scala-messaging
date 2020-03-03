@@ -4,28 +4,19 @@ import io.opentracing.mock.MockSpan
 import io.opentracing.{Span, Tracer}
 import org.scalatest.{Matchers, Suite}
 import uk.ac.wellcome.fixtures.TestWith
-import uk.ac.wellcome.messaging.worker.monitoring.tracing.{
-  OpenTracingMonitoringProcessor,
-  OpenTracingSpanSerializer
-}
+import uk.ac.wellcome.messaging.worker.monitoring.tracing.OpenTracingMonitoringProcessor
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 
 trait TracingFixtures extends Matchers { this: Suite =>
 
-  def withOpenTracingMetricsProcessor[MyWork, R](
-    MapContextCarrier: OpenTracingSpanSerializer[Map[String, String]],
-    tracer: Tracer)(
-    testWith: TestWith[
-      OpenTracingMonitoringProcessor[MyWork, Map[String, String]],
-      R]): R = {
+  def withOpenTracingMetricsProcessor[MyPayload, R](tracer: Tracer)(
+    testWith: TestWith[OpenTracingMonitoringProcessor[MyPayload], R]): R = {
     val processor =
-      new OpenTracingMonitoringProcessor[MyWork, Map[String, String]](
-        "namespace")(
+      new OpenTracingMonitoringProcessor[MyPayload]("namespace")(
         tracer,
-        ExecutionContext.Implicits.global,
-        MapContextCarrier)
+        ExecutionContext.Implicits.global)
     testWith(processor)
   }
 

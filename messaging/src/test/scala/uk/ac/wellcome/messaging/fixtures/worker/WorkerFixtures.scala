@@ -3,35 +3,40 @@ package uk.ac.wellcome.messaging.fixtures.worker
 import java.time.Instant
 
 import org.scalatest.{Assertion, Matchers}
+import uk.ac.wellcome.messaging.MessageSender
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringProcessor
-import uk.ac.wellcome.messaging.worker.steps.MessageProcessor
+import uk.ac.wellcome.messaging.worker.steps.{
+  MessageDeserialiser,
+  MessageProcessor
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait WorkerFixtures extends Matchers with MetricsFixtures {
   type MySummary = String
-  type MyContext = Instant
+  type MyTrace = Instant
   type TestResult = Result[MySummary]
-  type TestInnerProcess = MyWork => TestResult
-  type TestProcess = MyWork => Future[TestResult]
+  type TestInnerProcess = MyPayload => TestResult
+  type TestProcess = MyPayload => Future[TestResult]
+  type MyMessageMetadata = Map[String, String]
 
   case class MyMessage(s: String)
-  case class MyWork(s: String)
+  case class MyPayload(s: String)
 
-  object MyWork {
-    def apply(message: MyMessage): MyWork =
-      new MyWork(message.s)
+  object MyPayload {
+    def apply(message: MyMessage): MyPayload =
+      new MyPayload(message.s)
   }
 
-  def messageToWork(shouldFail: Boolean = false)(message: MyMessage)
-    : (Either[Throwable, MyWork], Either[Throwable, Option[MyContext]]) =
+  def messageToPayload(shouldFail: Boolean = false)(
+    message: MyMessage): Either[Throwable, (MyPayload, MyMessageMetadata)] =
     if (shouldFail) {
-      (Left(new RuntimeException("BOOM")), Right(None))
+      Left(new RuntimeException("BOOM"))
     } else {
-      (Right(MyWork(message)), Right(None))
+      Right((MyPayload(message), Map.empty))
     }
 
   def actionToAction(toActionShouldFail: Boolean)(result: Result[MySummary])(
@@ -46,19 +51,25 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
   case class MyExternalMessageAction(action: Action)
 
   class MyWorker(
-    val monitoringProcessor: MetricsMonitoringProcessor[MyWork],
+    val monitoringProcessor: MetricsMonitoringProcessor[MyPayload],
+    val messageSender: MessageSender[MyMessageMetadata],
     testProcess: TestInnerProcess,
-    val transform: MyMessage => (Either[Throwable, MyWork],
-                                 Either[Throwable, Option[MyContext]])
+    val deserialiseMsg: MyMessage => (Either[Throwable,
+                                             (MyPayload, MyMessageMetadata)])
   )(implicit val ec: ExecutionContext)
       extends Worker[
         MyMessage,
-        MyWork,
-        MyContext,
-        MyContext,
+        MyMessageMetadata,
+        MyPayload,
+        MyTrace,
         MySummary,
         MyExternalMessageAction
       ] {
+
+    protected val msgDeserialiser =
+      new MessageDeserialiser[MyMessage, MyPayload, MyMessageMetadata] {
+        def deserialise(msg: MyMessage) = deserialiseMsg(msg)
+      }
 
     val callCounter = new CallCounter()
 
@@ -69,30 +80,30 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       (_, MyExternalMessageAction(new Completed {}))
 
     override val doWork =
-      (work: MyWork) => createResult(testProcess, callCounter)(ec)(work)
+      (work: MyPayload) => createResult(testProcess, callCounter)(ec)(work)
 
     override type Completion = WorkCompletion[MyMessage, MySummary]
   }
 
   class MyMessageProcessor(
     testProcess: TestProcess
-  ) extends MessageProcessor[MyWork, MySummary] {
+  ) extends MessageProcessor[MyPayload, MySummary] {
 
     override protected val doWork: TestProcess =
       testProcess
   }
 
   val message = MyMessage("some_content")
-  val work = MyWork("some_content")
+  val work = MyPayload("some_content")
 
   class CallCounter() {
     var calledCount = 0
   }
 
   def createResult(op: TestInnerProcess, callCounter: CallCounter)(
-    implicit ec: ExecutionContext): MyWork => Future[TestResult] = {
+    implicit ec: ExecutionContext): MyPayload => Future[TestResult] = {
 
-    (in: MyWork) =>
+    (in: MyPayload) =>
       {
         callCounter.calledCount = callCounter.calledCount + 1
 
@@ -100,34 +111,31 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
       }
   }
 
-  val successful = (in: MyWork) => {
+  val successful = (in: MyPayload) => {
     Successful[MySummary](
-      Some("Summary Successful")
+      "Summary Successful"
     )
   }
 
-  val nonDeterministicFailure = (in: MyWork) =>
+  val nonDeterministicFailure = (in: MyPayload) =>
     NonDeterministicFailure[MySummary](
-      new RuntimeException("NonDeterministicFailure"),
-      Some("Summary NonDeterministicFailure")
+      new RuntimeException("NonDeterministicFailure")
   )
 
-  val deterministicFailure = (in: MyWork) =>
+  val deterministicFailure = (in: MyPayload) =>
     DeterministicFailure[MySummary](
-      new RuntimeException("DeterministicFailure"),
-      Some("Summary DeterministicFailure")
+      new RuntimeException("DeterministicFailure")
   )
 
-  val monitoringProcessorFailure = (in: MyWork) =>
+  val monitoringProcessorFailure = (in: MyPayload) =>
     MonitoringProcessorFailure[MySummary](
-      new RuntimeException("MonitoringProcessorFailure"),
-      Some("Summary MonitoringProcessorFailure")
+      new RuntimeException("MonitoringProcessorFailure")
   )
 
-  val exceptionState = (_: MyWork) => {
+  val exceptionState = (_: MyPayload) => {
     throw new RuntimeException("BOOM")
 
-    Successful[MySummary](Some("exceptionState"))
+    Successful[MySummary]("exceptionState")
   }
 
   val shouldBeSuccessful: Result[_] => Assertion =

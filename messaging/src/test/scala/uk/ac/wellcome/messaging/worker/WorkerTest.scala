@@ -5,6 +5,7 @@ import org.scalatest.{Assertion, FunSpec, Matchers}
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.fixtures.worker.WorkerFixtures
+import uk.ac.wellcome.messaging.memory.MemoryMessageSender
 import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -20,14 +21,16 @@ class WorkerTest
     with MetricsSenderFixture {
 
   it("successfully processes a work and increments success metrics") {
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
         val worker = new MyWorker(
           monitoringProcessor,
+          messageSender,
           successful,
-          messageToWork(shouldFail = false)
+          messageToPayload(shouldFail = false)
         )
 
         val process = worker.processMessage(message)
@@ -41,19 +44,22 @@ class WorkerTest
           )
 
           assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+          messageSender.getMessages[String] shouldBe List("Summary Successful")
         }
     }
   }
 
   it("increments deterministic failure metric if transformation returns a Left") {
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
         val worker = new MyWorker(
           monitoringProcessor,
+          messageSender,
           successful,
-          messageToWork(shouldFail = true)
+          messageToPayload(shouldFail = true)
         )
 
         val process = worker.processMessage(message)
@@ -67,6 +73,7 @@ class WorkerTest
           )
 
           assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+          messageSender.getMessages[String] shouldBe List()
         }
     }
   }
@@ -75,12 +82,14 @@ class WorkerTest
     "increments deterministic failure metric if transformation fails unexpectedly") {
     def transform(message: MyMessage) = throw new RuntimeException
 
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
         val worker = new MyWorker(
           monitoringProcessor,
+          new MemoryMessageSender(),
           successful,
           transform
         )
@@ -96,19 +105,22 @@ class WorkerTest
           )
 
           assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+          messageSender.getMessages[String] shouldBe List()
         }
     }
   }
 
   it("doesn't increment metrics if monitoring fails") {
-    withMetricsMonitoringProcessor[MyWork, Assertion](
+    withMetricsMonitoringProcessor[MyPayload, Assertion](
       namespace = "namespace",
       shouldFail = true) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
         val worker = new MyWorker(
           monitoringProcessor,
+          messageSender,
           successful,
-          messageToWork(shouldFail = false)
+          messageToPayload(shouldFail = false)
         )
 
         val process = worker.processMessage(message)
@@ -125,14 +137,16 @@ class WorkerTest
 
   it(
     "increments deterministic failure metric if processing fails with deterministic failure") {
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
         val worker = new MyWorker(
           monitoringProcessor,
+          messageSender,
           deterministicFailure,
-          messageToWork(shouldFail = false)
+          messageToPayload(shouldFail = false)
         )
 
         val process = worker.processMessage(message)
@@ -146,20 +160,23 @@ class WorkerTest
           )
 
           assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+          messageSender.getMessages[String] shouldBe List()
         }
     }
   }
 
   it(
     "increments non deterministic failure metric if processing fails with non deterministic failure") {
-    withMetricsMonitoringProcessor[MyWork, Unit](
+    withMetricsMonitoringProcessor[MyPayload, Unit](
       namespace = "namespace",
       shouldFail = false) {
       case (monitoringClient, monitoringProcessor) =>
+        val messageSender = new MemoryMessageSender()
         val worker = new MyWorker(
           monitoringProcessor,
+          messageSender,
           nonDeterministicFailure,
-          messageToWork(shouldFail = false)
+          messageToPayload(shouldFail = false)
         )
 
         val process = worker.processMessage(message)
@@ -173,6 +190,7 @@ class WorkerTest
           )
 
           assertMetricDurations(monitoringClient, "namespace/Duration", 1)
+          messageSender.getMessages[String] shouldBe List()
         }
     }
   }
