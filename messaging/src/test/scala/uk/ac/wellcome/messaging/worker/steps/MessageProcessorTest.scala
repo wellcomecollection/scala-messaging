@@ -1,20 +1,21 @@
 package uk.ac.wellcome.messaging.worker.steps
 
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import uk.ac.wellcome.akka.fixtures.Akka
+import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.fixtures.worker.WorkerFixtures
-import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits.global
 class MessageProcessorTest
-    extends FunSpec
+    extends AnyFunSpec
     with Matchers
     with Akka
     with ScalaFutures
     with IntegrationPatience
     with WorkerFixtures
-    with MetricsSenderFixture {
+    with MetricsFixtures {
 
   it(
     "calls a successful transform and process functions and returns successful result type") {

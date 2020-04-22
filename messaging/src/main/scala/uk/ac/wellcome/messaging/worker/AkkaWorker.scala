@@ -1,8 +1,8 @@
 package uk.ac.wellcome.messaging.worker
 
 import akka.actor.ActorSystem
+import akka.stream.Materializer
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.{Done, NotUsed}
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
 
@@ -26,10 +26,7 @@ trait AkkaWorker[Message,
       Action] {
 
   implicit val as: ActorSystem
-  implicit val am: ActorMaterializer =
-    ActorMaterializer(
-      ActorMaterializerSettings(as)
-    )
+  implicit val am: Materializer = Materializer(as)
   private val ec = as.dispatcher
   protected val monitoringProcessorBuilder: (
     ExecutionContext) => MonitoringProcessor[Work,
@@ -38,9 +35,9 @@ trait AkkaWorker[Message,
 
   override final val monitoringProcessor = monitoringProcessorBuilder(ec)
   type MessageSource = Source[Message, NotUsed]
-  type MessageSink = Sink[(Message, Action), Future[Done]]
+  type MessageSink = Sink[Action, Future[Done]]
 
-  type ProcessedSource = Source[(Message, Action), NotUsed]
+  type ProcessedSource = Source[Action, NotUsed]
 
   protected val parallelism: Int
 

@@ -4,10 +4,10 @@ import akka.actor.ActorSystem
 import akka.stream.alpakka.sqs
 import akka.stream.alpakka.sqs.MessageAction
 import akka.stream.alpakka.sqs.scaladsl.{SqsAckSink, SqsSource}
-import com.amazonaws.services.sqs.AmazonSQSAsync
-import com.amazonaws.services.sqs.model.{Message => SQSMessage}
+import software.amazon.awssdk.services.sqs.model.{Message => SQSMessage}
 import grizzled.slf4j.Logging
 import io.circe.Decoder
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
 import uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor
@@ -32,7 +32,7 @@ class AlpakkaSQSWorker[Work,
 )(implicit
   val as: ActorSystem,
   val wd: Decoder[Work],
-  sc: AmazonSQSAsync,
+  sc: SqsAsyncClient,
 ) extends AkkaWorker[
       SQSMessage,
       Work,
@@ -43,20 +43,18 @@ class AlpakkaSQSWorker[Work,
     with SnsSqsTransform[Work, InfraServiceMonitoringContext]
     with Logging {
 
-  type SQSAction = SQSMessage => (SQSMessage, sqs.MessageAction)
+  type SQSAction = SQSMessage => sqs.MessageAction
 
   val parallelism: Int = config.sqsConfig.parallelism
   val source = SqsSource(config.sqsConfig.queueUrl)
   val sink = SqsAckSink(config.sqsConfig.queueUrl)
 
-  private val makeVisibleAction = MessageAction
-    .changeMessageVisibility(visibilityTimeout = 0)
-
   val retryAction: SQSAction = (message: SQSMessage) =>
-    (message, makeVisibleAction)
+    MessageAction
+      .changeMessageVisibility(message, visibilityTimeout = 0)
 
   val completedAction: SQSAction = (message: SQSMessage) =>
-    (message, MessageAction.delete)
+    MessageAction.delete(message)
 }
 
 object AlpakkaSQSWorker {
@@ -71,7 +69,7 @@ object AlpakkaSQSWorker {
                                                InterServiceMonitoringContext])(
     process: Work => Future[Result[Summary]]
   )(implicit
-    sc: AmazonSQSAsync,
+    sc: SqsAsyncClient,
     as: ActorSystem,
     wd: Decoder[Work]) =
     new AlpakkaSQSWorker[

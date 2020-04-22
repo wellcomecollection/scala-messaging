@@ -5,13 +5,13 @@ import akka.stream.alpakka.sqs.MessageAction
 import akka.stream.alpakka.sqs.MessageAction.Delete
 import akka.stream.alpakka.sqs.scaladsl.{SqsAckSink, SqsSource}
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
+import akka.stream.{ActorAttributes, Materializer, Supervision}
 import akka.{Done, NotUsed}
-import com.amazonaws.services.cloudwatch.model.StandardUnit
-import com.amazonaws.services.sqs.AmazonSQSAsync
-import com.amazonaws.services.sqs.model.Message
 import grizzled.slf4j.Logging
 import io.circe.Decoder
+import software.amazon.awssdk.services.cloudwatch.model.StandardUnit
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.sqs.model.Message
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.json.exceptions.JsonDecodingError
 import uk.ac.wellcome.monitoring.Metrics
@@ -33,7 +33,7 @@ import scala.concurrent.Future
 //        process = processMessage
 //      )
 //
-class SQSStream[T](sqsClient: AmazonSQSAsync,
+class SQSStream[T](sqsClient: SqsAsyncClient,
                    sqsConfig: SQSConfig,
                    metricsSender: Metrics[Future, StandardUnit])(
   implicit val actorSystem: ActorSystem)
@@ -41,8 +41,8 @@ class SQSStream[T](sqsClient: AmazonSQSAsync,
 
   implicit val dispatcher = actorSystem.dispatcher
 
-  private val source = SqsSource(sqsConfig.queueUrl)(sqsClient)
-  private val sink: Sink[(Message, MessageAction), Future[Done]] =
+  private val source: Source[Message, NotUsed] = SqsSource(sqsConfig.queueUrl)(sqsClient)
+  private val sink: Sink[MessageAction, Future[Done]] =
     SqsAckSink(sqsConfig.queueUrl)(sqsClient)
 
   def foreach(streamName: String, process: T => Future[Unit])(
@@ -53,7 +53,7 @@ class SQSStream[T](sqsClient: AmazonSQSAsync,
         source
           .mapAsyncUnordered(parallelism = sqsConfig.parallelism) {
             case (message, t) =>
-              debug(s"Processing message ${message.getMessageId}")
+              debug(s"Processing message ${message.messageId()}")
               process(t).map(_ => message)
         }
     )
@@ -64,23 +64,22 @@ class SQSStream[T](sqsClient: AmazonSQSAsync,
     implicit decoder: Decoder[T]): Future[Done] = {
     val metricName = s"${streamName}_ProcessMessage"
 
-    implicit val materializer = ActorMaterializer(
-      ActorMaterializerSettings(actorSystem)
-        .withSupervisionStrategy(decider(metricName)))
+    implicit val materializer = Materializer(actorSystem)
 
-    val src: Source[Message, NotUsed] = modifySource(source.map { message =>
-      (message, fromJson[T](message.getBody).get)
+    val src = modifySource(source.map { message =>
+      (message, fromJson[T](message.body).get)
     })
 
-    val srcWithLogging: Source[(Message, Delete.type), NotUsed] = src
+    val srcWithLogging: Source[ Delete, NotUsed] = src
       .map { m =>
         metricsSender.incrementCount(s"${metricName}_success")
-        debug(s"Deleting message ${m.getMessageId}")
-        (m, MessageAction.Delete)
+        debug(s"Deleting message ${m.messageId()}")
+        (MessageAction.Delete(m))
       }
 
     srcWithLogging
       .toMat(sink)(Keep.right)
+      .withAttributes(ActorAttributes.supervisionStrategy(decider(metricName)))
       .run()
   }
 

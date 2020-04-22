@@ -1,23 +1,23 @@
 package uk.ac.wellcome.messaging.worker
 
+import org.scalatest.Assertion
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{Assertion, FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.fixtures.worker.WorkerFixtures
-import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class WorkerTest
-    extends FunSpec
+    extends AnyFunSpec
     with Matchers
     with Akka
     with ScalaFutures
     with IntegrationPatience
     with WorkerFixtures
-    with MetricsFixtures
-    with MetricsSenderFixture {
+    with MetricsFixtures {
 
   it("successfully processes a work and increments success metrics") {
     withMetricsMonitoringProcessor[MyWork, Unit](

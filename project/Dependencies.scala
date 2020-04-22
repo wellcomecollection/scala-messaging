@@ -2,10 +2,10 @@ import sbt._
 
 object WellcomeDependencies {
   private lazy val versions = new {
-    val fixtures = "1.0.0"
-    val json = "1.1.1"
-    val monitoring = "2.3.0"
-    val typesafe = "1.0.0"
+    val fixtures = "1.2.0"
+    val json = "2.0.1"
+    val monitoring = "4.0.0"
+    val typesafe = "2.0.0"
   }
 
   val fixturesLibrary: Seq[ModuleID] = Seq(
@@ -19,8 +19,8 @@ object WellcomeDependencies {
   )
 
   val monitoringLibrary: Seq[ModuleID] = Seq(
-    "uk.ac.wellcome" %% "monitoring" % versions.monitoring,
-    "uk.ac.wellcome" %% "monitoring" % versions.monitoring % "test" classifier "tests"
+    "uk.ac.wellcome" %% "monitoring" % versions.monitoring exclude("software.amazon.awssdk", "netty-nio-client"),
+    "uk.ac.wellcome" %% "monitoring" % versions.monitoring % "test" classifier "tests" exclude("software.amazon.awssdk", "netty-nio-client")
   )
 
   val monitoringTypesafeLibrary: Seq[ModuleID] = Seq(
@@ -36,12 +36,12 @@ object WellcomeDependencies {
 
 object Dependencies {
   lazy val versions = new {
-    val aws = "1.11.225"
-    val akka = "2.5.9"
-    val akkaStreamAlpakka = "0.20"
+    val aws = "2.11.14"
+    val akka = "2.6.4"
+    val akkaStreamAlpakka = "1.1.2"
     val circe = "0.9.0"
     val circeYaml = "0.8.0"
-    val scalatest = "3.0.1"
+    val scalatest = "3.1.1"
     val logback = "1.2.3"
     val elasticApm = "1.12.0"
   }
@@ -75,9 +75,9 @@ object Dependencies {
   )
 
   val libraryDependencies: Seq[ModuleID] = Seq(
-    "com.amazonaws" % "aws-java-sdk-sns" % versions.aws,
-    "com.amazonaws" % "aws-java-sdk-sqs" % versions.aws,
-    "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % versions.akkaStreamAlpakka,
+    "software.amazon.awssdk" % "sns" % versions.aws exclude("software.amazon.awssdk", "netty-nio-client"),
+    "software.amazon.awssdk" % "sqs" % versions.aws  exclude("software.amazon.awssdk", "netty-nio-client"),
+    "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % versions.akkaStreamAlpakka exclude("software.amazon.awssdk", "netty-nio-client"),
     "io.circe" %% "circe-yaml" % versions.circeYaml
   ) ++ WellcomeDependencies.jsonLibrary ++
     WellcomeDependencies.monitoringLibrary ++

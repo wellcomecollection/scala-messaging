@@ -1,7 +1,8 @@
 package uk.ac.wellcome.messaging.sqsworker.alpakka
 
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS.QueuePair
@@ -10,7 +11,7 @@ import uk.ac.wellcome.messaging.fixtures.worker.AlpakkaSQSWorkerFixtures
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class AlpakkaSQSWorkerTest
-    extends FunSpec
+    extends AnyFunSpec
     with Matchers
     with AlpakkaSQSWorkerFixtures
     with ScalaFutures

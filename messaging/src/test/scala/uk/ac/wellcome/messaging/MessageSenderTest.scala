@@ -1,16 +1,15 @@
 package uk.ac.wellcome.messaging
 
-import org.scalatest.{FunSpec, Matchers}
+
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.json.utils.JsonAssertions
-import uk.ac.wellcome.messaging.memory.{
-  MemoryIndividualMessageSender,
-  MemoryMessageSender
-}
+import uk.ac.wellcome.messaging.memory.{MemoryIndividualMessageSender, MemoryMessageSender}
 
 import scala.util.Success
 
-class MessageSenderTest extends FunSpec with Matchers with JsonAssertions {
+class MessageSenderTest extends AnyFunSpec with Matchers with JsonAssertions {
   it("sends individual messages") {
     val sender = new MemoryIndividualMessageSender()
 

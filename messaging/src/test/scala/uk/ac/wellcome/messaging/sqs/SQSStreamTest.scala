@@ -3,9 +3,10 @@ package uk.ac.wellcome.messaging.sqs
 import java.util.concurrent.ConcurrentLinkedQueue
 
 import akka.stream.scaladsl.Flow
-import com.amazonaws.services.cloudwatch.model.StandardUnit
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
+import software.amazon.awssdk.services.cloudwatch.model.StandardUnit
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
@@ -16,7 +17,7 @@ import uk.ac.wellcome.monitoring.memory.MemoryMetrics
 import scala.concurrent.Future
 
 class SQSStreamTest
-    extends FunSpec
+    extends AnyFunSpec
     with Matchers
     with ScalaFutures
     with IntegrationPatience

@@ -1,7 +1,7 @@
 package uk.ac.wellcome.messaging.fixtures.worker
 
 import akka.actor.ActorSystem
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS

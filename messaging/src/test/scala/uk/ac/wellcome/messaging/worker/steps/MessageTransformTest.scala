@@ -2,10 +2,10 @@ package uk.ac.wellcome.messaging.worker.steps
 
 import java.time.Instant
 
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 import uk.ac.wellcome.messaging.fixtures.worker.WorkerFixtures
 
-class MessageTransformTest extends FunSpec with WorkerFixtures {
+class MessageTransformTest extends AnyFunSpec with WorkerFixtures {
   it("calls transform function and returns result") {
     val now = Instant.now
     val messageTransform = new MessageTransform[MyMessage, MyWork, MyContext] {

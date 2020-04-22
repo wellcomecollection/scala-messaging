@@ -1,25 +1,27 @@
 package uk.ac.wellcome.messaging.sns
 
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.sns.{AmazonSNS, AmazonSNSClientBuilder}
+import java.net.URI
+
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.sns.SnsClient
 
 object SNSClientFactory {
   def create(region: String,
              endpoint: String,
              accessKey: String,
-             secretKey: String): AmazonSNS = {
-    val standardClient = AmazonSNSClientBuilder.standard
+             secretKey: String): SnsClient = {
+    val standardClient = SnsClient.builder()
     if (endpoint.isEmpty)
       standardClient
-        .withRegion(region)
+        .region(Region.of(region))
         .build()
     else
       standardClient
-        .withCredentials(
-          new AWSStaticCredentialsProvider(
-            new BasicAWSCredentials(accessKey, secretKey)))
-        .withEndpointConfiguration(new EndpointConfiguration(endpoint, region))
+        .credentialsProvider(
+          StaticCredentialsProvider.create(
+            AwsBasicCredentials.create(accessKey, secretKey)))
+        .endpointOverride(new URI(endpoint))
         .build()
   }
 }

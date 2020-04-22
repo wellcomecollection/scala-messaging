@@ -2,11 +2,11 @@ package uk.ac.wellcome.messaging.worker.monitoring.metrics.cloudwatch
 
 import grizzled.slf4j.Logging
 import uk.ac.wellcome.messaging.worker.monitoring.metrics.MetricsMonitoringClient
-import uk.ac.wellcome.monitoring.MetricsSender
+import uk.ac.wellcome.monitoring.cloudwatch.CloudWatchMetrics
 
 import scala.concurrent.Future
 
-class CloudwatchMetricsMonitoringClient(metricsSender: MetricsSender)
+class CloudwatchMetricsMonitoringClient(metricsSender: CloudWatchMetrics)
     extends MetricsMonitoringClient
     with Logging {
 
