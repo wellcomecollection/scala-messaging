@@ -12,10 +12,12 @@ class SNSIndividualMessageSender(
   override def send(message: String)(subject: String,
                                      destination: SNSConfig): Try[Unit] = Try {
     snsClient.publish(
-      PublishRequest.builder()
+      PublishRequest
+        .builder()
         .message(message)
         .subject(subject)
-        .topicArn(destination.topicArn).build()
+        .topicArn(destination.topicArn)
+        .build()
     )
   }
 }

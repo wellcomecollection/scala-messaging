@@ -5,7 +5,17 @@ import grizzled.slf4j.Logging
 import io.circe.Encoder
 import org.scalatest.matchers.should.Matchers
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit
-import software.amazon.awssdk.services.sqs.model.{CreateQueueRequest, DeleteQueueRequest, GetQueueAttributesRequest, PurgeQueueRequest, QueueAttributeName, ReceiveMessageRequest, SendMessageRequest, SendMessageResponse, SetQueueAttributesRequest}
+import software.amazon.awssdk.services.sqs.model.{
+  CreateQueueRequest,
+  DeleteQueueRequest,
+  GetQueueAttributesRequest,
+  PurgeQueueRequest,
+  QueueAttributeName,
+  ReceiveMessageRequest,
+  SendMessageRequest,
+  SendMessageResponse,
+  SetQueueAttributesRequest
+}
 import software.amazon.awssdk.services.sqs.{SqsAsyncClient, SqsClient}
 import uk.ac.wellcome.fixtures._
 import uk.ac.wellcome.json.JsonUtil._
@@ -63,21 +73,35 @@ trait SQS extends Matchers with Logging {
     fixture[Queue, R](
       create = {
         val queueName: String = Random.alphanumeric take 10 mkString
-        val response = client.createQueue { builder: CreateQueueRequest.Builder => builder.queueName(queueName) }
+        val response = client.createQueue {
+          builder: CreateQueueRequest.Builder =>
+            builder.queueName(queueName)
+        }
         val arn = client
-          .getQueueAttributes{ builder: GetQueueAttributesRequest.Builder =>
-            builder.queueUrl(response.queueUrl()).attributeNames(QueueAttributeName.QUEUE_ARN)
+          .getQueueAttributes { builder: GetQueueAttributesRequest.Builder =>
+            builder
+              .queueUrl(response.queueUrl())
+              .attributeNames(QueueAttributeName.QUEUE_ARN)
           }
-          .attributes().get(QueueAttributeName.QUEUE_ARN)
+          .attributes()
+          .get(QueueAttributeName.QUEUE_ARN)
         val queue = Queue(response.queueUrl(), arn)
         client
-          .setQueueAttributes{builder: SetQueueAttributesRequest.Builder =>
-            builder.queueUrl(queue.url).attributes(Map(QueueAttributeName.VISIBILITY_TIMEOUT -> "1").asJava)}
+          .setQueueAttributes { builder: SetQueueAttributesRequest.Builder =>
+            builder
+              .queueUrl(queue.url)
+              .attributes(
+                Map(QueueAttributeName.VISIBILITY_TIMEOUT -> "1").asJava)
+          }
         queue
       },
       destroy = { queue =>
-        client.purgeQueue{builder: PurgeQueueRequest.Builder => builder.queueUrl(queue.url)}
-        client.deleteQueue{builder: DeleteQueueRequest.Builder => builder.queueUrl(queue.url)}
+        client.purgeQueue { builder: PurgeQueueRequest.Builder =>
+          builder.queueUrl(queue.url)
+        }
+        client.deleteQueue { builder: DeleteQueueRequest.Builder =>
+          builder.queueUrl(queue.url)
+        }
       }
     )
 
@@ -93,14 +117,23 @@ trait SQS extends Matchers with Logging {
     testWith: TestWith[QueuePair, R]): R =
     withLocalSqsQueue { dlq =>
       val queueName: String = Random.alphanumeric take 10 mkString
-      val response = sqsClient.createQueue{ builder: CreateQueueRequest.Builder =>
-        builder.queueName(queueName).attributes(
-          Map(QueueAttributeName.REDRIVE_POLICY->s"""{"maxReceiveCount":"3", "deadLetterTargetArn":"${dlq.arn}"}""",
-            QueueAttributeName.VISIBILITY_TIMEOUT -> s"$visibilityTimeout").asJava)}
+      val response = sqsClient.createQueue {
+        builder: CreateQueueRequest.Builder =>
+          builder
+            .queueName(queueName)
+            .attributes(Map(
+              QueueAttributeName.REDRIVE_POLICY -> s"""{"maxReceiveCount":"3", "deadLetterTargetArn":"${dlq.arn}"}""",
+              QueueAttributeName.VISIBILITY_TIMEOUT -> s"$visibilityTimeout"
+            ).asJava)
+      }
       val arn = sqsClient
-        .getQueueAttributes{builder: GetQueueAttributesRequest.Builder =>
-          builder.queueUrl(response.queueUrl()).attributeNames(QueueAttributeName.QUEUE_ARN)}
-        .attributes().get(QueueAttributeName.QUEUE_ARN)
+        .getQueueAttributes { builder: GetQueueAttributesRequest.Builder =>
+          builder
+            .queueUrl(response.queueUrl())
+            .attributeNames(QueueAttributeName.QUEUE_ARN)
+        }
+        .attributes()
+        .get(QueueAttributeName.QUEUE_ARN)
       val queue = Queue(response.queueUrl(), arn)
       testWith(QueuePair(queue, dlq))
     }
@@ -169,23 +202,33 @@ trait SQS extends Matchers with Logging {
                                      body: String): SendMessageResponse = {
     debug(s"Sending message to ${queue.url}: ${body}")
 
-    sqsClient.sendMessage{builder: SendMessageRequest.Builder => builder.queueUrl(queue.url).messageBody(body)}
+    sqsClient.sendMessage { builder: SendMessageRequest.Builder =>
+      builder.queueUrl(queue.url).messageBody(body)
+    }
   }
 
   def noMessagesAreWaitingIn(queue: Queue) = {
     // No messages in flight
     sqsClient
-      .getQueueAttributes{builder: GetQueueAttributesRequest.Builder =>
-        builder.queueUrl(queue.url)
-          .attributeNames(List(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE).asJava)}
-      .attributes().get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE) shouldBe "0"
+      .getQueueAttributes { builder: GetQueueAttributesRequest.Builder =>
+        builder
+          .queueUrl(queue.url)
+          .attributeNames(List(
+            QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE).asJava)
+      }
+      .attributes()
+      .get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE) shouldBe "0"
 
     // No messages awaiting processing
     sqsClient
-      .getQueueAttributes{builder: GetQueueAttributesRequest.Builder =>
-        builder.queueUrl(queue.url)
-          .attributeNames(List(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES).asJava)}
-      .attributes().get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES) shouldBe "0"
+      .getQueueAttributes { builder: GetQueueAttributesRequest.Builder =>
+        builder
+          .queueUrl(queue.url)
+          .attributeNames(
+            List(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES).asJava)
+      }
+      .attributes()
+      .get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES) shouldBe "0"
   }
 
   def assertQueueEmpty(queue: Queue) = {
@@ -241,7 +284,9 @@ trait SQS extends Matchers with Logging {
 
   def getMessages(queue: Queue) = {
     sqsClient
-      .receiveMessage { builder: ReceiveMessageRequest.Builder => builder.queueUrl(queue.url).maxNumberOfMessages(10) }
+      .receiveMessage { builder: ReceiveMessageRequest.Builder =>
+        builder.queueUrl(queue.url).maxNumberOfMessages(10)
+      }
       .messages()
       .asScala
   }

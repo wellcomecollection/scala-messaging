@@ -64,7 +64,7 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     val callCounter = new CallCounter()
 
     override val retryAction: MessageAction =
-     _ => MyExternalMessageAction(new Retry {})
+      _ => MyExternalMessageAction(new Retry {})
 
     override val completedAction: MessageAction =
       _ => MyExternalMessageAction(new Completed {})

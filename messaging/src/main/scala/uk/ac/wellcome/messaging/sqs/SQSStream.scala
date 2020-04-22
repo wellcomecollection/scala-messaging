@@ -41,7 +41,8 @@ class SQSStream[T](sqsClient: SqsAsyncClient,
 
   implicit val dispatcher = actorSystem.dispatcher
 
-  private val source: Source[Message, NotUsed] = SqsSource(sqsConfig.queueUrl)(sqsClient)
+  private val source: Source[Message, NotUsed] =
+    SqsSource(sqsConfig.queueUrl)(sqsClient)
   private val sink: Sink[MessageAction, Future[Done]] =
     SqsAckSink(sqsConfig.queueUrl)(sqsClient)
 
@@ -70,7 +71,7 @@ class SQSStream[T](sqsClient: SqsAsyncClient,
       (message, fromJson[T](message.body).get)
     })
 
-    val srcWithLogging: Source[ Delete, NotUsed] = src
+    val srcWithLogging: Source[Delete, NotUsed] = src
       .map { m =>
         metricsSender.incrementCount(s"${metricName}_success")
         debug(s"Deleting message ${m.messageId()}")

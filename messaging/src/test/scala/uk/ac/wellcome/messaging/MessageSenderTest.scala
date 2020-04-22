@@ -1,11 +1,13 @@
 package uk.ac.wellcome.messaging
 
-
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.json.utils.JsonAssertions
-import uk.ac.wellcome.messaging.memory.{MemoryIndividualMessageSender, MemoryMessageSender}
+import uk.ac.wellcome.messaging.memory.{
+  MemoryIndividualMessageSender,
+  MemoryMessageSender
+}
 
 import scala.util.Success
 
