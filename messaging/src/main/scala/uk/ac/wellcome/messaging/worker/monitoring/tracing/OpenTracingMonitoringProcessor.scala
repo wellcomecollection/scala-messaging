@@ -9,7 +9,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Implements the [[MonitoringProcessor]] interface with Opentracing (https://opentracing.io/).
+  * Implements the [[uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor]] interface with Opentracing (https://opentracing.io/).
   */
 class OpenTracingMonitoringProcessor[Work, InfraServiceMonitoringContext](
   namespace: String)(
@@ -22,9 +22,9 @@ class OpenTracingMonitoringProcessor[Work, InfraServiceMonitoringContext](
     new TracedExecutionContext(wrappedEc, tracer)
 
   /**
-    * Starts a [[Span]] and returns it.
-    * If an optional [[context]] is passed, it uses a [[OpenTracingSpanSerializer]]
-    * to deserialise it into a [[io.opentracing.SpanContext]] and link it to the new [[Span]]
+    * Starts a `Span` and returns it.
+    * If an optional `context` is passed, it uses a [[uk.ac.wellcome.messaging.worker.monitoring.tracing.OpenTracingSpanSerializer]]
+    * to deserialise it into a `SpanContext` and link it to the new `Span`
     */
   override def recordStart(
     work: Either[Throwable, Work],
@@ -56,8 +56,8 @@ class OpenTracingMonitoringProcessor[Work, InfraServiceMonitoringContext](
   }
 
   /**
-    * Receives a [[Span]] and calls [[Span.finish]]. It tags the [[Span]] as
-    * errored based on the type of [[result]]
+    * Receives a `Span` and calls `Span.finish`. It tags the `Span` as
+    * errored based on the type of `result`
     */
   override def recordEnd[Recorded](
     span: Either[Throwable, Span],

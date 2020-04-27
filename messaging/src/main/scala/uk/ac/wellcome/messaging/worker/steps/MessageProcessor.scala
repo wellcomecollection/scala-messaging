@@ -5,7 +5,8 @@ import uk.ac.wellcome.messaging.worker.models.{DeterministicFailure, Result}
 import scala.concurrent.{ExecutionContext, Future}
 
 /***
-  * Executes some operation on a [[Work]] and returns a [[Result]] with a onptional descriptive [[Summary]]
+  * Executes some operation on a `Work` and returns a [[uk.ac.wellcome.messaging.worker.models.Result]]
+ * with a optional descriptive `Summary`
   */
 trait MessageProcessor[Work, Summary] {
   type ResultSummary = Future[Result[Summary]]

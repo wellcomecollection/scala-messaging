@@ -11,12 +11,12 @@ import uk.ac.wellcome.messaging.worker.steps.{
 import scala.concurrent.Future
 
 /**
-  * A Worker receives a [[Message]] and performs a series of steps. These steps are
-  *    - [[MessageTransform]]: deserialises the payload of the message into a [[Work]]
-  *    - [[MonitoringProcessor.recordStart]]: starts monitoring
-  *    - [[MessageProcessor.process]]: performs an operation on the [[Work]]
-  *    - [[Logger.log]]: logs the result of the processing
-  *    - [[MonitoringProcessor.recordEnd]]: ends monitoring
+  * A Worker receives a `Message` and performs a series of steps. These steps are
+  *    - [[uk.ac.wellcome.messaging.worker.steps.MessageTransform]]: deserialises the payload of the message into a `Work`
+  *    - [[uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor#recordStart]]: starts monitoring
+  *    - [[uk.ac.wellcome.messaging.worker.steps.MessageProcessor#process]]: performs an operation on the `Work`
+  *    - [[uk.ac.wellcome.messaging.worker.steps.Logger#log]]: logs the result of the processing
+  *    - [[uk.ac.wellcome.messaging.worker.steps.MonitoringProcessor#recordEnd]]: ends monitoring
   * @tparam Message: the message received by the Worker
   * @tparam Work: the payload in the message
   * @tparam InfraServiceMonitoringContext: the monitoring context to be passed around between different services

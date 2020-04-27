@@ -3,7 +3,7 @@ package uk.ac.wellcome.messaging.worker.steps
 import scala.util.Try
 
 /**
-  * Deserialises a [[Message]] into a [[Work]] and an optional [[InfraServiceMonitoringContext]]
+  * Deserialises a `Message` into a `Work` and an optional `InfraServiceMonitoringContext``
   */
 trait MessageTransform[Message, Work, InfraServiceMonitoringContext] {
 
