@@ -14,10 +14,9 @@ object SNSClientFactory {
              endpoint: String,
              accessKey: String,
              secretKey: String): SnsClient = {
-    val standardClient = SnsClient.builder()
+    val standardClient = SnsClient.builder().region(Region.of(region))
     if (endpoint.isEmpty)
       standardClient
-        .region(Region.of(region))
         .build()
     else
       standardClient

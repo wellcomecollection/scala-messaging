@@ -14,10 +14,9 @@ object SQSClientFactory {
                         endpoint: String,
                         accessKey: String,
                         secretKey: String): SqsAsyncClient = {
-    val standardClient = SqsAsyncClient.builder()
+    val standardClient = SqsAsyncClient.builder().region(Region.of(region))
     if (endpoint.isEmpty)
       standardClient
-        .region(Region.of(region))
         .build()
     else
       standardClient
@@ -32,10 +31,9 @@ object SQSClientFactory {
                        endpoint: String,
                        accessKey: String,
                        secretKey: String): SqsClient = {
-    val standardClient = SqsClient.builder()
+    val standardClient = SqsClient.builder().region(Region.of(region))
     if (endpoint.isEmpty)
       standardClient
-        .region(Region.of(region))
         .build()
     else
       standardClient
