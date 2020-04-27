@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v9.0.0 - 2020-04-27
+
+Upgrade akka, alpakka, aws sdk and scalatest
+
 ## v8.0.0 - 2020-04-27
 
 Add `OpenTracingMonitoringProcessor` and further refactor `Worker` and `MonitoringProcessor` interfaces
