@@ -19,8 +19,8 @@ object WellcomeDependencies {
   )
 
   val monitoringLibrary: Seq[ModuleID] = Seq(
-    "uk.ac.wellcome" %% "monitoring" % versions.monitoring exclude("software.amazon.awssdk", "netty-nio-client"),
-    "uk.ac.wellcome" %% "monitoring" % versions.monitoring % "test" classifier "tests" exclude("software.amazon.awssdk", "netty-nio-client")
+    "uk.ac.wellcome" %% "monitoring" % versions.monitoring,
+    "uk.ac.wellcome" %% "monitoring" % versions.monitoring % "test" classifier "tests"
   )
 
   val monitoringTypesafeLibrary: Seq[ModuleID] = Seq(
@@ -75,9 +75,12 @@ object Dependencies {
   )
 
   val libraryDependencies: Seq[ModuleID] = Seq(
-    "software.amazon.awssdk" % "sns" % versions.aws exclude("software.amazon.awssdk", "netty-nio-client"),
-    "software.amazon.awssdk" % "sqs" % versions.aws  exclude("software.amazon.awssdk", "netty-nio-client"),
-    "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % versions.akkaStreamAlpakka exclude("software.amazon.awssdk", "netty-nio-client"),
+    "software.amazon.awssdk" % "sns" % versions.aws,
+    "software.amazon.awssdk" % "sqs" % versions.aws,
+    "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % versions.akkaStreamAlpakka
+      // This needs to be excluded bacuse it conflicts with aws http client "netty-nio-client"
+      // and it also causes weird leaks between tests
+      exclude("com.github.matsluni", "aws-spi-akka-http_2.12"),
     "io.circe" %% "circe-yaml" % versions.circeYaml
   ) ++ WellcomeDependencies.jsonLibrary ++
     WellcomeDependencies.monitoringLibrary ++

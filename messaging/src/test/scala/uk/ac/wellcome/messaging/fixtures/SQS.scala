@@ -5,17 +5,7 @@ import grizzled.slf4j.Logging
 import io.circe.Encoder
 import org.scalatest.matchers.should.Matchers
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit
-import software.amazon.awssdk.services.sqs.model.{
-  CreateQueueRequest,
-  DeleteQueueRequest,
-  GetQueueAttributesRequest,
-  PurgeQueueRequest,
-  QueueAttributeName,
-  ReceiveMessageRequest,
-  SendMessageRequest,
-  SendMessageResponse,
-  SetQueueAttributesRequest
-}
+import software.amazon.awssdk.services.sqs.model.{CreateQueueRequest, DeleteQueueRequest, GetQueueAttributesRequest, PurgeQueueRequest, QueueAttributeName, ReceiveMessageRequest, SendMessageRequest, SendMessageResponse, SetQueueAttributesRequest}
 import software.amazon.awssdk.services.sqs.{SqsAsyncClient, SqsClient}
 import uk.ac.wellcome.fixtures._
 import uk.ac.wellcome.json.JsonUtil._

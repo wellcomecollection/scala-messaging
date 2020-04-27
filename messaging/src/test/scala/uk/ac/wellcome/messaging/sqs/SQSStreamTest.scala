@@ -8,7 +8,7 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit
 import uk.ac.wellcome.akka.fixtures.Akka
-import uk.ac.wellcome.fixtures.TestWith
+import uk.ac.wellcome.fixtures.{RandomGenerators, TestWith}
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.fixtures.SQS
 import uk.ac.wellcome.messaging.fixtures.SQS.{Queue, QueuePair}
@@ -23,7 +23,7 @@ class SQSStreamTest
     with IntegrationPatience
     with Eventually
     with SQS
-    with Akka {
+    with Akka with RandomGenerators{
 
   case class NamedObject(name: String)
 
@@ -39,9 +39,9 @@ class SQSStreamTest
         sendNamedObjects(queue = queue, count = 3)
 
         val received = new ConcurrentLinkedQueue[NamedObject]()
-
+          val streamName = randomAlphanumeric(10)
         messageStream.foreach(
-          streamName = "test-stream",
+          streamName = streamName,
           process = process(received))
 
         eventually {
@@ -61,13 +61,14 @@ class SQSStreamTest
         sendNamedObjects(queue = queue)
 
         val received = new ConcurrentLinkedQueue[NamedObject]()
+        val streamName = randomAlphanumeric(10)
         messageStream.foreach(
-          streamName = "test-stream",
+          streamName = streamName,
           process = process(received))
 
         eventually {
           metricsSender.incrementedCounts shouldBe Seq(
-            "test-stream_ProcessMessage_success")
+            s"${streamName}_ProcessMessage_success")
         }
     }
   }
@@ -78,16 +79,16 @@ class SQSStreamTest
         sendInvalidJSONto(queue)
 
         val received = new ConcurrentLinkedQueue[NamedObject]()
-
+        val streamName = randomAlphanumeric(10)
         messageStream.foreach(
-          streamName = "test-stream",
+          streamName = streamName,
           process = process(received))
 
         eventually {
           metricsSender.incrementedCounts shouldBe Seq(
-            "test-stream_ProcessMessage_recognisedFailure",
-            "test-stream_ProcessMessage_recognisedFailure",
-            "test-stream_ProcessMessage_recognisedFailure"
+            s"${streamName}_ProcessMessage_recognisedFailure",
+            s"${streamName}_ProcessMessage_recognisedFailure",
+            s"${streamName}_ProcessMessage_recognisedFailure"
           )
           received shouldBe empty
 
@@ -108,16 +109,17 @@ class SQSStreamTest
         def processFailing(o: NamedObject) = {
           Future.failed(new RuntimeException("BOOOOM!"))
         }
+        val streamName = randomAlphanumeric(10)
 
         messageStream.foreach(
-          streamName = "test-stream",
+          streamName = streamName,
           process = processFailing)
 
         eventually {
           metricsSender.incrementedCounts shouldBe Seq(
-            "test-stream_ProcessMessage_failure",
-            "test-stream_ProcessMessage_failure",
-            "test-stream_ProcessMessage_failure"
+            s"${streamName}_ProcessMessage_failure",
+            s"${streamName}_ProcessMessage_failure",
+            s"${streamName}_ProcessMessage_failure"
           )
           assertQueueEmpty(queue)
           assertQueueHasSize(dlq, size = 1)
@@ -135,8 +137,10 @@ class SQSStreamTest
         sendInvalidJSONto(queue)
 
         val received = new ConcurrentLinkedQueue[NamedObject]()
+        val streamName = randomAlphanumeric(10)
+
         messageStream.foreach(
-          streamName = "test-stream",
+          streamName = streamName,
           process = process(received))
 
         eventually {
@@ -156,9 +160,10 @@ class SQSStreamTest
           sendNamedObjects(queue = queue, start = 1, count = 2)
 
           val received = new ConcurrentLinkedQueue[NamedObject]()
+          val streamName = randomAlphanumeric(10)
 
           messageStream.runStream(
-            "test-stream",
+            streamName,
             source =>
               source.via(Flow.fromFunction {
                 case (message, t) =>
@@ -174,8 +179,8 @@ class SQSStreamTest
             assertQueueEmpty(dlq)
 
             metricsSender.incrementedCounts shouldBe Seq(
-              "test-stream_ProcessMessage_success",
-              "test-stream_ProcessMessage_success"
+              s"${streamName}_ProcessMessage_success",
+              s"${streamName}_ProcessMessage_success"
             )
           }
       }
@@ -185,9 +190,10 @@ class SQSStreamTest
       withSQSStreamFixtures {
         case (messageStream, QueuePair(queue, dlq), metricsSender) =>
           sendNamedObjects(queue = queue)
+          val streamName = randomAlphanumeric(10)
 
           messageStream.runStream(
-            "test-stream",
+            streamName,
             source =>
               source.via(
                 Flow.fromFunction(_ => throw new RuntimeException("BOOOM!"))))
@@ -197,9 +203,9 @@ class SQSStreamTest
             assertQueueHasSize(dlq, 1)
 
             metricsSender.incrementedCounts shouldBe Seq(
-              "test-stream_ProcessMessage_failure",
-              "test-stream_ProcessMessage_failure",
-              "test-stream_ProcessMessage_failure"
+              s"${streamName}_ProcessMessage_failure",
+              s"${streamName}_ProcessMessage_failure",
+              s"${streamName}_ProcessMessage_failure"
             )
           }
       }
@@ -216,7 +222,7 @@ class SQSStreamTest
 
           val received = new ConcurrentLinkedQueue[NamedObject]()
           messageStream.runStream(
-            "test-stream",
+            randomAlphanumeric(10),
             source =>
               source.via(Flow.fromFunction {
                 case (message, t) =>
@@ -251,7 +257,7 @@ class SQSStreamTest
                         QueuePair,
                         MemoryMetrics[StandardUnit]),
                        R]): R =
-    withActorSystem { implicit actorSystem =>
+     withActorSystem{ implicit actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>
           val metrics = new MemoryMetrics[StandardUnit]()
