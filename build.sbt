@@ -1,5 +1,3 @@
-import java.util.UUID
-import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider
 val projectName = "messaging"
 val projectVersion = "8.0.0"
 
@@ -34,15 +32,6 @@ val settings: Seq[Def.Setting[_]] = Seq(
   publishArtifact in Test := true,
   version := projectVersion
 )
-
-s3CredentialsProvider := { _ =>
-  val builder = new STSAssumeRoleSessionCredentialsProvider.Builder(
-    "arn:aws:iam::760097843905:role/platform-read_only",
-    UUID.randomUUID().toString
-  )
-
-  builder.build()
-}
 
 lazy val lib =
   project

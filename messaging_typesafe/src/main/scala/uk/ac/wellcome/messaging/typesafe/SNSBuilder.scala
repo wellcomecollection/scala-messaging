@@ -1,7 +1,7 @@
 package uk.ac.wellcome.messaging.typesafe
 
-import com.amazonaws.services.sns.AmazonSNS
 import com.typesafe.config.Config
+import software.amazon.awssdk.services.sns.SnsClient
 import uk.ac.wellcome.config.models.AWSClientConfig
 import uk.ac.wellcome.messaging.sns._
 import uk.ac.wellcome.typesafe.config.builders.AWSClientConfigBuilder
@@ -15,7 +15,7 @@ object SNSBuilder extends AWSClientConfigBuilder {
     SNSConfig(topicArn = topicArn)
   }
 
-  private def buildSNSClient(awsClientConfig: AWSClientConfig): AmazonSNS =
+  private def buildSNSClient(awsClientConfig: AWSClientConfig): SnsClient =
     SNSClientFactory.create(
       region = awsClientConfig.region,
       endpoint = awsClientConfig.endpoint.getOrElse(""),
@@ -23,7 +23,7 @@ object SNSBuilder extends AWSClientConfigBuilder {
       secretKey = awsClientConfig.secretKey.getOrElse("")
     )
 
-  def buildSNSClient(config: Config): AmazonSNS =
+  def buildSNSClient(config: Config): SnsClient =
     buildSNSClient(
       awsClientConfig = buildAWSClientConfig(config, namespace = "sns")
     )
