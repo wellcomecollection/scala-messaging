@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v8.0.0 - 2020-04-27
+
+Add `OpenTracingMonitoringProcessor` and further refactor `Worker` and `MonitoringProcessor` interfaces
+
 ## v7.0.0 - 2020-02-14
 
 Refactor `Worker` and `MonitoringProcessor` interfaces to allow for monitoring context to be carried across different services in messages.
