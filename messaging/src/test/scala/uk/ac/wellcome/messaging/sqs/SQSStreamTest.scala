@@ -23,7 +23,8 @@ class SQSStreamTest
     with IntegrationPatience
     with Eventually
     with SQS
-    with Akka with RandomGenerators{
+    with Akka
+    with RandomGenerators {
 
   case class NamedObject(name: String)
 
@@ -39,7 +40,7 @@ class SQSStreamTest
         sendNamedObjects(queue = queue, count = 3)
 
         val received = new ConcurrentLinkedQueue[NamedObject]()
-          val streamName = randomAlphanumeric(10)
+        val streamName = randomAlphanumeric(10)
         messageStream.foreach(
           streamName = streamName,
           process = process(received))
@@ -111,9 +112,7 @@ class SQSStreamTest
         }
         val streamName = randomAlphanumeric(10)
 
-        messageStream.foreach(
-          streamName = streamName,
-          process = processFailing)
+        messageStream.foreach(streamName = streamName, process = processFailing)
 
         eventually {
           metricsSender.incrementedCounts shouldBe Seq(
@@ -257,7 +256,7 @@ class SQSStreamTest
                         QueuePair,
                         MemoryMetrics[StandardUnit]),
                        R]): R =
-     withActorSystem{ implicit actorSystem =>
+    withActorSystem { implicit actorSystem =>
       withLocalSqsQueueAndDlq {
         case queuePair @ QueuePair(queue, _) =>
           val metrics = new MemoryMetrics[StandardUnit]()
