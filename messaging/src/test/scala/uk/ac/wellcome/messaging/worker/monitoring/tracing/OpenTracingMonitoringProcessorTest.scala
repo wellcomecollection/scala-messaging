@@ -2,8 +2,9 @@ package uk.ac.wellcome.messaging.worker.monitoring.tracing
 
 import io.opentracing.Span
 import io.opentracing.mock.{MockSpan, MockTracer}
+import org.scalatest.Assertion
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Assertion, FunSpec}
+import org.scalatest.funspec.AnyFunSpec
 import uk.ac.wellcome.messaging.fixtures.monitoring.tracing.TracingFixtures
 import uk.ac.wellcome.messaging.fixtures.worker.WorkerFixtures
 import uk.ac.wellcome.messaging.worker.models.MonitoringProcessorFailure
@@ -11,7 +12,7 @@ import uk.ac.wellcome.messaging.worker.models.MonitoringProcessorFailure
 import scala.collection.JavaConverters._
 
 class OpenTracingMonitoringProcessorTest
-    extends FunSpec
+    extends AnyFunSpec
     with WorkerFixtures
     with ScalaFutures
     with TracingFixtures {

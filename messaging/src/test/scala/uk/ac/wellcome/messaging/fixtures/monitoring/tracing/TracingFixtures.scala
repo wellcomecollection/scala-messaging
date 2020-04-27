@@ -2,7 +2,8 @@ package uk.ac.wellcome.messaging.fixtures.monitoring.tracing
 
 import io.opentracing.mock.MockSpan
 import io.opentracing.{Span, Tracer}
-import org.scalatest.{Matchers, Suite}
+import org.scalatest.Suite
+import org.scalatest.matchers.should.Matchers
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.messaging.worker.monitoring.tracing.{
   OpenTracingMonitoringProcessor,

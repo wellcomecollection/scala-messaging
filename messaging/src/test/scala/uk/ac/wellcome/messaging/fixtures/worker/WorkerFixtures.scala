@@ -2,7 +2,8 @@ package uk.ac.wellcome.messaging.fixtures.worker
 
 import java.time.Instant
 
-import org.scalatest.{Assertion, Matchers}
+import org.scalatest.Assertion
+import org.scalatest.matchers.should.Matchers
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.worker._
 import uk.ac.wellcome.messaging.worker.models._
@@ -63,10 +64,10 @@ trait WorkerFixtures extends Matchers with MetricsFixtures {
     val callCounter = new CallCounter()
 
     override val retryAction: MessageAction =
-      (_, MyExternalMessageAction(new Retry {}))
+      _ => MyExternalMessageAction(new Retry {})
 
     override val completedAction: MessageAction =
-      (_, MyExternalMessageAction(new Completed {}))
+      _ => MyExternalMessageAction(new Completed {})
 
     override val doWork =
       (work: MyWork) => createResult(testProcess, callCounter)(ec)(work)

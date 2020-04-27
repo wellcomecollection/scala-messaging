@@ -1,9 +1,13 @@
 package uk.ac.wellcome.messaging.fixtures
 
-import com.amazonaws.services.sns.AmazonSNS
 import grizzled.slf4j.Logging
 import io.circe.{yaml, Decoder, Json, ParsingFailure}
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
+import software.amazon.awssdk.services.sns.SnsClient
+import software.amazon.awssdk.services.sns.model.{
+  CreateTopicRequest,
+  DeleteTopicRequest
+}
 import uk.ac.wellcome.fixtures._
 import uk.ac.wellcome.json.JsonUtil._
 import uk.ac.wellcome.messaging.sns.{SNSClientFactory, SNSConfig}
@@ -32,7 +36,7 @@ trait SNS extends Matchers with Logging {
   private val accessKey = "access"
   private val secretKey = "secret"
 
-  implicit val snsClient: AmazonSNS = SNSClientFactory.create(
+  implicit val snsClient: SnsClient = SNSClientFactory.create(
     region = regionName,
     endpoint = localSNSEndpointUrl,
     accessKey = accessKey,
@@ -42,15 +46,21 @@ trait SNS extends Matchers with Logging {
   def withLocalSnsTopic[R]: Fixture[Topic, R] = fixture[Topic, R](
     create = {
       val topicName = Random.alphanumeric take 10 mkString
-      val arn = snsClient.createTopic(topicName).getTopicArn
+      val arn = snsClient
+        .createTopic { builder: CreateTopicRequest.Builder =>
+          builder.name(topicName)
+        }
+        .topicArn()
       Topic(arn)
     },
     destroy = { topic =>
-      snsClient.deleteTopic(topic.arn)
+      snsClient.deleteTopic { builder: DeleteTopicRequest.Builder =>
+        builder.topicArn(topic.arn)
+      }
     }
   )
 
-  val localStackSnsClient: AmazonSNS = SNSClientFactory.create(
+  val localStackSnsClient: SnsClient = SNSClientFactory.create(
     region = "eu-west-2",
     endpoint = "http://localhost:4575",
     accessKey = accessKey,
@@ -60,11 +70,17 @@ trait SNS extends Matchers with Logging {
   def withLocalStackSnsTopic[R]: Fixture[Topic, R] = fixture[Topic, R](
     create = {
       val topicName = Random.alphanumeric take 10 mkString
-      val arn = localStackSnsClient.createTopic(topicName).getTopicArn
+      val arn = localStackSnsClient
+        .createTopic { builder: CreateTopicRequest.Builder =>
+          builder.name(topicName)
+        }
+        .topicArn()
       Topic(arn)
     },
     destroy = { topic =>
-      localStackSnsClient.deleteTopic(topic.arn)
+      localStackSnsClient.deleteTopic { builder: DeleteTopicRequest.Builder =>
+        builder.topicArn(topic.arn)
+      }
     }
   )
 

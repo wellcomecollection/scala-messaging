@@ -1,7 +1,8 @@
 package uk.ac.wellcome.messaging.fixtures.monitoring.metrics
 
 import grizzled.slf4j.Logging
-import org.scalatest.{Assertion, Matchers}
+import org.scalatest.Assertion
+import org.scalatest.matchers.should.Matchers
 import uk.ac.wellcome.fixtures.TestWith
 import uk.ac.wellcome.messaging.worker.monitoring.metrics.{
   MetricsMonitoringClient,

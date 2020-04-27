@@ -1,13 +1,14 @@
 package uk.ac.wellcome.messaging.sns
 
-import com.amazonaws.services.sns.model.AmazonSNSException
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
+import software.amazon.awssdk.services.sns.model.SnsException
 import uk.ac.wellcome.messaging.fixtures.SNS
 import uk.ac.wellcome.messaging.fixtures.SNS.Topic
 
 import scala.util.{Failure, Success}
 
-class SNSMessageSenderTest extends FunSpec with Matchers with SNS {
+class SNSMessageSenderTest extends AnyFunSpec with Matchers with SNS {
   it("sends messages to SNS") {
     withLocalSnsTopic { topic =>
       val sender = new SNSIndividualMessageSender(snsClient)
@@ -32,7 +33,7 @@ class SNSMessageSenderTest extends FunSpec with Matchers with SNS {
 
     result shouldBe a[Failure[_]]
     val err = result.failed.get
-    err shouldBe a[AmazonSNSException]
+    err shouldBe a[SnsException]
     err.getMessage should startWith("Unknown topic: does not exist")
   }
 }

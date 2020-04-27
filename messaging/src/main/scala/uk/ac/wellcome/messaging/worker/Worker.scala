@@ -34,10 +34,10 @@ trait Worker[Message,
     with MessageTransform[Message, Work, InfraServiceMonitoringContext]
     with Logger {
 
-  type Processed = Future[(Message, Action)]
+  type Processed = Future[Action]
 
   type Completion = WorkCompletion[Message, Summary]
-  type MessageAction = Message => (Message, Action)
+  type MessageAction = Message => Action
 
   protected val retryAction: MessageAction
   protected val completedAction: MessageAction

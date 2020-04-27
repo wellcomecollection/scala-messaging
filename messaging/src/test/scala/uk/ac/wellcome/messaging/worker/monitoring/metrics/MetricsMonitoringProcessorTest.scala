@@ -3,23 +3,22 @@ package uk.ac.wellcome.messaging.worker.monitoring.metrics
 import java.time.Instant
 
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import uk.ac.wellcome.akka.fixtures.Akka
 import uk.ac.wellcome.messaging.fixtures.monitoring.metrics.MetricsFixtures
 import uk.ac.wellcome.messaging.fixtures.worker.WorkerFixtures
-import uk.ac.wellcome.monitoring.fixtures.MetricsSenderFixture
 
 import scala.concurrent.ExecutionContext.Implicits._
 
 class MetricsMonitoringProcessorTest
-    extends FunSpec
+    extends AnyFunSpec
     with Matchers
     with Akka
     with ScalaFutures
     with IntegrationPatience
     with WorkerFixtures
-    with MetricsFixtures
-    with MetricsSenderFixture {
+    with MetricsFixtures {
 
   val successMetric = "namespace/Successful"
   val deterministicFailMetric = "namespace/DeterministicFailure"

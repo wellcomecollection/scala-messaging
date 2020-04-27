@@ -1,12 +1,12 @@
 package uk.ac.wellcome.messaging.typesafe
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
-import com.amazonaws.services.sqs.{AmazonSQS, AmazonSQSAsync}
+import akka.stream.Materializer
 import com.typesafe.config.Config
+import software.amazon.awssdk.services.sqs.{SqsAsyncClient, SqsClient}
 import uk.ac.wellcome.config.models.AWSClientConfig
 import uk.ac.wellcome.messaging.sqs.{SQSClientFactory, SQSConfig, SQSStream}
-import uk.ac.wellcome.monitoring.typesafe.MetricsBuilder
+import uk.ac.wellcome.monitoring.typesafe.CloudWatchBuilder
 import uk.ac.wellcome.typesafe.config.builders.AWSClientConfigBuilder
 import uk.ac.wellcome.typesafe.config.builders.EnrichConfig._
 
@@ -26,7 +26,7 @@ object SQSBuilder extends AWSClientConfigBuilder {
     )
   }
 
-  private def buildSQSClient(awsClientConfig: AWSClientConfig): AmazonSQS =
+  private def buildSQSClient(awsClientConfig: AWSClientConfig): SqsClient =
     SQSClientFactory.createSyncClient(
       region = awsClientConfig.region,
       endpoint = awsClientConfig.endpoint.getOrElse(""),
@@ -34,12 +34,12 @@ object SQSBuilder extends AWSClientConfigBuilder {
       secretKey = awsClientConfig.secretKey.getOrElse("")
     )
 
-  def buildSQSClient(config: Config): AmazonSQS =
+  def buildSQSClient(config: Config): SqsClient =
     buildSQSClient(
       awsClientConfig = buildAWSClientConfig(config, namespace = "sqs")
     )
 
-  def buildSQSAsyncClient(awsClientConfig: AWSClientConfig): AmazonSQSAsync =
+  def buildSQSAsyncClient(awsClientConfig: AWSClientConfig): SqsAsyncClient =
     SQSClientFactory.createAsyncClient(
       region = awsClientConfig.region,
       endpoint = awsClientConfig.endpoint.getOrElse(""),
@@ -47,17 +47,17 @@ object SQSBuilder extends AWSClientConfigBuilder {
       secretKey = awsClientConfig.secretKey.getOrElse("")
     )
 
-  def buildSQSAsyncClient(config: Config): AmazonSQSAsync =
+  def buildSQSAsyncClient(config: Config): SqsAsyncClient =
     buildSQSAsyncClient(
       awsClientConfig = buildAWSClientConfig(config, namespace = "sqs")
     )
 
   def buildSQSStream[T](config: Config)(implicit actorSystem: ActorSystem,
-                                        materializer: ActorMaterializer,
+                                        materializer: Materializer,
                                         ec: ExecutionContext): SQSStream[T] =
     new SQSStream[T](
       sqsClient = buildSQSAsyncClient(config),
       sqsConfig = buildSQSConfig(config),
-      metricsSender = MetricsBuilder.buildMetricsSender(config)
+      metricsSender = CloudWatchBuilder.buildCloudWatchMetrics(config)
     )
 }
