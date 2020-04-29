@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v9.0.1 - 2020-04-29
+
+This patch tidies up the dependency tree of this library.  Specifically, it removes some explicit dependencies that are duplicated from other Wellcome Scala libraries (Circe, Akka, Logback).
+
 ## v9.0.0 - 2020-04-27
 
 Upgrade akka, alpakka, aws sdk and scalatest
