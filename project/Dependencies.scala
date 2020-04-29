@@ -37,7 +37,6 @@ object WellcomeDependencies {
 object Dependencies {
   lazy val versions = new {
     val aws = "2.11.14"
-    val akka = "2.6.4"
     val akkaStreamAlpakka = "1.1.2"
     val circeYaml = "0.8.0"
     val scalatest = "3.1.1"
@@ -52,11 +51,6 @@ object Dependencies {
   val elasticApmBridgeDependencies = Seq (
     "co.elastic.apm" % "apm-opentracing" % versions.elasticApm,
     "co.elastic.apm" % "apm-agent-attach" % versions.elasticApm
-  )
-
-  val akkaDependencies: Seq[ModuleID] = Seq(
-    "com.typesafe.akka" %% "akka-actor" % versions.akka,
-    "com.typesafe.akka" %% "akka-stream" % versions.akka
   )
 
   val testDependencies = Seq(
@@ -75,7 +69,6 @@ object Dependencies {
     WellcomeDependencies.monitoringLibrary ++
     WellcomeDependencies.fixturesLibrary ++
     WellcomeDependencies.typesafeLibrary ++
-    akkaDependencies ++
     testDependencies ++
     openTracingDependencies ++
     elasticApmBridgeDependencies
