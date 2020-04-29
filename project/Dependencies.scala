@@ -41,7 +41,6 @@ object Dependencies {
     val akkaStreamAlpakka = "1.1.2"
     val circeYaml = "0.8.0"
     val scalatest = "3.1.1"
-    val logback = "1.2.3"
     val elasticApm = "1.12.0"
   }
 
@@ -53,10 +52,6 @@ object Dependencies {
   val elasticApmBridgeDependencies = Seq (
     "co.elastic.apm" % "apm-opentracing" % versions.elasticApm,
     "co.elastic.apm" % "apm-agent-attach" % versions.elasticApm
-  )
-
-  val logbackDependencies = Seq(
-    "ch.qos.logback" % "logback-classic" % versions.logback
   )
 
   val akkaDependencies: Seq[ModuleID] = Seq(
@@ -82,7 +77,6 @@ object Dependencies {
     WellcomeDependencies.typesafeLibrary ++
     akkaDependencies ++
     testDependencies ++
-    logbackDependencies ++
     openTracingDependencies ++
     elasticApmBridgeDependencies
 
