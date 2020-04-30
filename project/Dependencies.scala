@@ -3,7 +3,7 @@ import sbt._
 object WellcomeDependencies {
   private lazy val versions = new {
     val fixtures = "1.2.0"
-    val json = "2.0.1"
+    val json = "2.1.0"
     val monitoring = "4.0.0"
     val typesafe = "2.0.0"
   }
@@ -38,7 +38,7 @@ object Dependencies {
   lazy val versions = new {
     val aws = "2.11.14"
     val akkaStreamAlpakka = "1.1.2"
-    val circeYaml = "0.8.0"
+    val circe = "0.13.0"
     val scalatest = "3.1.1"
     val elasticApm = "1.12.0"
   }
@@ -64,7 +64,7 @@ object Dependencies {
       // This needs to be excluded bacuse it conflicts with aws http client "netty-nio-client"
       // and it also causes weird leaks between tests
       exclude("com.github.matsluni", "aws-spi-akka-http_2.12"),
-    "io.circe" %% "circe-yaml" % versions.circeYaml
+    "io.circe" %% "circe-yaml" % versions.circe
   ) ++ WellcomeDependencies.jsonLibrary ++
     WellcomeDependencies.monitoringLibrary ++
     WellcomeDependencies.fixturesLibrary ++
