@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v9.1.0 - 2020-04-30
+
+Upgrade circe to 0.13.0
+
 ## v9.0.1 - 2020-04-29
 
 This patch tidies up the dependency tree of this library.  Specifically, it removes some explicit dependencies that are duplicated from other Wellcome Scala libraries (Circe, Akka, Logback).
