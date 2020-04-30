@@ -39,8 +39,7 @@ object Dependencies {
     val aws = "2.11.14"
     val akka = "2.6.4"
     val akkaStreamAlpakka = "1.1.2"
-    val circe = "0.9.0"
-    val circeYaml = "0.8.0"
+    val circe = "0.13.0"
     val scalatest = "3.1.1"
     val logback = "1.2.3"
     val elasticApm = "1.12.0"
@@ -81,7 +80,7 @@ object Dependencies {
       // This needs to be excluded bacuse it conflicts with aws http client "netty-nio-client"
       // and it also causes weird leaks between tests
       exclude("com.github.matsluni", "aws-spi-akka-http_2.12"),
-    "io.circe" %% "circe-yaml" % versions.circeYaml
+    "io.circe" %% "circe-yaml" % versions.circe
   ) ++ WellcomeDependencies.jsonLibrary ++
     WellcomeDependencies.monitoringLibrary ++
     WellcomeDependencies.fixturesLibrary ++

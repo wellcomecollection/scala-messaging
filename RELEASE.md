@@ -1,3 +1,3 @@
-RELEASE_TYPE: major
+RELEASE_TYPE: minor
 
-Upgrade akka, alpakka, aws sdk and scalatest
+Upgrade circe
