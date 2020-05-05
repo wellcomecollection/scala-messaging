@@ -3,6 +3,7 @@ package uk.ac.wellcome.messaging.fixtures
 import akka.actor.ActorSystem
 import grizzled.slf4j.Logging
 import io.circe.Encoder
+import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit
 import software.amazon.awssdk.services.sqs.model._
@@ -21,7 +22,7 @@ import scala.util.Random
 object SQS {
   case class Queue(url: String, arn: String) {
     override def toString = s"SQS.Queue(url = $url, name = $name)"
-    def name = url.split("/").toList.last
+    def name: String = url.split("/").toList.last
   }
   case class QueuePair(queue: Queue, dlq: Queue)
 }
@@ -200,7 +201,7 @@ trait SQS extends Matchers with Logging {
 
   private def sendMessageToSqsClient(queue: Queue,
                                      body: String): SendMessageResponse = {
-    debug(s"Sending message to ${queue.url}: ${body}")
+    debug(s"Sending message to ${queue.url}: $body")
 
     sqsClient.sendMessage { builder: SendMessageRequest.Builder =>
       builder.queueUrl(queue.url).messageBody(body)
@@ -215,7 +216,7 @@ trait SQS extends Matchers with Logging {
 
     assert(
       messagesInFlight == "0",
-      clue = s"Expected messages in flight on ${queue.url} to be 0, actually $messagesInFlight"
+      s"Expected messages in flight on ${queue.url} to be 0, actually $messagesInFlight"
     )
 
     val messagesWaiting = getQueueAttribute(
@@ -225,69 +226,61 @@ trait SQS extends Matchers with Logging {
 
     assert(
       messagesWaiting == "0",
-      clue = s"Expected messages waiting on ${queue.url} to be 0, actually $messagesWaiting"
+      s"Expected messages waiting on ${queue.url} to be 0, actually $messagesWaiting"
     )
   }
 
-  def assertQueueEmpty(queue: Queue) = {
+  def assertQueueEmpty(queue: Queue): Assertion = {
     waitVisibilityTimeoutExipiry()
 
     val messages = getMessages(queue)
 
-    messages shouldBe empty
+    assert(messages.isEmpty, s"Expected not to get any messages from ${queue.url}, actually got $messages")
+
     noMessagesAreWaitingIn(queue)
   }
 
-  def assertQueueNotEmpty(queue: Queue) = {
+  def assertQueueNotEmpty(queue: Queue): Assertion = {
     waitVisibilityTimeoutExipiry()
 
     val messages = getMessages(queue)
 
-    messages should not be empty
+    assert(
+      messages.nonEmpty,
+      s"Expected ${queue.url} to have messages, but was actually empty"
+    )
   }
 
-  def assertQueuePairSizes(queue: QueuePair, qSize: Int, dlqSize: Int) = {
-    waitVisibilityTimeoutExipiry()
-
-    val messagesDlq = getMessages(queue.dlq)
-    val messagesDlqSize = messagesDlq.size
-
-    val messagesQ = getMessages(queue.queue)
-    val messagesQSize = messagesQ.size
-
-    debug(
-      s"\ndlq: ${queue.dlq.url}, ${messagesDlqSize}\nqueue: ${queue.queue.url}, ${messagesQSize}")
-
-    debug(s"$messagesDlq")
-
-    messagesQSize shouldBe qSize
-    messagesDlqSize shouldBe dlqSize
+  def assertQueuePairSizes(queue: QueuePair, qSize: Int, dlqSize: Int): Assertion = {
+    assertQueueHasSize(queue = queue.queue, size = qSize)
+    assertQueueHasSize(queue = queue.dlq, size = dlqSize)
   }
 
-  def assertQueueHasSize(queue: Queue, size: Int) = {
+  def assertQueueHasSize(queue: Queue, size: Int): Assertion = {
     waitVisibilityTimeoutExipiry()
 
     val messages = getMessages(queue)
     val messagesSize = messages.size
 
-    messagesSize shouldBe size
+    assert(
+      messagesSize == size,
+      s"Expected queue ${queue.url} to have size $size, actually had size $messagesSize"
+    )
   }
 
-  def waitVisibilityTimeoutExipiry() = {
+  def waitVisibilityTimeoutExipiry(): Unit =
     // The visibility timeout is set to 1 second for test queues.
     // Wait for slightly longer than that to make sure that messages
     // that fail processing become visible again before asserting.
     Thread.sleep(1500)
-  }
 
-  def getMessages(queue: Queue) = {
+  def getMessages(queue: Queue): Seq[Message] =
     sqsClient
       .receiveMessage { builder: ReceiveMessageRequest.Builder =>
         builder.queueUrl(queue.url).maxNumberOfMessages(10)
       }
       .messages()
       .asScala
-  }
 
   def createSQSConfigWith(queue: Queue): SQSConfig =
     SQSConfig(queueUrl = queue.url)
