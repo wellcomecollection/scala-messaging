@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v9.2.0 - 2020-05-05
+
+Add a new method `getQueueAttribute(queue: Queue, attributeName: QueueAttributeName)` to the SQS fixture, for retrieving the value of a queue attribute.
+
+Improve the assertion messages when checking queue sizes in the SQS fixture.
+
 ## v9.1.0 - 2020-04-30
 
 Upgrade circe to 0.13.0
