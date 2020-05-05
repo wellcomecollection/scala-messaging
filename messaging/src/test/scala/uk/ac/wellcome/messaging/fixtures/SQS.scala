@@ -104,7 +104,8 @@ trait SQS extends Matchers with Logging {
   def withLocalSqsQueueAndDlq[R](testWith: TestWith[QueuePair, R]): R =
     withLocalSqsQueueAndDlqAndTimeout(visibilityTimeout = 1)(testWith)
 
-  private def getQueueAttribute(queueUrl: String, attributeName: QueueAttributeName): String =
+  private def getQueueAttribute(queueUrl: String,
+                                attributeName: QueueAttributeName): String =
     sqsClient
       .getQueueAttributes { builder: GetQueueAttributesRequest.Builder =>
         builder
@@ -114,7 +115,8 @@ trait SQS extends Matchers with Logging {
       .attributes()
       .get(attributeName)
 
-  def getQueueAttribute(queue: Queue, attributeName: QueueAttributeName): String =
+  def getQueueAttribute(queue: Queue,
+                        attributeName: QueueAttributeName): String =
     getQueueAttribute(queueUrl = queue.url, attributeName = attributeName)
 
   def withLocalSqsQueueAndDlqAndTimeout[R](visibilityTimeout: Int)(
@@ -211,7 +213,8 @@ trait SQS extends Matchers with Logging {
   def noMessagesAreWaitingIn(queue: Queue): Assertion = {
     val messagesInFlight = getQueueAttribute(
       queue,
-      attributeName = QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE
+      attributeName =
+        QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE
     )
 
     assert(
@@ -235,7 +238,9 @@ trait SQS extends Matchers with Logging {
 
     val messages = getMessages(queue)
 
-    assert(messages.isEmpty, s"Expected not to get any messages from ${queue.url}, actually got $messages")
+    assert(
+      messages.isEmpty,
+      s"Expected not to get any messages from ${queue.url}, actually got $messages")
 
     noMessagesAreWaitingIn(queue)
   }
@@ -251,7 +256,9 @@ trait SQS extends Matchers with Logging {
     )
   }
 
-  def assertQueuePairSizes(queue: QueuePair, qSize: Int, dlqSize: Int): Assertion = {
+  def assertQueuePairSizes(queue: QueuePair,
+                           qSize: Int,
+                           dlqSize: Int): Assertion = {
     assertQueueHasSize(queue = queue.queue, size = qSize)
     assertQueueHasSize(queue = queue.dlq, size = dlqSize)
   }
