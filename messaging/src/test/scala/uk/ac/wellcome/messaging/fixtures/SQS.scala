@@ -148,6 +148,13 @@ trait SQS extends Matchers with Logging {
     secretKey = sqsSecretKey
   )
 
+  val localStackSqsAsyncClient: SqsAsyncClient = SQSClientFactory.createAsyncClient(
+    region = "localhost",
+    endpoint = "http://localhost:4576",
+    accessKey = sqsAccessKey,
+    secretKey = sqsSecretKey
+  )
+
   def withLocalStackSqsQueue[R](testWith: TestWith[Queue, R]): R =
     withLocalSqsQueue(localStackSqsClient) { queue =>
       testWith(queue)
