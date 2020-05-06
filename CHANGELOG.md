@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v9.2.1 - 2020-05-06
+
+Add async sqs client for localstack in SQS fixtures
+
 ## v9.2.0 - 2020-05-05
 
 Add a new method `getQueueAttribute(queue: Queue, attributeName: QueueAttributeName)` to the SQS fixture, for retrieving the value of a queue attribute.
