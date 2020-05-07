@@ -26,6 +26,7 @@ This release changes how some of the SQS helpers work.
 
 *   The `SQS.Queue` case class now includes the `visibilityTimeout`.
 
-*   The following helpers have been made private, because they weren't in use in the catalogue or storage-service repos:
+*   The following helpers have been made private or removed, because they weren't in use in the catalogue or storage-service repos:
 
     -   `waitVisibilityTimeoutExipiry()`
+    -   `assertQueuePairSizes()`

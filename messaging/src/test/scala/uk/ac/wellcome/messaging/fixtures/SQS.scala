@@ -261,13 +261,6 @@ trait SQS extends Matchers with Logging {
     )
   }
 
-  def assertQueuePairSizes(queue: QueuePair,
-                           qSize: Int,
-                           dlqSize: Int): Assertion = {
-    assertQueueHasSize(queue = queue.queue, size = qSize)
-    assertQueueHasSize(queue = queue.dlq, size = dlqSize)
-  }
-
   def assertQueueHasSize(queue: Queue, size: Int): Assertion = {
     waitVisibilityTimeoutExpiry(queue)
 
