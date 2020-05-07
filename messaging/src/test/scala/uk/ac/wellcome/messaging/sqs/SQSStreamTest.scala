@@ -257,7 +257,7 @@ class SQSStreamTest
                         MemoryMetrics[StandardUnit]),
                        R]): R =
     withActorSystem { implicit actorSystem =>
-      withLocalSqsQueueAndDlq {
+      withLocalSqsQueuePair() {
         case queuePair @ QueuePair(queue, _) =>
           val metrics = new MemoryMetrics[StandardUnit]()
           withSQSStream[NamedObject, R](queue, metrics) { stream =>
