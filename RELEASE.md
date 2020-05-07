@@ -28,5 +28,6 @@ This release changes how some of the SQS helpers work.
 
 *   The following helpers have been made private or removed, because they weren't in use in the catalogue or storage-service repos:
 
-    -   `waitVisibilityTimeoutExipiry()`
+    -   `assertQueueNotEmpty()`
     -   `assertQueuePairSizes()`
+    -   `waitVisibilityTimeoutExipiry()`

@@ -250,17 +250,6 @@ trait SQS extends Matchers with Logging {
     noMessagesAreWaitingIn(queue)
   }
 
-  def assertQueueNotEmpty(queue: Queue): Assertion = {
-    waitVisibilityTimeoutExpiry(queue)
-
-    val messages = getMessages(queue)
-
-    assert(
-      messages.nonEmpty,
-      s"Expected ${queue.url} to have messages, but was actually empty"
-    )
-  }
-
   def assertQueueHasSize(queue: Queue, size: Int): Assertion = {
     waitVisibilityTimeoutExpiry(queue)
 
