@@ -60,15 +60,15 @@ trait SQS extends Matchers with Logging {
       secretKey = sqsSecretKey
     )
 
-  private def setQueueAttribute(queueUrl: String,
-                                attributeName: QueueAttributeName,
-                                attributeValue: String): SetQueueAttributesResponse =
+  private def setQueueAttribute(
+    queueUrl: String,
+    attributeName: QueueAttributeName,
+    attributeValue: String): SetQueueAttributesResponse =
     sqsClient
       .setQueueAttributes { builder: SetQueueAttributesRequest.Builder =>
         builder
           .queueUrl(queueUrl)
-          .attributes(
-            Map(attributeName -> attributeValue).asJava)
+          .attributes(Map(attributeName -> attributeValue).asJava)
       }
 
   private def getQueueAttribute(queueUrl: String,
@@ -127,15 +127,20 @@ trait SQS extends Matchers with Logging {
       }
     )
 
-  def withLocalSqsQueuePair[R](visibilityTimeout: Int = 1)(testWith: TestWith[QueuePair, R]): R = {
+  def withLocalSqsQueuePair[R](visibilityTimeout: Int = 1)(
+    testWith: TestWith[QueuePair, R]): R = {
     val queueName = Random.alphanumeric take 10 mkString
 
     withLocalSqsQueue(sqsClient, queueName = s"$queueName-dlq") { dlq =>
-      withLocalSqsQueue(sqsClient, queueName = queueName, visibilityTimeout = visibilityTimeout) { queue =>
+      withLocalSqsQueue(
+        sqsClient,
+        queueName = queueName,
+        visibilityTimeout = visibilityTimeout) { queue =>
         setQueueAttribute(
           queueUrl = queue.url,
           attributeName = QueueAttributeName.REDRIVE_POLICY,
-          attributeValue = s"""{"maxReceiveCount":"3", "deadLetterTargetArn":"${dlq.arn}"}"""
+          attributeValue =
+            s"""{"maxReceiveCount":"3", "deadLetterTargetArn":"${dlq.arn}"}"""
         )
 
         testWith(QueuePair(queue, dlq))
@@ -166,8 +171,7 @@ trait SQS extends Matchers with Logging {
   def withSQSStream[T, R](
     queue: Queue,
     metrics: Metrics[Future, StandardUnit] = new MemoryMetrics[StandardUnit]()
-  )(
-    testWith: TestWith[SQSStream[T], R])(
+  )(testWith: TestWith[SQSStream[T], R])(
     implicit actorSystem: ActorSystem): R = {
     val sqsConfig = createSQSConfigWith(queue)
 
