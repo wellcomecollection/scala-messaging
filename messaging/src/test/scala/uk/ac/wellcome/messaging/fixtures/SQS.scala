@@ -20,7 +20,7 @@ import scala.concurrent.Future
 import scala.util.Random
 
 object SQS {
-  case class Queue(url: String, arn: String) {
+  case class Queue(url: String, arn: String, visibilityTimeout: Int) {
     override def toString = s"SQS.Queue(url = $url, name = $name)"
     def name: String = url.split("/").toList.last
   }
@@ -60,49 +60,16 @@ trait SQS extends Matchers with Logging {
       secretKey = sqsSecretKey
     )
 
-  private def withLocalSqsQueue[R](client: SqsClient): Fixture[Queue, R] =
-    fixture[Queue, R](
-      create = {
-        val queueName: String = Random.alphanumeric take 10 mkString
-        val response = client.createQueue {
-          builder: CreateQueueRequest.Builder =>
-            builder.queueName(queueName)
-        }
-        val arn = client
-          .getQueueAttributes { builder: GetQueueAttributesRequest.Builder =>
-            builder
-              .queueUrl(response.queueUrl())
-              .attributeNames(QueueAttributeName.QUEUE_ARN)
-          }
-          .attributes()
-          .get(QueueAttributeName.QUEUE_ARN)
-        val queue = Queue(response.queueUrl(), arn)
-        client
-          .setQueueAttributes { builder: SetQueueAttributesRequest.Builder =>
-            builder
-              .queueUrl(queue.url)
-              .attributes(
-                Map(QueueAttributeName.VISIBILITY_TIMEOUT -> "1").asJava)
-          }
-        queue
-      },
-      destroy = { queue =>
-        client.purgeQueue { builder: PurgeQueueRequest.Builder =>
-          builder.queueUrl(queue.url)
-        }
-        client.deleteQueue { builder: DeleteQueueRequest.Builder =>
-          builder.queueUrl(queue.url)
-        }
+  private def setQueueAttribute(
+    queueUrl: String,
+    attributeName: QueueAttributeName,
+    attributeValue: String): SetQueueAttributesResponse =
+    sqsClient
+      .setQueueAttributes { builder: SetQueueAttributesRequest.Builder =>
+        builder
+          .queueUrl(queueUrl)
+          .attributes(Map(attributeName -> attributeValue).asJava)
       }
-    )
-
-  def withLocalSqsQueue[R](testWith: TestWith[Queue, R]): R =
-    withLocalSqsQueue(sqsClient) { queue =>
-      testWith(queue)
-    }
-
-  def withLocalSqsQueueAndDlq[R](testWith: TestWith[QueuePair, R]): R =
-    withLocalSqsQueueAndDlqAndTimeout(visibilityTimeout = 1)(testWith)
 
   private def getQueueAttribute(queueUrl: String,
                                 attributeName: QueueAttributeName): String =
@@ -119,27 +86,67 @@ trait SQS extends Matchers with Logging {
                         attributeName: QueueAttributeName): String =
     getQueueAttribute(queueUrl = queue.url, attributeName = attributeName)
 
-  def withLocalSqsQueueAndDlqAndTimeout[R](visibilityTimeout: Int)(
-    testWith: TestWith[QueuePair, R]): R =
-    withLocalSqsQueue { dlq =>
-      val queueName: String = Random.alphanumeric take 10 mkString
-      val response = sqsClient.createQueue {
-        builder: CreateQueueRequest.Builder =>
-          builder
-            .queueName(queueName)
-            .attributes(Map(
-              QueueAttributeName.REDRIVE_POLICY -> s"""{"maxReceiveCount":"3", "deadLetterTargetArn":"${dlq.arn}"}""",
-              QueueAttributeName.VISIBILITY_TIMEOUT -> s"$visibilityTimeout"
-            ).asJava)
-      }
-      val arn = getQueueAttribute(
-        queueUrl = response.queueUrl(),
-        attributeName = QueueAttributeName.QUEUE_ARN
-      )
+  def withLocalSqsQueue[R](
+    client: SqsClient = sqsClient,
+    queueName: String = Random.alphanumeric take 10 mkString,
+    visibilityTimeout: Int = 1
+  ): Fixture[Queue, R] =
+    fixture[Queue, R](
+      create = {
+        val response = client.createQueue {
+          builder: CreateQueueRequest.Builder =>
+            builder.queueName(queueName)
+        }
 
-      val queue = Queue(response.queueUrl(), arn)
-      testWith(QueuePair(queue, dlq))
+        val arn = getQueueAttribute(
+          queueUrl = response.queueUrl(),
+          attributeName = QueueAttributeName.QUEUE_ARN
+        )
+
+        val queue = Queue(
+          url = response.queueUrl(),
+          arn = arn,
+          visibilityTimeout = visibilityTimeout
+        )
+
+        setQueueAttribute(
+          queueUrl = queue.url,
+          attributeName = QueueAttributeName.VISIBILITY_TIMEOUT,
+          attributeValue = visibilityTimeout.toString
+        )
+
+        queue
+      },
+      destroy = { queue =>
+        client.purgeQueue { builder: PurgeQueueRequest.Builder =>
+          builder.queueUrl(queue.url)
+        }
+        client.deleteQueue { builder: DeleteQueueRequest.Builder =>
+          builder.queueUrl(queue.url)
+        }
+      }
+    )
+
+  def withLocalSqsQueuePair[R](visibilityTimeout: Int = 1)(
+    testWith: TestWith[QueuePair, R]): R = {
+    val queueName = Random.alphanumeric take 10 mkString
+
+    withLocalSqsQueue(sqsClient, queueName = s"$queueName-dlq") { dlq =>
+      withLocalSqsQueue(
+        sqsClient,
+        queueName = queueName,
+        visibilityTimeout = visibilityTimeout) { queue =>
+        setQueueAttribute(
+          queueUrl = queue.url,
+          attributeName = QueueAttributeName.REDRIVE_POLICY,
+          attributeValue =
+            s"""{"maxReceiveCount":"3", "deadLetterTargetArn":"${dlq.arn}"}"""
+        )
+
+        testWith(QueuePair(queue, dlq))
+      }
     }
+  }
 
   val localStackSqsClient: SqsClient = SQSClientFactory.createSyncClient(
     region = "localhost",
@@ -161,8 +168,10 @@ trait SQS extends Matchers with Logging {
       testWith(queue)
     }
 
-  def withSQSStream[T, R](queue: Queue, metrics: Metrics[Future, StandardUnit])(
-    testWith: TestWith[SQSStream[T], R])(
+  def withSQSStream[T, R](
+    queue: Queue,
+    metrics: Metrics[Future, StandardUnit] = new MemoryMetrics[StandardUnit]()
+  )(testWith: TestWith[SQSStream[T], R])(
     implicit actorSystem: ActorSystem): R = {
     val sqsConfig = createSQSConfigWith(queue)
 
@@ -173,14 +182,6 @@ trait SQS extends Matchers with Logging {
     )
 
     testWith(stream)
-  }
-
-  def withSQSStream[T, R](queue: Queue)(testWith: TestWith[SQSStream[T], R])(
-    implicit actorSystem: ActorSystem): R = {
-    val metrics = new MemoryMetrics[StandardUnit]()
-    withSQSStream[T, R](queue, metrics) { sqsStream =>
-      testWith(sqsStream)
-    }
   }
 
   def createNotificationMessageWith(body: String): NotificationMessage =
@@ -242,7 +243,7 @@ trait SQS extends Matchers with Logging {
   }
 
   def assertQueueEmpty(queue: Queue): Assertion = {
-    waitVisibilityTimeoutExipiry()
+    waitVisibilityTimeoutExpiry(queue)
 
     val messages = getMessages(queue)
 
@@ -253,26 +254,8 @@ trait SQS extends Matchers with Logging {
     noMessagesAreWaitingIn(queue)
   }
 
-  def assertQueueNotEmpty(queue: Queue): Assertion = {
-    waitVisibilityTimeoutExipiry()
-
-    val messages = getMessages(queue)
-
-    assert(
-      messages.nonEmpty,
-      s"Expected ${queue.url} to have messages, but was actually empty"
-    )
-  }
-
-  def assertQueuePairSizes(queue: QueuePair,
-                           qSize: Int,
-                           dlqSize: Int): Assertion = {
-    assertQueueHasSize(queue = queue.queue, size = qSize)
-    assertQueueHasSize(queue = queue.dlq, size = dlqSize)
-  }
-
   def assertQueueHasSize(queue: Queue, size: Int): Assertion = {
-    waitVisibilityTimeoutExipiry()
+    waitVisibilityTimeoutExpiry(queue)
 
     val messages = getMessages(queue)
     val messagesSize = messages.size
@@ -283,11 +266,12 @@ trait SQS extends Matchers with Logging {
     )
   }
 
-  def waitVisibilityTimeoutExipiry(): Unit =
-    // The visibility timeout is set to 1 second for test queues.
-    // Wait for slightly longer than that to make sure that messages
+  private def waitVisibilityTimeoutExpiry(queue: Queue): Unit = {
+    // Wait slightly longer than the visibility timeout to ensure that messages
     // that fail processing become visible again before asserting.
-    Thread.sleep(1500)
+    val millisecondsToWait = queue.visibilityTimeout * 1500
+    Thread.sleep(millisecondsToWait)
+  }
 
   def getMessages(queue: Queue): Seq[Message] =
     sqsClient

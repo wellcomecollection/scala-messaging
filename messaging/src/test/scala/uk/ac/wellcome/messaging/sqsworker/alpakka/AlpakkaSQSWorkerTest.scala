@@ -23,7 +23,7 @@ class AlpakkaSQSWorkerTest
 
   describe("When a message is processed") {
     it("consumes a message and increments success metrics") {
-      withLocalSqsQueueAndDlq {
+      withLocalSqsQueuePair() {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
             withAlpakkaSQSWorker(queue, successful, namespace) {
@@ -58,7 +58,7 @@ class AlpakkaSQSWorkerTest
 
     it(
       "consumes a message and increments non deterministic failure metrics metrics") {
-      withLocalSqsQueueAndDlq {
+      withLocalSqsQueuePair() {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
             withAlpakkaSQSWorker(queue, deterministicFailure, namespace) {
@@ -93,7 +93,7 @@ class AlpakkaSQSWorkerTest
 
     it(
       "retries nonDeterministicFailure 3 times and places the message in the dlq") {
-      withLocalSqsQueueAndDlq {
+      withLocalSqsQueuePair() {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
             withAlpakkaSQSWorker(queue, nonDeterministicFailure, namespace) {
@@ -130,7 +130,7 @@ class AlpakkaSQSWorkerTest
   describe("When a message cannot be parsed") {
     it(
       "consumes the message increments failure metrics if the message is not json") {
-      withLocalSqsQueueAndDlq {
+      withLocalSqsQueuePair() {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
             withAlpakkaSQSWorker(queue, successful, namespace) {
@@ -164,7 +164,7 @@ class AlpakkaSQSWorkerTest
 
     it(
       "consumes the message increments failure metrics if the message is json but not a work") {
-      withLocalSqsQueueAndDlq {
+      withLocalSqsQueuePair() {
         case QueuePair(queue, dlq) =>
           withActorSystem { implicit actorSystem =>
             withAlpakkaSQSWorker(queue, successful, namespace) {
