@@ -161,7 +161,10 @@ trait SQS extends Matchers with Logging {
       testWith(queue)
     }
 
-  def withSQSStream[T, R](queue: Queue, metrics: Metrics[Future, StandardUnit])(
+  def withSQSStream[T, R](
+    queue: Queue,
+    metrics: Metrics[Future, StandardUnit] = new MemoryMetrics[StandardUnit]()
+  )(
     testWith: TestWith[SQSStream[T], R])(
     implicit actorSystem: ActorSystem): R = {
     val sqsConfig = createSQSConfigWith(queue)
@@ -173,14 +176,6 @@ trait SQS extends Matchers with Logging {
     )
 
     testWith(stream)
-  }
-
-  def withSQSStream[T, R](queue: Queue)(testWith: TestWith[SQSStream[T], R])(
-    implicit actorSystem: ActorSystem): R = {
-    val metrics = new MemoryMetrics[StandardUnit]()
-    withSQSStream[T, R](queue, metrics) { sqsStream =>
-      testWith(sqsStream)
-    }
   }
 
   def createNotificationMessageWith(body: String): NotificationMessage =
