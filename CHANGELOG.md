@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## v9.3.0 - 2020-05-07
+
+This release changes how some of the SQS helpers work.
+
+*   `withLocalSqsQueueAndDlq` and `withLocalSqsQueueAndDlqAndTimeout` are both renamed to `withLocalSqsQueuePair()`, which takes an optional `visibilityTimeout` argument.
+
+    The DLQ name will also be the name of the main queue suffixed with `-dlq` for easier debugging.
+
+*   `withLocalSqsQueue` now takes an optional `visibilityTimeout` argument.
+
+    If you are using it without arguments, e.g.:
+
+    ```scala
+    withLocalSqsQueue { queue =>
+      // do stuff with queue
+    }
+    ```
+
+    you need to add empty parentheses:
+
+    ```scala
+    withLocalSqsQueue() { queue =>
+      // do stuff with queue
+    }
+    ```
+
+*   The `SQS.Queue` case class now includes the `visibilityTimeout`.
+
+*   The following helpers have been made private or removed, because they weren't in use in the catalogue or storage-service repos:
+
+    -   `assertQueueNotEmpty()`
+    -   `assertQueuePairSizes()`
+    -   `waitVisibilityTimeoutExipiry()`
+
 ## v9.2.1 - 2020-05-06
 
 Add async sqs client for localstack in SQS fixtures
